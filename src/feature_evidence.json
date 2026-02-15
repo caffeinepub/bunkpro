@@ -2,11 +2,45 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-replace-the-app-s-branding-assets-so-the-uploaded-file-image-png-is-the-only-logo-used-shown-exactly-as-provided-no-redesign-re-draw-in-all-existing-logo-placements-including-initial-loading-splash-settings-about-and-any-other-in-app-logo-usage",
-      "featureTitle": "Replace the app’s branding assets so the uploaded file (image.png) is the only logo used, shown exactly as provided (no redesign/re-draw), in all existing logo placements including: Initial loading splash, Settings → About, and any other in-app logo usage.",
+      "featureId": "feature-generate-a-new-modern-minimal-professional-bunkpro-logo-set-that-follows-the-provided-style-requirements-flat-clean-premium-tech-gen-z-recognizable-at-48-48-and-includes-1-app-icon-only-square-2-full-horizontal-logo-with-text-each-in-both-dark-background-and-light-background-variants-using-the-palette-centered-on-deep-purple-6c4dff-optionally-an-indigo-gradient-with-soft-white-light-gray-and-an-optional-subtle-neon-blue-pink-accent-typography-must-be-modern-geometric-sans-serif-with-rounded-edges-with-bunk-bold-and-pro-lighter-and-the-tagline-text-exactly-track-smart",
+      "featureTitle": "Generate a new modern, minimal, professional BunkPro logo set that follows the provided style requirements (flat, clean, premium/tech, Gen‑Z, recognizable at 48×48) and includes: (1) app icon only (square), (2) full horizontal logo with text, each in both dark-background and light-background variants, using the palette centered on deep purple #6C4DFF (optionally an indigo gradient) with soft white/light gray and an optional subtle neon blue/pink accent; typography must be modern geometric sans-serif with rounded edges, with “Bunk” bold and “Pro” lighter, and the tagline text exactly “Track Smart.”.",
+      "files": [],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-27"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-the-newly-generated-logo-assets-to-the-app-as-static-files-under-frontend-public-assets-generated-and-wire-them-into-all-existing-branding-placements-at-minimum-initial-loading-splash-and-settings-about-selecting-the-appropriate-dark-light-variant-based-on-current-theme",
+      "featureTitle": "Add the newly generated logo assets to the app as static files under frontend/public/assets/generated and wire them into all existing branding placements (at minimum: Initial loading splash and Settings → About), selecting the appropriate dark/light variant based on current theme.",
       "files": [
         "frontend/src/components/settings/AboutCard.tsx",
-        "frontend/src/components/system/InitialLoadSplash.tsx",
+        "frontend/src/components/system/InitialLoadSplash.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-28"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-app-s-branding-constants-so-that-a-the-tagline-displayed-in-the-ui-uses-the-exact-text-track-smart-and-b-the-logo-path-s-support-theme-aware-dark-light-selection-without-editing-any-immutable-frontend-paths",
+      "featureTitle": "Update the app’s branding constants so that (a) the tagline displayed in the UI uses the exact text “Track Smart.” and (b) the logo path(s) support theme-aware dark/light selection without editing any immutable frontend paths.",
+      "files": [
+        "frontend/src/components/settings/AboutCard.tsx",
         "frontend/src/lib/branding.ts"
       ],
       "components": [
@@ -17,13 +51,13 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-21"
+        "REQ-29"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-browser-tab-icon-favicon-to-match-the-uploaded-logo-image-png-exactly-as-provided",
-      "featureTitle": "Update the browser tab icon/favicon to match the uploaded logo (image.png) exactly as provided.",
+      "featureId": "feature-generate-and-set-a-matching-favicon-based-on-the-new-app-icon-and-ensure-frontend-index-html-references-the-updated-favicon-file-under-frontend-public-assets-generated",
+      "featureTitle": "Generate and set a matching favicon based on the new app icon, and ensure frontend/index.html references the updated favicon file under frontend/public/assets/generated.",
       "files": [],
       "components": [
         "core-infrastructure@1.0.2",
@@ -33,85 +67,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-22"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-notification-support-using-the-browser-notifications-api-including-permission-prompt-flow-an-in-app-toggle-to-enable-disable-notifications-and-a-test-notification-action-in-settings",
-      "featureTitle": "Add notification support using the browser Notifications API, including: permission prompt flow, an in-app toggle to enable/disable notifications, and a test notification action in Settings.",
-      "files": [
-        "frontend/src/components/settings/NotificationsCard.tsx",
-        "frontend/src/domain/attendanceTypes.ts",
-        "frontend/src/notifications/notificationsApi.ts",
-        "frontend/src/pages/SettingsPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-23"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-local-notifications-behavior-for-this-web-app-as-on-device-in-app-notifications-triggered-by-app-events-while-the-app-is-running-e-g-after-successfully-saving-a-class-mark-respecting-the-notifications-setting-and-browser-permission-state",
-      "featureTitle": "Implement “local notifications” behavior for this web app as on-device/in-app notifications triggered by app events while the app is running (e.g., after successfully saving a class mark), respecting the notifications setting and browser permission state.",
-      "files": [
-        "frontend/src/notifications/localNotificationMessages.ts",
-        "frontend/src/pages/HomeDashboardPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-24"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-persist-the-new-notification-related-user-preference-s-in-the-existing-local-persistence-backup-restore-flow-indexeddb-export-import-backup-without-breaking-existing-stored-data",
-      "featureTitle": "Persist the new notification-related user preference(s) in the existing local persistence/backup/restore flow (IndexedDB + export/import backup), without breaking existing stored data.",
-      "files": [
-        "frontend/src/backup/backupSchema.ts",
-        "frontend/src/domain/attendanceTypes.ts",
-        "frontend/src/state/persistence.ts"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-25"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-clear-user-facing-copy-in-settings-clarifying-the-supported-notification-behavior-and-limitations-for-this-web-app-e-g-notifications-require-browser-permission-no-guaranteed-delivery-when-the-app-is-closed",
-      "featureTitle": "Add clear user-facing copy in Settings clarifying the supported notification behavior and limitations for this web app (e.g., notifications require browser permission; no guaranteed delivery when the app is closed).",
-      "files": [
-        "frontend/src/components/settings/NotificationsCard.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-26"
+        "REQ-30"
       ],
       "confidence": "high"
     }

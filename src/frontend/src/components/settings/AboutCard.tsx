@@ -1,10 +1,29 @@
-// About section card displaying the BunkPro logo, app information, and version details
+// About section card displaying the BunkPro logo, app information, and version details using theme-aware branding
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BRANDING } from '@/lib/branding';
 
 export function AboutCard() {
+  const [isDark, setIsDark] = useState(() => {
+    // Check if dark mode is active on mount
+    return document.documentElement.classList.contains('dark');
+  });
+
+  useEffect(() => {
+    // Watch for theme changes
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -13,14 +32,10 @@ export function AboutCard() {
       <CardContent className="space-y-6">
         <div className="flex flex-col items-center gap-4 py-4">
           <img 
-            src={BRANDING.logoPath}
+            src={BRANDING.getHorizontalLogo(isDark)}
             alt={BRANDING.logoAlt}
-            className="w-40 h-40 object-contain"
+            className="w-full max-w-md h-auto object-contain"
           />
-          <div className="text-center space-y-2">
-            <h3 className="text-2xl font-bold">{BRANDING.appName}</h3>
-            <p className="text-muted-foreground italic">{BRANDING.tagline}</p>
-          </div>
         </div>
 
         <div className="space-y-2 text-sm text-center">

@@ -1,62 +1,63 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-15T12:39:42.862Z",
-  "summary": "Diff implements browser Notifications API support with Settings UI (toggle, permission prompt, test notification), adds local in-app notifications on class marking, and persists the new notification preference through IndexedDB and backup migration. Branding is refactored via a new BRANDING constant and used in InitialLoadSplash and Settings → About. However, the favicon update and required generated logo/favicon static assets are not evidenced in the provided diff summary, and it’s not verifiable that the uploaded logo is the only logo used everywhere in the UI.",
+  "generatedAt": "2026-02-15T12:49:26.211Z",
+  "summary": "Diff updates theme-aware branding helpers and wires new logo paths into InitialLoadSplash and Settings → About, but it does not add the required static image assets or update index.html for the favicon, and the UI does not display the required tagline text in About.",
   "missing_requirements": [
     {
-      "id": "REQ-21",
-      "requirement": "Replace the app’s branding assets so the uploaded file (image.png) is the only logo used, shown exactly as provided, in all existing logo placements (Initial loading splash, Settings → About, and any other in-app logo usage).",
-      "reason": "Splash and About were updated to use BRANDING.logoPath, but the diff does not show the required static image asset being added, nor does it provide evidence that all other logo placements (beyond these two files) were updated to prevent any other logo from appearing.",
+      "id": "REQ-27",
+      "requirement": "Produce four new logo image assets (app icon light/dark, horizontal logo light/dark) as static files matching the specified style and containing tagline “Track Smart.” in the full logo.",
+      "reason": "No new image assets were added in the diff (no files under frontend/public/assets/generated were introduced), so the required generated logo set is not present/verified.",
       "evidence": [
+        "File diff summary shows “Added: 0” and “ADDED FILES: none”",
+        "frontend/src/lib/branding.ts (references /assets/generated/... but does not add them)"
+      ]
+    },
+    {
+      "id": "REQ-28",
+      "requirement": "Add newly generated logo assets under frontend/public/assets/generated and ensure all existing branding placements use them with theme-aware dark/light selection; remove any previous generated logo path usage.",
+      "reason": "The code references new /assets/generated paths, but the assets themselves were not added. Also, the diff summary does not provide evidence that all other branding placements (beyond the two modified files) were updated or that old logo paths were fully removed.",
+      "evidence": [
+        "ADDED FILES: none (no frontend/public/assets/generated assets added)",
         "frontend/src/components/system/InitialLoadSplash.tsx",
         "frontend/src/components/settings/AboutCard.tsx",
         "frontend/src/lib/branding.ts"
       ]
     },
     {
-      "id": "REQ-22",
-      "requirement": "Update the browser tab icon/favicon to match the uploaded logo (image.png) exactly as provided, served from frontend static assets and referenced by frontend/index.html.",
-      "reason": "No changes to frontend/index.html are shown, and no favicon static asset addition is evidenced in the diff summary.",
+      "id": "REQ-29",
+      "requirement": "Ensure the displayed tagline in Settings → About is exactly “Track Smart.” and branding constants support theme-aware logo selection.",
+      "reason": "Branding constants include tagline: 'Track Smart.' and theme-aware getters, but Settings → About (AboutCard) does not render BRANDING.tagline anywhere, so the displayed tagline requirement is not met.",
       "evidence": [
-        "File diff summary has no entry for frontend/index.html",
-        "ADDED FILES list does not include a favicon asset path"
+        "frontend/src/lib/branding.ts (tagline: 'Track Smart.')",
+        "frontend/src/components/settings/AboutCard.tsx (no usage of BRANDING.tagline; displays “A smart attendance manager for college students”)"
+      ]
+    },
+    {
+      "id": "REQ-30",
+      "requirement": "Add a 32×32 PNG favicon under frontend/public/assets/generated and update frontend/index.html to reference it.",
+      "reason": "No favicon asset was added and frontend/index.html was not modified in the diff, so the favicon cannot be updated as required.",
+      "evidence": [
+        "ADDED FILES: none (no /assets/generated/bunkpro-favicon.dim_32x32.png)",
+        "Modified files list does not include frontend/index.html"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Introduced a new branding constants module with appName/tagline and centralized logo path usage.",
-      "reason": "BuildRequest only asked to replace logo assets everywhere and update favicon; adding a branding constants module and new tagline is an implementation choice not explicitly requested.",
+      "description": "Changed InitialLoadSplash background to a purple/blue gradient (bg-gradient-to-br from-purple-600 via-blue-600 to-purple-800).",
+      "reason": "The BuildRequest focuses on branding/assets integration and wiring logos; it does not request changing the splash screen background styling. This may be an unrequested UI change beyond asset integration.",
       "evidence": [
-        "frontend/src/lib/branding.ts",
-        "frontend/src/components/settings/AboutCard.tsx",
         "frontend/src/components/system/InitialLoadSplash.tsx"
-      ]
-    },
-    {
-      "description": "Added emoji in notification titles/messages (e.g., 🎉 Test Notification, ✅/❌/🚫, 📚).",
-      "reason": "Not requested by the BuildRequest; while still English, these are additional UX embellishments beyond the stated requirements.",
-      "evidence": [
-        "frontend/src/components/settings/NotificationsCard.tsx",
-        "frontend/src/notifications/localNotificationMessages.ts"
       ]
     }
   ],
-  "confidence": 0.72,
+  "confidence": 0.84,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/backup/backupSchema.ts",
     "frontend/src/components/settings/AboutCard.tsx",
-    "frontend/src/components/settings/NotificationsCard.tsx",
     "frontend/src/components/system/InitialLoadSplash.tsx",
-    "frontend/src/domain/attendanceTypes.ts",
     "frontend/src/lib/branding.ts",
-    "frontend/src/notifications/localNotificationMessages.ts",
-    "frontend/src/notifications/notificationsApi.ts",
-    "frontend/src/pages/HomeDashboardPage.tsx",
-    "frontend/src/pages/SettingsPage.tsx",
-    "frontend/src/state/persistence.ts",
     "project_state.json"
   ]
 }

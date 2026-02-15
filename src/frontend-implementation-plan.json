@@ -1,149 +1,106 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Exact logo replacement + browser Notifications API settings and in-app notifications",
+  "title": "Integrate new BunkPro logo set with theme-aware variants and updated favicon",
   "requirements": [
     {
-      "id": "REQ-21",
-      "summary": "Replace all in-app logo placements to use only the uploaded logo raster asset exactly as provided.",
+      "id": "REQ-27",
+      "summary": "Add the newly generated BunkPro logo set (icon + horizontal wordmark) with dark/light variants as static assets.",
       "acceptanceCriteria": [
-        "InitialLoadSplash displays the uploaded logo image exactly (no color/shape changes)",
-        "Settings → About displays the uploaded logo image exactly (no color/shape changes)",
-        "No other logo asset is shown anywhere in the UI (only the uploaded logo)"
+        "Four logo images are produced as static assets (icon + horizontal wordmark) with both dark-background and light-background variants.",
+        "Logos are flat/minimal (no heavy 3D), avoid mascots/playful fonts/too many colors/complex illustrations.",
+        "Primary color uses deep purple #6C4DFF or an indigo gradient; secondary colors are soft white/light gray; any accent glow is subtle and does not reduce legibility.",
+        "The icon remains clearly recognizable when rasterized/viewed at 48×48.",
+        "Typography matches: modern sans-serif, geometric/rounded feel; “Bunk” visually heavier than “Pro”; tagline text exactly “Track Smart.” appears in the full logo variant."
       ],
       "file_operations": [
         {
-          "path": "frontend/public/assets/generated/bunkpro-logo.dim_1024x1024.png",
+          "path": "frontend/public/assets/generated/bunkpro-app-icon-light.dim_1024x1024.png",
           "operation": "create",
-          "description": "Add the required generated square logo asset as an exact raster conversion of the uploaded image.png at frontend/public/assets/generated/bunkpro-logo.dim_1024x1024.png."
+          "description": "Add the generated light-background app icon asset as a static file. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/lib/branding.ts",
+          "path": "frontend/public/assets/generated/bunkpro-app-icon-dark.dim_1024x1024.png",
           "operation": "create",
-          "description": "Create a small branding helper exporting the single allowed logo asset path and related accessible alt text so all logo placements reference the same source of truth."
+          "description": "Add the generated dark-background app icon asset as a static file. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/system/InitialLoadSplash.tsx",
-          "operation": "modify",
-          "description": "Update the splash screen to import and use the shared branding logo path (from frontend/src/lib/branding.ts) so the only displayed logo is the uploaded logo asset exactly as provided."
+          "path": "frontend/public/assets/generated/bunkpro-logo-horizontal-light.dim_1600x500.png",
+          "operation": "create",
+          "description": "Add the generated horizontal logo (light-background) with wordmark and tagline “Track Smart.” as a static file. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/settings/AboutCard.tsx",
-          "operation": "modify",
-          "description": "Update Settings → About to import and use the shared branding logo path (from frontend/src/lib/branding.ts) and ensure no other logo assets are referenced anywhere in this card."
+          "path": "frontend/public/assets/generated/bunkpro-logo-horizontal-dark.dim_1600x500.png",
+          "operation": "create",
+          "description": "Add the generated horizontal logo (dark-background) with wordmark and tagline “Track Smart.” as a static file. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-22",
-      "summary": "Set the browser tab favicon to the generated favicon derived from the uploaded logo.",
+      "id": "REQ-28",
+      "summary": "Wire the new logo assets into existing branding placements (Initial loading splash and Settings → About) with theme-aware dark/light selection.",
       "acceptanceCriteria": [
-        "The favicon shown in the browser tab uses the uploaded logo image",
-        "The favicon asset is served from frontend static assets and referenced by frontend/index.html"
+        "All new logo files exist under frontend/public/assets/generated and are referenced via absolute paths (e.g., /assets/generated/...).",
+        "Initial loading splash and Settings → About display the new logo, with a dark-variant used in dark mode and a light-variant used in light mode.",
+        "No remaining UI surfaces show the previous generated logo file path(s)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/system/InitialLoadSplash.tsx",
+          "operation": "modify",
+          "description": "Update the splash screen to display the new logo (prefer the icon-only variant) and choose between dark/light assets based on the current theme, using absolute paths under /assets/generated/. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/settings/AboutCard.tsx",
+          "operation": "modify",
+          "description": "Update Settings → About to display the new horizontal wordmark variant and choose between dark/light assets based on the current theme, using absolute paths under /assets/generated/. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "If needed to avoid duplicating theme detection logic, pass theme context (or a derived isDark boolean) down to InitialLoadSplash so it can reliably select the correct logo variant. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-29",
+      "summary": "Update branding constants to use the exact tagline “Track Smart.” and support theme-aware logo selection via stable immutable paths.",
+      "acceptanceCriteria": [
+        "The displayed tagline in Settings → About is exactly “Track Smart.”.",
+        "Branding constants provide a clear way to retrieve the correct logo asset for dark vs light mode (used by splash and about views).",
+        "No changes are made to any paths listed as immutable in SYSTEM_CONTEXT."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/branding.ts",
+          "operation": "modify",
+          "description": "Replace the existing single logoPath and tagline with theme-aware asset references (light/dark) for icon and horizontal logo, and set the tagline to exactly “Track Smart.”. Ensure callers can retrieve the correct absolute /assets/generated/... path without changing any immutable paths. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/settings/AboutCard.tsx",
+          "operation": "modify",
+          "description": "Update AboutCard to source the tagline from the updated BRANDING constants and render exactly “Track Smart.” in the UI. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-30",
+      "summary": "Add a new favicon derived from the new app icon and ensure index.html references it under frontend/public/assets/generated.",
+      "acceptanceCriteria": [
+        "A 32×32 PNG favicon asset is present under frontend/public/assets/generated.",
+        "frontend/index.html references the new favicon file path.",
+        "Browser tab icon updates to the new design after reload (with normal cache-busting expectations during development)."
       ],
       "file_operations": [
         {
           "path": "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png",
           "operation": "create",
-          "description": "Add the required generated favicon asset as an exact favicon conversion of the uploaded image.png at frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png."
+          "description": "Add the generated 32×32 PNG favicon derived from the new app icon as a static asset. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/index.html",
           "operation": "modify",
-          "description": "Verify and (if needed) update the favicon <link> tag to reference frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png so the tab icon matches the uploaded logo exactly."
-        }
-      ]
-    },
-    {
-      "id": "REQ-23",
-      "summary": "Add browser Notifications API support with permission prompting, an enable/disable toggle, and a Settings test notification action.",
-      "acceptanceCriteria": [
-        "Settings includes a Notifications section with: (1) enable/disable toggle and (2) “Send test notification” button",
-        "If permission is not granted, the UI clearly indicates that permission is required and provides an action to request permission",
-        "When notifications are disabled in Settings, the app does not send notifications even if permission is granted",
-        "Notifications work in supported desktop browsers (same implementation powers both 'web' and 'desktop' notifications)"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/notifications/notificationsApi.ts",
-          "operation": "create",
-          "description": "Implement a small wrapper around the browser Notifications API (support detection, current permission state, permission request, and sending notifications) to centralize logic and ensure consistent permission/setting checks."
-        },
-        {
-          "path": "frontend/src/components/settings/NotificationsCard.tsx",
-          "operation": "create",
-          "description": "Create a Settings Notifications section UI. Use the shadcn-ui components (Card, Button, Switch, Label) to provide an enable/disable toggle, a permission request action when needed, and a “Send test notification” button. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/SettingsPage.tsx",
-          "operation": "modify",
-          "description": "Wire the new NotificationsCard into Settings and connect it to global state (read current preference, dispatch updates). Use shadcn-ui layout patterns already present on the page. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/domain/attendanceTypes.ts",
-          "operation": "modify",
-          "description": "Extend AppSettings and DEFAULT_SETTINGS to include notification preference(s) (e.g., enableNotifications) with safe defaults, without altering existing attendance calculation logic or other data model behavior."
-        }
-      ]
-    },
-    {
-      "id": "REQ-24",
-      "summary": "Trigger in-app/on-device notifications (while the app is running) after successful class marking, respecting user setting and permission state.",
-      "acceptanceCriteria": [
-        "After a user marks a class (attended/missed/cancelled) successfully, the app can show a notification summarizing the action when notifications are enabled and permission is granted",
-        "No notification is shown if notifications are disabled or permission is not granted",
-        "The notification content is in English and does not contain Caffeine branding"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/notifications/localNotificationMessages.ts",
-          "operation": "create",
-          "description": "Add helper(s) to build English notification title/body strings summarizing attendance marking actions (attended/missed/cancelled) with no Caffeine branding."
-        },
-        {
-          "path": "frontend/src/pages/HomeDashboardPage.tsx",
-          "operation": "modify",
-          "description": "After successfully saving marked classes (after dispatching ADD_EVENTS), call the notifications wrapper to show a local notification summary only when notifications are enabled in settings and browser permission is granted."
-        }
-      ]
-    },
-    {
-      "id": "REQ-25",
-      "summary": "Persist notification preferences through existing IndexedDB persistence and export/import backup flow without breaking older backups.",
-      "acceptanceCriteria": [
-        "Notification preference(s) persist across refresh/reload",
-        "Exported backup includes notification preference(s)",
-        "Importing an older backup (without notification fields) still works and defaults notification preference(s) safely"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/backup/backupSchema.ts",
-          "operation": "modify",
-          "description": "Ensure backup migration continues to merge settings with updated DEFAULT_SETTINGS so older backups without notification fields import safely and notification preference(s) default correctly."
-        },
-        {
-          "path": "frontend/src/state/persistence.ts",
-          "operation": "modify",
-          "description": "Confirm loaded state validation and fallbacks remain compatible after adding notification preference(s) to settings, preserving existing stored data behavior."
-        },
-        {
-          "path": "frontend/src/domain/attendanceTypes.ts",
-          "operation": "modify",
-          "description": "Ensure DEFAULT_SETTINGS contains the notification preference default so both IndexedDB load and backup migration reliably populate it when missing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-26",
-      "summary": "Add clear English explanatory copy in Settings describing notification behavior and limitations for this web app.",
-      "acceptanceCriteria": [
-        "Settings shows English explanatory text describing permission requirements and that notifications are only triggered while the app is running (no push delivery guarantee)"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/settings/NotificationsCard.tsx",
-          "operation": "modify",
-          "description": "Add clear English user-facing copy explaining: notifications require browser permission; notifications are triggered only while the app is running; and there is no guaranteed delivery when the app/browser is closed. Use shadcn-ui typography/layout conventions. Verify the component's usage instructions before implementing."
+          "description": "Ensure the favicon <link> references /assets/generated/bunkpro-favicon.dim_32x32.png (and update it if it points elsewhere). Verify the component's usage instructions before implementing."
         }
       ]
     }

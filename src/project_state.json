@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
+  "projectStateVersion": 11,
   "summary": "Build “BunkPro”, a fully functional Android smart attendance manager for college students with BunkWell-equivalent core features/logic, redesigned premium modern UI/UX, offline local storage, backup/restore, and thorough testing.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -9,11 +9,12 @@
     "Compatibility with latest Android SDK; prioritize stability (zero crashes, no memory leaks)",
     "Ensure the user-provided BunkPro logo is integrated into the app branding (app icon/header as applicable) and splash/launch screen during final polish.",
     "Ensure no third-party/white-label branding (e.g., “Build with Caffeine AI”) appears anywhere in the app UI, splash screen, settings/about, or build artifacts.",
-    "Notifications scope added: implement web push notifications, desktop notifications, and local notifications (clarify platform support/approach for Android vs web/desktop)."
+    "Notifications scope added: implement web push notifications, desktop notifications, and local notifications (clarify platform support/approach for Android vs web/desktop).",
+    "Branding scope: create new BunkPro logo assets (icon-only + full wordmark) with dark/light variants; must be flat, minimal, and legible at small sizes (48x48)."
   ],
   "known_issues": [],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Exact raster conversion of the uploaded logo (image.png) into a square static asset (bunkpro-logo.dim_1024x1024.png)\n- Exact favicon generation from the uploaded logo (image.png) (bunkpro-favicon.dim_32x32.png)",
+  "imageRequirements": "## Required Images\n- Minimal flat app icon mark (calendar/checkmark OR calendar/graph arrow OR progress-ring ‘B’), deep purple #6C4DFF with subtle indigo gradient (bunkpro-app-icon-light.dim_1024x1024.png)\n- Minimal flat app icon mark (same design), optimized for dark backgrounds (bunkpro-app-icon-dark.dim_1024x1024.png)\n- Horizontal logo with icon + ‘BunkPro’ wordmark (Bunk bold, Pro lighter) + tagline ‘Track Smart.’, optimized for light backgrounds (bunkpro-logo-horizontal-light.dim_1600x500.png)\n- Horizontal logo with icon + ‘BunkPro’ wordmark (Bunk bold, Pro lighter) + tagline ‘Track Smart.’, optimized for dark backgrounds (bunkpro-logo-horizontal-dark.dim_1600x500.png)\n- Favicon derived from the app icon mark (bunkpro-favicon.dim_32x32.png)",
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -206,6 +207,38 @@
         "REQ-26"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-generate-a-new-modern-minimal-professional-bunkpro-logo-set-that-follows-the-provided-style-requirements-flat-clean-premium-tech-gen-z-recognizable-at-48-48-and-includes-1-app-icon-only-square-2-full-horizontal-logo-with-text-each-in-both-dark-background-and-light-background-variants-using-the-palette-centered-on-deep-purple-6c4dff-optionally-an-indigo-gradient-with-soft-white-light-gray-and-an-optional-subtle-neon-blue-pink-accent-typography-must-be-modern-geometric-sans-serif-with-rounded-edges-with-bunk-bold-and-pro-lighter-and-the-tagline-text-exactly-track-smart",
+      "title": "Generate a new modern, minimal, professional BunkPro logo set that follows the provided style requirements (flat, clean, premium/tech, Gen‑Z, recognizable at 48×48) and includes: (1) app icon only (square), (2) full horizontal logo with text, each in both dark-background and light-background variants, using the palette centered on deep purple #6C4DFF (optionally an indigo gradient) with soft white/light gray and an optional subtle neon blue/pink accent; typography must be modern geometric sans-serif with rounded edges, with “Bunk” bold and “Pro” lighter, and the tagline text exactly “Track Smart.”.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-the-newly-generated-logo-assets-to-the-app-as-static-files-under-frontend-public-assets-generated-and-wire-them-into-all-existing-branding-placements-at-minimum-initial-loading-splash-and-settings-about-selecting-the-appropriate-dark-light-variant-based-on-current-theme",
+      "title": "Add the newly generated logo assets to the app as static files under frontend/public/assets/generated and wire them into all existing branding placements (at minimum: Initial loading splash and Settings → About), selecting the appropriate dark/light variant based on current theme.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-app-s-branding-constants-so-that-a-the-tagline-displayed-in-the-ui-uses-the-exact-text-track-smart-and-b-the-logo-path-s-support-theme-aware-dark-light-selection-without-editing-any-immutable-frontend-paths",
+      "title": "Update the app’s branding constants so that (a) the tagline displayed in the UI uses the exact text “Track Smart.” and (b) the logo path(s) support theme-aware dark/light selection without editing any immutable frontend paths.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-and-set-a-matching-favicon-based-on-the-new-app-icon-and-ensure-frontend-index-html-references-the-updated-favicon-file-under-frontend-public-assets-generated",
+      "title": "Generate and set a matching favicon based on the new app icon, and ensure frontend/index.html references the updated favicon file under frontend/public/assets/generated.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -306,6 +339,12 @@
     {
       "id": "AR-29",
       "summary": "Add notifications features: web notifications (push), desktop notifications, and local notifications.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Design a modern, minimal BunkPro logo/branding set with icon + typography, including app icon (square), full horizontal logo, and dark/light background variants, matching the specified purple/indigo tech aesthetic and Gen‑Z premium style.",
       "reqIds": [],
       "status": "pending"
     }

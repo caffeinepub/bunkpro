@@ -1,14 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Use the uploaded logo (image.png) exactly everywhere in the app (including favicon) and add in-browser notification features with user controls and persistence.
+**Goal:** Refresh BunkPro branding by generating a new modern, minimal logo set (icon + horizontal wordmark) with dark/light variants, and integrate it across the app with theme-aware selection.
 
 **Planned changes:**
-- Replace all in-app logo usages (initial loading splash, Settings → About, and any other placements) to use only the uploaded image.png exactly as provided, with no redesign or alterations.
-- Update the browser tab icon/favicon to match the uploaded image.png exactly and ensure it’s referenced from frontend static assets via frontend/index.html.
-- Add a Notifications section in Settings with an enable/disable toggle, a permission request flow, and a “Send test notification” action using the browser Notifications API.
-- Implement in-app “local notifications” triggered by app events while the app is running (e.g., after successfully marking a class attended/missed/cancelled), respecting the notifications toggle and permission state.
-- Persist notification preference(s) through the existing local persistence and backup/restore flow (IndexedDB + export/import), remaining compatible with older backups.
-- Add clear English explanatory copy in Settings describing permission requirements and limitations (e.g., no guaranteed delivery when the app is closed).
+- Generate four new logo assets (square app icon + horizontal logo with “BunkPro” and tagline “Track Smart.”), each with light-background and dark-background variants.
+- Add the new logo assets under `frontend/public/assets/generated` and update branding placements (at minimum: initial loading splash and Settings → About) to use theme-appropriate variants via absolute `/assets/generated/...` paths.
+- Update branding constants to (a) use the exact tagline text “Track Smart.” and (b) provide theme-aware logo path selection for splash and about views.
+- Generate a matching 32×32 favicon derived from the new app icon and update `frontend/index.html` to reference it.
 
-**User-visible outcome:** The app shows only the uploaded logo everywhere (including the favicon). Users can enable/disable notifications in Settings, grant permission, send a test notification, and receive in-app notifications after marking a class while the app is running; the preference is saved and included in backups.
+**User-visible outcome:** The app displays the new BunkPro icon/wordmark and the exact “Track Smart.” tagline on the splash and About screen, automatically switching the correct light/dark logo variant with the current theme, and the browser tab favicon matches the new icon.

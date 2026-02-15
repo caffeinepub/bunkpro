@@ -1,0 +1,123 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-15T12:39:42.866Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 6,
+    "implemented": 6,
+    "items": [
+      {
+        "id": "REQ-21",
+        "summary": "Replace the app’s branding assets so the uploaded file (image.png) is the only logo used, shown exactly as provided (no redesign/re-draw), in all existing logo placements including: Initial loading splash, Settings → About, and any other in-app logo usage.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/public/assets/generated/bunkpro-logo.dim_1024x1024.png",
+          "frontend/src/lib/branding.ts",
+          "frontend/src/components/system/InitialLoadSplash.tsx",
+          "frontend/src/components/settings/AboutCard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/public/assets/generated/bunkpro-logo.dim_1024x1024.png",
+          "frontend/src/lib/branding.ts",
+          "frontend/src/components/system/InitialLoadSplash.tsx",
+          "frontend/src/components/settings/AboutCard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-22",
+        "summary": "Update the browser tab icon/favicon to match the uploaded logo (image.png) exactly as provided.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png",
+          "frontend/index.html"
+        ],
+        "matchedFiles": [
+          "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png"
+        ]
+      },
+      {
+        "id": "REQ-23",
+        "summary": "Add notification support using the browser Notifications API, including: permission prompt flow, an in-app toggle to enable/disable notifications, and a test notification action in Settings.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/notifications/notificationsApi.ts",
+          "frontend/src/components/settings/NotificationsCard.tsx",
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/domain/attendanceTypes.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/notifications/notificationsApi.ts",
+          "frontend/src/components/settings/NotificationsCard.tsx",
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/domain/attendanceTypes.ts"
+        ]
+      },
+      {
+        "id": "REQ-24",
+        "summary": "Implement “local notifications” behavior for this web app as on-device/in-app notifications triggered by app events while the app is running (e.g., after successfully saving a class mark), respecting the notifications setting and browser permission state.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/notifications/localNotificationMessages.ts",
+          "frontend/src/pages/HomeDashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/notifications/localNotificationMessages.ts",
+          "frontend/src/pages/HomeDashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-25",
+        "summary": "Persist the new notification-related user preference(s) in the existing local persistence/backup/restore flow (IndexedDB + export/import backup), without breaking existing stored data.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/backup/backupSchema.ts",
+          "frontend/src/state/persistence.ts",
+          "frontend/src/domain/attendanceTypes.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/backup/backupSchema.ts",
+          "frontend/src/state/persistence.ts",
+          "frontend/src/domain/attendanceTypes.ts"
+        ]
+      },
+      {
+        "id": "REQ-26",
+        "summary": "Add clear user-facing copy in Settings clarifying the supported notification behavior and limitations for this web app (e.g., notifications require browser permission; no guaranteed delivery when the app is closed).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/settings/NotificationsCard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/settings/NotificationsCard.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png",
+    "frontend/public/assets/generated/bunkpro-logo.dim_1024x1024.png",
+    "frontend/src/backup/backupSchema.ts",
+    "frontend/src/components/settings/AboutCard.tsx",
+    "frontend/src/components/settings/NotificationsCard.tsx",
+    "frontend/src/components/system/InitialLoadSplash.tsx",
+    "frontend/src/domain/attendanceTypes.ts",
+    "frontend/src/lib/branding.ts",
+    "frontend/src/notifications/localNotificationMessages.ts",
+    "frontend/src/notifications/notificationsApi.ts",
+    "frontend/src/pages/HomeDashboardPage.tsx",
+    "frontend/src/pages/SettingsPage.tsx",
+    "frontend/src/state/persistence.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

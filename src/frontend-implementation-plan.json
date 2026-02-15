@@ -1,0 +1,151 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Exact logo replacement + browser Notifications API settings and in-app notifications",
+  "requirements": [
+    {
+      "id": "REQ-21",
+      "summary": "Replace all in-app logo placements to use only the uploaded logo raster asset exactly as provided.",
+      "acceptanceCriteria": [
+        "InitialLoadSplash displays the uploaded logo image exactly (no color/shape changes)",
+        "Settings → About displays the uploaded logo image exactly (no color/shape changes)",
+        "No other logo asset is shown anywhere in the UI (only the uploaded logo)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/bunkpro-logo.dim_1024x1024.png",
+          "operation": "create",
+          "description": "Add the required generated square logo asset as an exact raster conversion of the uploaded image.png at frontend/public/assets/generated/bunkpro-logo.dim_1024x1024.png."
+        },
+        {
+          "path": "frontend/src/lib/branding.ts",
+          "operation": "create",
+          "description": "Create a small branding helper exporting the single allowed logo asset path and related accessible alt text so all logo placements reference the same source of truth."
+        },
+        {
+          "path": "frontend/src/components/system/InitialLoadSplash.tsx",
+          "operation": "modify",
+          "description": "Update the splash screen to import and use the shared branding logo path (from frontend/src/lib/branding.ts) so the only displayed logo is the uploaded logo asset exactly as provided."
+        },
+        {
+          "path": "frontend/src/components/settings/AboutCard.tsx",
+          "operation": "modify",
+          "description": "Update Settings → About to import and use the shared branding logo path (from frontend/src/lib/branding.ts) and ensure no other logo assets are referenced anywhere in this card."
+        }
+      ]
+    },
+    {
+      "id": "REQ-22",
+      "summary": "Set the browser tab favicon to the generated favicon derived from the uploaded logo.",
+      "acceptanceCriteria": [
+        "The favicon shown in the browser tab uses the uploaded logo image",
+        "The favicon asset is served from frontend static assets and referenced by frontend/index.html"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png",
+          "operation": "create",
+          "description": "Add the required generated favicon asset as an exact favicon conversion of the uploaded image.png at frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png."
+        },
+        {
+          "path": "frontend/index.html",
+          "operation": "modify",
+          "description": "Verify and (if needed) update the favicon <link> tag to reference frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png so the tab icon matches the uploaded logo exactly."
+        }
+      ]
+    },
+    {
+      "id": "REQ-23",
+      "summary": "Add browser Notifications API support with permission prompting, an enable/disable toggle, and a Settings test notification action.",
+      "acceptanceCriteria": [
+        "Settings includes a Notifications section with: (1) enable/disable toggle and (2) “Send test notification” button",
+        "If permission is not granted, the UI clearly indicates that permission is required and provides an action to request permission",
+        "When notifications are disabled in Settings, the app does not send notifications even if permission is granted",
+        "Notifications work in supported desktop browsers (same implementation powers both 'web' and 'desktop' notifications)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/notifications/notificationsApi.ts",
+          "operation": "create",
+          "description": "Implement a small wrapper around the browser Notifications API (support detection, current permission state, permission request, and sending notifications) to centralize logic and ensure consistent permission/setting checks."
+        },
+        {
+          "path": "frontend/src/components/settings/NotificationsCard.tsx",
+          "operation": "create",
+          "description": "Create a Settings Notifications section UI. Use the shadcn-ui components (Card, Button, Switch, Label) to provide an enable/disable toggle, a permission request action when needed, and a “Send test notification” button. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/SettingsPage.tsx",
+          "operation": "modify",
+          "description": "Wire the new NotificationsCard into Settings and connect it to global state (read current preference, dispatch updates). Use shadcn-ui layout patterns already present on the page. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/domain/attendanceTypes.ts",
+          "operation": "modify",
+          "description": "Extend AppSettings and DEFAULT_SETTINGS to include notification preference(s) (e.g., enableNotifications) with safe defaults, without altering existing attendance calculation logic or other data model behavior."
+        }
+      ]
+    },
+    {
+      "id": "REQ-24",
+      "summary": "Trigger in-app/on-device notifications (while the app is running) after successful class marking, respecting user setting and permission state.",
+      "acceptanceCriteria": [
+        "After a user marks a class (attended/missed/cancelled) successfully, the app can show a notification summarizing the action when notifications are enabled and permission is granted",
+        "No notification is shown if notifications are disabled or permission is not granted",
+        "The notification content is in English and does not contain Caffeine branding"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/notifications/localNotificationMessages.ts",
+          "operation": "create",
+          "description": "Add helper(s) to build English notification title/body strings summarizing attendance marking actions (attended/missed/cancelled) with no Caffeine branding."
+        },
+        {
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
+          "operation": "modify",
+          "description": "After successfully saving marked classes (after dispatching ADD_EVENTS), call the notifications wrapper to show a local notification summary only when notifications are enabled in settings and browser permission is granted."
+        }
+      ]
+    },
+    {
+      "id": "REQ-25",
+      "summary": "Persist notification preferences through existing IndexedDB persistence and export/import backup flow without breaking older backups.",
+      "acceptanceCriteria": [
+        "Notification preference(s) persist across refresh/reload",
+        "Exported backup includes notification preference(s)",
+        "Importing an older backup (without notification fields) still works and defaults notification preference(s) safely"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/backup/backupSchema.ts",
+          "operation": "modify",
+          "description": "Ensure backup migration continues to merge settings with updated DEFAULT_SETTINGS so older backups without notification fields import safely and notification preference(s) default correctly."
+        },
+        {
+          "path": "frontend/src/state/persistence.ts",
+          "operation": "modify",
+          "description": "Confirm loaded state validation and fallbacks remain compatible after adding notification preference(s) to settings, preserving existing stored data behavior."
+        },
+        {
+          "path": "frontend/src/domain/attendanceTypes.ts",
+          "operation": "modify",
+          "description": "Ensure DEFAULT_SETTINGS contains the notification preference default so both IndexedDB load and backup migration reliably populate it when missing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-26",
+      "summary": "Add clear English explanatory copy in Settings describing notification behavior and limitations for this web app.",
+      "acceptanceCriteria": [
+        "Settings shows English explanatory text describing permission requirements and that notifications are only triggered while the app is running (no push delivery guarantee)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/settings/NotificationsCard.tsx",
+          "operation": "modify",
+          "description": "Add clear English user-facing copy explaining: notifications require browser permission; notifications are triggered only while the app is running; and there is no guaranteed delivery when the app/browser is closed. Use shadcn-ui typography/layout conventions. Verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
+}

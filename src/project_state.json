@@ -1,0 +1,317 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 9,
+  "summary": "Build “BunkPro”, a fully functional Android smart attendance manager for college students with BunkWell-equivalent core features/logic, redesigned premium modern UI/UX, offline local storage, backup/restore, and thorough testing.",
+  "architectural_notes": [
+    "Android app using MVVM architecture (preferred) with clean structure and error handling",
+    "Offline-first app using local Room/SQLite database (secure local storage)",
+    "Do not alter BunkWell-equivalent attendance calculation logic; focus changes on UI/UX, performance, and visual polish",
+    "Compatibility with latest Android SDK; prioritize stability (zero crashes, no memory leaks)",
+    "Ensure the user-provided BunkPro logo is integrated into the app branding (app icon/header as applicable) and splash/launch screen during final polish.",
+    "Ensure no third-party/white-label branding (e.g., “Build with Caffeine AI”) appears anywhere in the app UI, splash screen, settings/about, or build artifacts.",
+    "Notifications scope added: implement web push notifications, desktop notifications, and local notifications (clarify platform support/approach for Android vs web/desktop)."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Exact raster conversion of the uploaded logo (image.png) into a square static asset (bunkpro-logo.dim_1024x1024.png)\n- Exact favicon generation from the uploaded logo (image.png) (bunkpro-favicon.dim_32x32.png)",
+  "existing_features": [
+    {
+      "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
+      "title": "Implement the core data model and logic for subject-wise attendance tracking, including: subjects (add/edit/delete), per-subject counters for Attended/Missed/Cancelled/Extra classes, class exchanges, per-subject attendance percentage, overall attendance percentage, reset attendance for a subject, and a target attendance percentage setting used by calculators. All calculations must correctly handle edge cases such as 0 total classes and 100% attendance.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-offline-first-local-persistence-layer-for-all-app-data-subjects-timetable-class-history-events-settings-like-target-and-theme-data-must-be-stored-locally-in-the-browser-e-g-indexeddb-and-loaded-on-startup-with-robust-error-handling-and-no-data-loss-on-refresh",
+      "title": "Create an offline-first local persistence layer for all app data (subjects, timetable, class history/events, settings like target % and theme). Data must be stored locally in the browser (e.g., IndexedDB) and loaded on startup, with robust error handling and no data loss on refresh.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-local-backup-restore-minimum-local-backup-allow-exporting-all-app-data-to-a-file-and-importing-it-back-including-validation-versioning-and-a-clear-warning-that-restore-replaces-current-data",
+      "title": "Implement local backup & restore (minimum local backup): allow exporting all app data to a file and importing it back, including validation, versioning, and a clear warning that restore replaces current data.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-home-dashboard-screen-with-overall-attendance-subject-wise-cards-animated-circular-progress-indicators-per-subject-quick-mark-today-action-and-insight-callouts-such-as-you-can-bunk-x-more-classes-and-attend-next-y-classes-to-reach-z-based-on-the-current-target-percentage",
+      "title": "Build the Home Dashboard screen with: overall attendance %, subject-wise cards, animated circular progress indicators per subject, quick “Mark Today” action, and insight callouts such as “You can bunk X more classes” and “Attend next Y classes to reach Z%” based on the current target percentage.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-subject-management-ui-flows-add-subject-edit-subject-delete-subject-with-a-confirmation-dialog-and-reset-subject-attendance-with-a-confirmation-dialog",
+      "title": "Implement subject management UI flows: add subject, edit subject, delete subject with a confirmation dialog, and reset subject attendance with a confirmation dialog.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-the-timetable-screen-with-a-clean-weekly-grid-layout-for-day-wise-subjects-including-tapping-to-edit-subjects-in-a-slot-long-press-or-equivalent-to-add-an-extra-class-and-support-for-recording-class-exchanges-tied-to-the-timetable",
+      "title": "Create the Timetable screen with a clean weekly grid layout for day-wise subjects, including: tapping to edit subjects in a slot, long-press (or equivalent) to add an extra class, and support for recording class exchanges tied to the timetable.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-the-subject-details-screen-for-a-selected-subject-including-attendance-stats-summary-calendar-view-of-class-events-an-attendance-trend-graph-safe-bunk-calculator-and-a-reset-button",
+      "title": "Create the Subject Details screen for a selected subject including: attendance stats summary, calendar view of class events, an attendance trend graph, safe bunk calculator, and a reset button.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-the-settings-screen-including-dark-light-mode-toggle-target-attendance-setting-app-theme-selector-backup-restore-actions-and-an-about-section-that-displays-bunkpro-and-tagline-track-smart-bunk-smarter",
+      "title": "Create the Settings screen including: Dark/Light mode toggle, target attendance % setting, app theme selector, Backup & Restore actions, and an About section that displays “BunkPro” and tagline “Track Smart. Bunk Smarter.”",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-navigation-structure-with-a-smooth-bottom-navigation-bar-connecting-home-timetable-and-settings-plus-deep-navigation-to-subject-details-from-subject-cards-ensure-smooth-micro-animations-and-transitions-without-jank",
+      "title": "Add navigation structure with a smooth bottom navigation bar connecting: Home, Timetable, and Settings, plus deep navigation to Subject Details from subject cards. Ensure smooth micro-animations and transitions without jank.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-the-premium-ui-ux-redesign-for-bunkpro-with-a-consistent-modern-aesthetic-soft-gradients-purple-blue-and-midnight-dark-themes-glassmorphism-or-soft-neumorphism-styling-rounded-cards-16-20px-radius-elegant-modern-sans-serif-typography-minimal-clutter-and-subtle-motion-design-e-g-progress-indicator-animations-button-press-feedback-do-not-change-any-core-attendance-logic-while-applying-these-design-improvements",
+      "title": "Implement the premium UI/UX redesign for BunkPro with a consistent modern aesthetic: soft gradients (purple-blue and midnight-dark themes), glassmorphism or soft neumorphism styling, rounded cards (16–20px radius), elegant modern sans-serif typography, minimal clutter, and subtle motion design (e.g., progress indicator animations, button press feedback). Do not change any core attendance logic while applying these design improvements.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-optional-premium-features-non-blocking-can-be-toggled-disabled-if-needed-simple-predictive-insights-based-on-recent-attendance-trend-motivational-streak-counter-and-a-danger-zone-alert-state-when-attendance-drops-below-the-target-threshold",
+      "title": "Implement optional premium features (non-blocking, can be toggled/disabled if needed): simple predictive insights (based on recent attendance trend), motivational streak counter, and a “Danger Zone” alert state when attendance drops below the target threshold.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-generated-branding-assets-and-wire-them-into-the-ui-a-premium-minimal-logo-for-bunkpro-with-an-academic-vibe-calendar-graph-combined-concept-and-an-elegant-splash-hero-graphic-used-on-initial-load-screen-web-equivalent",
+      "title": "Add generated branding assets and wire them into the UI: a premium minimal logo for “BunkPro” with an academic vibe (calendar + graph combined concept) and an elegant splash/hero graphic used on initial load screen (web equivalent).",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-provide-robust-error-handling-and-performance-safeguards-prevent-crashes-on-invalid-inputs-handle-storage-failures-keep-initial-load-fast-and-avoid-memory-leaks-e-g-clean-up-timers-animations",
+      "title": "Provide robust error handling and performance safeguards: prevent crashes on invalid inputs, handle storage failures, keep initial load fast, and avoid memory leaks (e.g., clean up timers/animations).",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-integrate-the-user-uploaded-logo-image-unnamed-1-jpg-as-the-app-s-primary-branding-asset-by-converting-it-into-static-generated-assets-and-wiring-them-into-all-existing-logo-placements-initial-loading-splash-and-settings-about",
+      "title": "Integrate the user-uploaded logo image (unnamed-1.jpg) as the app’s primary branding asset by converting it into static generated assets and wiring them into all existing logo placements (initial loading splash and Settings → About).",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-browser-favicon-using-the-user-provided-logo-mark-so-the-tab-icon-shows-bunkpro-branding",
+      "title": "Add a browser favicon using the user-provided logo mark so the tab icon shows BunkPro branding.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-perform-a-final-qa-ui-polish-pass-across-home-timetable-subject-details-and-settings-to-ensure-visual-consistency-smooth-micro-animations-no-jank-and-correct-responsive-layout-on-small-screens-without-changing-core-attendance-logic",
+      "title": "Perform a final QA + UI polish pass across Home, Timetable, Subject Details, and Settings to ensure visual consistency, smooth micro-animations (no jank), and correct responsive layout on small screens, without changing core attendance logic.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-current-bunkpro-branding-assets-used-by-the-app-with-the-newly-uploaded-logo-image-so-the-logo-appears-exactly-as-provided-no-redesign-and-ensure-the-updated-logo-is-used-everywhere-the-app-currently-displays-the-logo-including-the-initial-loading-splash-and-settings-about",
+      "title": "Replace the current BunkPro branding assets used by the app with the newly uploaded logo image so the logo appears exactly as provided (no redesign), and ensure the updated logo is used everywhere the app currently displays the logo (including the initial loading splash and Settings → About).",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-hide-all-built-with-caffeine-ai-caffeine-ai-attribution-and-links-from-the-ui-so-the-app-does-not-display-caffeine-branding-anywhere-in-app",
+      "title": "Remove/hide all “Built with Caffeine AI” / caffeine.ai attribution and links from the UI so the app does not display Caffeine branding anywhere in-app.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-app-s-branding-assets-so-the-uploaded-file-image-png-is-the-only-logo-used-shown-exactly-as-provided-no-redesign-re-draw-in-all-existing-logo-placements-including-initial-loading-splash-settings-about-and-any-other-in-app-logo-usage",
+      "title": "Replace the app’s branding assets so the uploaded file (image.png) is the only logo used, shown exactly as provided (no redesign/re-draw), in all existing logo placements including: Initial loading splash, Settings → About, and any other in-app logo usage.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-browser-tab-icon-favicon-to-match-the-uploaded-logo-image-png-exactly-as-provided",
+      "title": "Update the browser tab icon/favicon to match the uploaded logo (image.png) exactly as provided.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-notification-support-using-the-browser-notifications-api-including-permission-prompt-flow-an-in-app-toggle-to-enable-disable-notifications-and-a-test-notification-action-in-settings",
+      "title": "Add notification support using the browser Notifications API, including: permission prompt flow, an in-app toggle to enable/disable notifications, and a test notification action in Settings.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-local-notifications-behavior-for-this-web-app-as-on-device-in-app-notifications-triggered-by-app-events-while-the-app-is-running-e-g-after-successfully-saving-a-class-mark-respecting-the-notifications-setting-and-browser-permission-state",
+      "title": "Implement “local notifications” behavior for this web app as on-device/in-app notifications triggered by app events while the app is running (e.g., after successfully saving a class mark), respecting the notifications setting and browser permission state.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-persist-the-new-notification-related-user-preference-s-in-the-existing-local-persistence-backup-restore-flow-indexeddb-export-import-backup-without-breaking-existing-stored-data",
+      "title": "Persist the new notification-related user preference(s) in the existing local persistence/backup/restore flow (IndexedDB + export/import backup), without breaking existing stored data.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-clear-user-facing-copy-in-settings-clarifying-the-supported-notification-behavior-and-limitations-for-this-web-app-e-g-notifications-require-browser-permission-no-guaranteed-delivery-when-the-app-is-closed",
+      "title": "Add clear user-facing copy in Settings clarifying the supported notification behavior and limitations for this web app (e.g., notifications require browser permission; no guaranteed delivery when the app is closed).",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Implement subject-wise attendance tracking with add/edit/delete subjects, reset attendance, and delete confirmation dialogs",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Implement timetable creation (day-wise subjects) including extra classes and class exchanges",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Implement class marking workflow: attended, missed/bunked, cancelled, with accurate subject-wise % calculations",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Provide attendance insights and calculators: safe bunk count, required classes to reach target %, target % setting",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Create screens: Home dashboard (overall %, subject cards, animated circular progress, quick 'Mark Today'), Subject Details (stats, calendar view, trend graph), Timetable, Settings",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add dark/light mode toggle, theme selector, smooth animations (micro-interactions, bottom nav), premium modern UI style (gradients, glass/neumorphism)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Local persistence using Room/SQLite with secure storage; offline-first behavior",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Implement local backup & restore for app data (minimum local backup)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Add optional premium features: smart predictions (simple logic), motivational streak counter, danger-zone alerts, haptic feedback, animated splash screen/logo",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Testing & quality requirements: edge-case tests for calculations, deletion logic, timetable switching, dark mode rendering, small-screen UI overflow; performance (no crashes/leaks)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Add a test suite covering attendance calculations and critical flows: calculation edge cases (0 classes, 100%, extreme bunks), deletion and reset confirmation behavior, timetable switching/exchanges, and dark mode rendering sanity (no overflow on small screens).",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Final release polish pass: run a final QA check, apply UI/UX polish, and integrate the user-provided BunkPro logo (including splash/launch screen).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Use the attached BunkPro logo exactly as provided for BOTH the app icon and the splash screen branding.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Remove/disable any “Build with Caffeine AI” branding from the app build and UI.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "Update the app icon assets to use the newly uploaded logo for browser-tab/app icon usage (favicon and any existing icon references), ensuring the icon matches the uploaded logo exactly.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Add notifications features: web notifications (push), desktop notifications, and local notifications.",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "BunkPro",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

@@ -1,0 +1,141 @@
+{
+  "kind": "build_request",
+  "title": "Use uploaded logo exactly everywhere + add in-browser notification features",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-21",
+      "text": "Replace the app’s branding assets so the uploaded file (image.png) is the only logo used, shown exactly as provided (no redesign/re-draw), in all existing logo placements including: Initial loading splash, Settings → About, and any other in-app logo usage.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4"
+        ],
+        "quotes": [
+          "add only and exactly this logo"
+        ]
+      },
+      "acceptanceCriteria": [
+        "InitialLoadSplash displays the uploaded logo image exactly (no color/shape changes)",
+        "Settings → About displays the uploaded logo image exactly (no color/shape changes)",
+        "No other logo asset is shown anywhere in the UI (only the uploaded logo)"
+      ]
+    },
+    {
+      "id": "REQ-22",
+      "text": "Update the browser tab icon/favicon to match the uploaded logo (image.png) exactly as provided.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4"
+        ],
+        "quotes": [
+          "add only and exactly this logo"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The favicon shown in the browser tab uses the uploaded logo image",
+        "The favicon asset is served from frontend static assets and referenced by frontend/index.html"
+      ]
+    },
+    {
+      "id": "REQ-23",
+      "text": "Add notification support using the browser Notifications API, including: permission prompt flow, an in-app toggle to enable/disable notifications, and a test notification action in Settings.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4"
+        ],
+        "quotes": [
+          "add web notifications and dekstop notication and local notifications features"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Settings includes a Notifications section with: (1) enable/disable toggle and (2) “Send test notification” button",
+        "If permission is not granted, the UI clearly indicates that permission is required and provides an action to request permission",
+        "When notifications are disabled in Settings, the app does not send notifications even if permission is granted",
+        "Notifications work in supported desktop browsers (same implementation powers both 'web' and 'desktop' notifications)"
+      ]
+    },
+    {
+      "id": "REQ-24",
+      "text": "Implement “local notifications” behavior for this web app as on-device/in-app notifications triggered by app events while the app is running (e.g., after successfully saving a class mark), respecting the notifications setting and browser permission state.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4"
+        ],
+        "quotes": [
+          "local notifications features"
+        ]
+      },
+      "acceptanceCriteria": [
+        "After a user marks a class (attended/missed/cancelled) successfully, the app can show a notification summarizing the action when notifications are enabled and permission is granted",
+        "No notification is shown if notifications are disabled or permission is not granted",
+        "The notification content is in English and does not contain Caffeine branding"
+      ]
+    },
+    {
+      "id": "REQ-25",
+      "text": "Persist the new notification-related user preference(s) in the existing local persistence/backup/restore flow (IndexedDB + export/import backup), without breaking existing stored data.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4"
+        ],
+        "quotes": [
+          "add web notifications and dekstop notication and local notifications features"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Notification preference(s) persist across refresh/reload",
+        "Exported backup includes notification preference(s)",
+        "Importing an older backup (without notification fields) still works and defaults notification preference(s) safely"
+      ]
+    },
+    {
+      "id": "REQ-26",
+      "text": "Add clear user-facing copy in Settings clarifying the supported notification behavior and limitations for this web app (e.g., notifications require browser permission; no guaranteed delivery when the app is closed).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4"
+        ],
+        "quotes": [
+          "add web notifications and dekstop notication and local notifications features"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Settings shows English explanatory text describing permission requirements and that notifications are only triggered while the app is running (no push delivery guarantee)"
+      ]
+    }
+  ],
+  "constraints": [
+    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui",
+    "Do not introduce third-party push notification services or external backends for push delivery",
+    "Do not change core attendance calculation logic or existing attendance data model behavior",
+    "All user-facing text must be in English"
+  ],
+  "nonGoals": [
+    "Implementing true web push notifications with delivery while the app/browser is closed (requires push service infrastructure)",
+    "Mobile-native (Android/iOS) local notifications",
+    "Adding new backend canisters or external databases/services"
+  ],
+  "imageRequirements": {
+    "required": [
+      "Exact raster conversion of the uploaded logo (image.png) into a square static asset (bunkpro-logo.dim_1024x1024.png)",
+      "Exact favicon generation from the uploaded logo (image.png) (bunkpro-favicon.dim_32x32.png)"
+    ],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

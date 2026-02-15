@@ -1,0 +1,119 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-replace-the-app-s-branding-assets-so-the-uploaded-file-image-png-is-the-only-logo-used-shown-exactly-as-provided-no-redesign-re-draw-in-all-existing-logo-placements-including-initial-loading-splash-settings-about-and-any-other-in-app-logo-usage",
+      "featureTitle": "Replace the app’s branding assets so the uploaded file (image.png) is the only logo used, shown exactly as provided (no redesign/re-draw), in all existing logo placements including: Initial loading splash, Settings → About, and any other in-app logo usage.",
+      "files": [
+        "frontend/src/components/settings/AboutCard.tsx",
+        "frontend/src/components/system/InitialLoadSplash.tsx",
+        "frontend/src/lib/branding.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-21"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-browser-tab-icon-favicon-to-match-the-uploaded-logo-image-png-exactly-as-provided",
+      "featureTitle": "Update the browser tab icon/favicon to match the uploaded logo (image.png) exactly as provided.",
+      "files": [],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-22"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-notification-support-using-the-browser-notifications-api-including-permission-prompt-flow-an-in-app-toggle-to-enable-disable-notifications-and-a-test-notification-action-in-settings",
+      "featureTitle": "Add notification support using the browser Notifications API, including: permission prompt flow, an in-app toggle to enable/disable notifications, and a test notification action in Settings.",
+      "files": [
+        "frontend/src/components/settings/NotificationsCard.tsx",
+        "frontend/src/domain/attendanceTypes.ts",
+        "frontend/src/notifications/notificationsApi.ts",
+        "frontend/src/pages/SettingsPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-23"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-local-notifications-behavior-for-this-web-app-as-on-device-in-app-notifications-triggered-by-app-events-while-the-app-is-running-e-g-after-successfully-saving-a-class-mark-respecting-the-notifications-setting-and-browser-permission-state",
+      "featureTitle": "Implement “local notifications” behavior for this web app as on-device/in-app notifications triggered by app events while the app is running (e.g., after successfully saving a class mark), respecting the notifications setting and browser permission state.",
+      "files": [
+        "frontend/src/notifications/localNotificationMessages.ts",
+        "frontend/src/pages/HomeDashboardPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-24"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-persist-the-new-notification-related-user-preference-s-in-the-existing-local-persistence-backup-restore-flow-indexeddb-export-import-backup-without-breaking-existing-stored-data",
+      "featureTitle": "Persist the new notification-related user preference(s) in the existing local persistence/backup/restore flow (IndexedDB + export/import backup), without breaking existing stored data.",
+      "files": [
+        "frontend/src/backup/backupSchema.ts",
+        "frontend/src/domain/attendanceTypes.ts",
+        "frontend/src/state/persistence.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-25"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-clear-user-facing-copy-in-settings-clarifying-the-supported-notification-behavior-and-limitations-for-this-web-app-e-g-notifications-require-browser-permission-no-guaranteed-delivery-when-the-app-is-closed",
+      "featureTitle": "Add clear user-facing copy in Settings clarifying the supported notification behavior and limitations for this web app (e.g., notifications require browser permission; no guaranteed delivery when the app is closed).",
+      "files": [
+        "frontend/src/components/settings/NotificationsCard.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-26"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
   "frontend/src/domain/attendanceCalculations.ts": "Pure calculation utilities for attendance percentages, safe bunk calculator, required-to-target calculator, and insight messages with proper edge case handling.",
   "frontend/src/domain/attendanceReducer.ts": "State management reducer extended with actions for user profile management, point awards, and milestone tracking.",
   "frontend/src/domain/premiumInsights.ts": "Premium features calculations including trend prediction, streak counting, and motivational messages.",
-  "frontend/src/state/appStore.tsx": "React Context-based global state management with automatic persistence integration and loading states.",
+  "frontend/src/state/appStore.tsx": "Global app state management using React Context with automatic persistence and logout support that prevents re-saving state immediately after RESET_ALL action.",
   "frontend/src/storage/indexedDbClient.ts": "IndexedDB persistence client with error handling for saving/loading app state to browser storage.",
   "frontend/src/state/persistence.ts": "Persistence layer updated to safely merge user profile and gamification fields with defaults for backward compatibility.",
   "frontend/src/backup/backupSchema.ts": "Backup schema and migration logic extended to include user profile and streak milestone fields with backward-compatible defaults.",
@@ -28,7 +28,7 @@
   "frontend/src/pages/HomeDashboardPage.tsx": "Home dashboard with streak milestone detection using computeContinuousDayStreak and checkMilestoneEligibility, proper backend points submission via RankingService, and quick-action buttons now styled with purple primary background and foreground colors for consistent theming across all modes.",
   "frontend/src/pages/SubjectDetailsPage.tsx": "Subject details page with responsive stats display, safe bunk/required-to-target calculators, recent activity list, and action menu",
   "frontend/src/pages/TimetablePage.tsx": "Timetable page with responsive weekly grid, sticky time column, mobile-optimized cell sizing, and edit mode for assigning subjects",
-  "frontend/src/pages/SettingsPage.tsx": "Settings page with profile editor that syncs displayName to canister via saveCallerUserProfile, showing success toast on save and error toast only on failure, plus theme controls with correct prop names and backup/restore functionality.",
+  "frontend/src/pages/SettingsPage.tsx": "Settings page with profile editor, theme controls, backend profile sync, and logout functionality that deletes user data from backend, clears local storage, and signs out from Internet Identity.",
   "frontend/src/App.tsx": "Main app component with 5-tab navigation, login gate with proper onLogin handler, and automatic profile sync to canister backend using saveCallerUserProfile after login without blocking UI.",
   "frontend/src/index.css": "Global styles with OKLCH color system, motion preferences, smooth scrolling, and confetti animation keyframes respecting prefers-reduced-motion.",
   "frontend/tailwind.config.js": "Tailwind configuration extended with custom colors, shadows, and animations including fade-in and slide-in-from-bottom for premium UI effects.",
@@ -51,5 +51,6 @@
   "frontend/src/rank/RankingRepository.ts": "Repository layer that fetches leaderboard data from the canister using the correct getGlobalRankingPaginated method with pagination support and maps backend results to UI models with correct global rank numbering across pages.",
   "frontend/src/rank/RankingService.ts": "Service layer orchestrating ranking data fetch with backend-first approach, cache only as stale fallback on failure, polling-friendly API, and clear English error messaging distinguishing between stale cached data and total failure scenarios.",
   "frontend/src/rank/RankingScreen.tsx": "Main ranking screen component with Top-3 premium showcase, current user highlight using stable userId (principal) when available with fallback to displayName, one-time auto-scroll to user position, polling-based near-real-time updates with proper cleanup, manual refresh with retry action, and clear stale data fallback messaging.",
-  "frontend/src/backend.d.ts": "TypeScript interface definitions for the Motoko backend canister, including RankingDetails type with all required fields (displayName, college, points, streak, longestStreak, joinDate) and the correct method signatures for global ranking queries."
+  "frontend/src/backend.d.ts": "TypeScript interface definitions for the Motoko backend canister, including RankingDetails type with all required fields (displayName, college, points, streak, longestStreak, joinDate) and the correct method signatures for global ranking queries.",
+  "frontend/src/components/settings/LogoutCard.tsx": "Logout card component with destructive confirmation dialog that triggers the complete logout flow including backend deletion, local data wipe, and Internet Identity sign-out with proper loading state handling."
 }

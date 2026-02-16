@@ -8,12 +8,10 @@ import Iter "mo:core/Iter";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Migration "migration";
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-(with migration = Migration.run)
 actor {
   // Mix in the authorization logic
   let accessControlState = AccessControl.initState();
@@ -178,6 +176,22 @@ actor {
     };
   };
 
+  public shared ({ caller }) func deleteCallerUser() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can delete their profiles");
+    };
+
+    let existingUser = users.get(caller);
+    switch (existingUser) {
+      case (null) {
+        Runtime.trap("User not found");
+      };
+      case (?_) {
+        users.remove(caller);
+      };
+    };
+  };
+
   // Public query - accessible to all users including guests
   // Global leaderboard should be publicly accessible
   public query func getGlobalRankingPaginated(start : Nat, count : Nat) : async [RankingDetails] {
@@ -189,7 +203,7 @@ actor {
     };
 
     let end = Nat.min(start + count, sortedEntries.size());
-    let sliceSize = if (end > start) { end - start } else { 0 : Nat };
+    let sliceSize = if (end >= start) { 0 : Nat } else { end - start };
 
     Array.tabulate<RankingDetails>(
       sliceSize,
@@ -214,7 +228,7 @@ actor {
     };
 
     let end = Nat.min(start + count, sortedEntries.size());
-    let sliceSize = if (end > start) { end - start } else { 0 : Nat };
+    let sliceSize = if (end >= start) { 0 : Nat } else { end - start };
 
     Array.tabulate<RankingDetails>(
       sliceSize,

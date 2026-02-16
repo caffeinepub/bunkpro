@@ -1,110 +1,43 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T16:00:53.469Z",
-  "summary": "Diff adds a frontend ranking data layer (repository/service/cache), a new Rank screen with polling and some UX behaviors, and backend schema/migration scaffolding. However, the diff does not provide clear evidence that the backend now exposes the required global leaderboard contract, deterministic sorting with the specified tie-breakers, or the weekly snapshot/rollover idempotency logic. Some new UI/UX elements and cache behavior are added beyond the explicit request.",
+  "generatedAt": "2026-02-16T16:57:48.505Z",
+  "summary": "Frontend logout UI and flow were added (SettingsPage + new LogoutCard), including confirmation copy, backend delete call, IndexedDB clearing, rank cache clearing, RESET_ALL, and Internet Identity clear(). However, the diff summary does not show evidence that the required backend delete endpoint was implemented in backend/main.mo, and the visible button label capitalization does not exactly match the requested \"Log out\" text.",
   "missing_requirements": [
     {
-      "id": "REQ-71",
-      "requirement": "Remove any device-specific or caller-only ranking behavior so the Rank screen always loads a truly global leaderboard from the canister, with no code path filtering to the current user only.",
-      "reason": "Frontend calls a backend method named `getGlobalRankingPaginated`, but the backend diff portion shown does not include this method nor demonstrate that results are global and not filtered by caller. Without the backend endpoint implementation visible, global visibility cannot be confirmed from the provided diff summary.",
+      "id": "REQ-79",
+      "requirement": "Add a shared backend endpoint in backend/main.mo that lets the authenticated caller delete their own user record (users map entry for caller), returning a safe non-trapping result when no record exists, enforcing non-anonymous authorization, and ensuring caller no longer appears in getGlobalRankingPaginated results.",
+      "reason": "The frontend calls actor.deleteCallerUser(), but the provided backend/main.mo diff excerpt does not include any new shared method (e.g., deleteCallerUser) or logic showing deletion from the users map or its effect on ranking queries. Since backend/main.mo is truncated, there is insufficient evidence this endpoint was implemented.",
       "evidence": [
-        "frontend/src/rank/RankingRepository.ts",
-        "backend/main.mo (truncated)"
+        "backend/main.mo (truncated)",
+        "frontend/src/pages/SettingsPage.tsx (calls actor.deleteCallerUser())"
       ]
     },
     {
-      "id": "REQ-72",
-      "requirement": "Upgrade backend ranking data contract to expose user_id, name, college, total_points, current_streak, longest_streak, join_date for every user, and return global results (no per-caller filtering).",
-      "reason": "Backend types shown include `RankingDetails` without any `userId`/principal field, and no leaderboard query implementation is visible in the truncated backend diff. Frontend mapping also does not populate `userId` from backend data.",
+      "id": "REQ-80",
+      "requirement": "Settings displays a clearly labeled button: \"Log out\".",
+      "reason": "The added/used UI text appears as \"Log Out\" (capital O in \"Out\") in multiple places rather than exactly \"Log out\" as specified.",
       "evidence": [
-        "backend/main.mo (truncated): type RankingDetails = { displayName; college; points; streak; joinDate; longestStreak }",
-        "frontend/src/rank/RankingModel.ts: userId?: string is optional and not set in mapBackendEntryToUI",
-        "frontend/src/rank/RankingRepository.ts: expects getGlobalRankingPaginated"
-      ]
-    },
-    {
-      "id": "REQ-73",
-      "requirement": "Deterministic rank calculation at runtime using tie-breakers: total_points desc, longest_streak desc, join_date asc; rank = index + 1; do not persist static rank.",
-      "reason": "Backend comparator uses `points` then `streak` (not `longestStreak`) as the second tie-breaker. Also, no evidence is shown that the backend returns ranks computed from the full global dataset at runtime (only a sort helper is visible).",
-      "evidence": [
-        "backend/main.mo (truncated): compareEntriesForRanking uses Nat.compare(b.streak, a.streak)"
-      ]
-    },
-    {
-      "id": "REQ-74",
-      "requirement": "Fix pagination/incremental loading so Rank can scale to 100+ users without truncation and ranks remain stable across pages.",
-      "reason": "Frontend implements pagination-by-looping (`fetchAll` pulls pages of 100), but backend pagination endpoint `getGlobalRankingPaginated` is not shown in the backend diff, so end-to-end pagination correctness and non-truncation cannot be verified from the provided summary.",
-      "evidence": [
-        "frontend/src/rank/RankingRepository.ts: fetchAll() loops pages of 100 using getGlobalRankingPaginated",
-        "backend/main.mo (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-75",
-      "requirement": "Highlight current logged-in user reliably using a stable backend identifier (not displayName alone) and auto-scroll them into view when not Top 3.",
-      "reason": "The UI passes `currentUserId` from Internet Identity, but `RankingUIEntry.userId` is not populated from backend entries (mapping omits it). The `RankingScreen` function that finds the current user is truncated, so it is not verifiable that highlighting is based on stable identifier rather than name.",
-      "evidence": [
-        "frontend/src/rank/RankPage.tsx: currentUserId = identity?.getPrincipal().toString()",
-        "frontend/src/rank/RankingModel.ts: mapBackendEntryToUI does not set userId",
-        "frontend/src/rank/RankingScreen.tsx (truncated): findCurrentUser implementation not fully shown"
-      ]
-    },
-    {
-      "id": "REQ-76",
-      "requirement": "Implement/correct weekly snapshot/rollover logic with a stable last_update_date (or equivalent) so recalculation runs at most once per Sunday 12:00 AM boundary and is idempotent.",
-      "reason": "Backend adds `lastRecalculated : ?Time.Time` and migration sets it to null, but no logic is shown that computes the Sunday boundary, checks last update against the boundary, or performs idempotent weekly recalculation/snapshotting.",
-      "evidence": [
-        "backend/main.mo (truncated): var lastRecalculated : ?Time.Time = null",
-        "backend/migration.mo: lastRecalculated = null"
-      ]
-    },
-    {
-      "id": "REQ-78",
-      "requirement": "Update all user-facing text in the ranking flow to clear English, including stale cache warning and error state with retry action.",
-      "reason": "Service-layer strings include clear English stale/error messages, but the `RankingScreen` UI (where the messages and retry action must be presented) is truncated, so it is not verifiable that the UI actually displays these messages and includes a retry action when no cache exists.",
-      "evidence": [
-        "frontend/src/rank/RankingService.ts: error strings for stale and failure states",
-        "frontend/src/rank/RankingScreen.tsx (truncated)"
+        "frontend/src/components/settings/LogoutCard.tsx (CardTitle \"Log Out\", Button \"Log Out\", dialog title/actionLabel \"Log Out\")"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Introduced a localStorage-based ranking cache module and compatibility mapping that stores only rank/displayName/points.",
-      "reason": "BuildRequest allows cache only as a stale fallback (which is implemented), but the specific addition of a dedicated localStorage cache module and a reduced cached schema is not explicitly requested; it is an implementation choice not stated in requirements.",
+      "description": "Changed persistence behavior to skip saving immediately after RESET_ALL using an isResettingRef flag and special-case logic.",
+      "reason": "The BuildRequest only specifies that logout should dispatch RESET_ALL and clear local storage/IndexedDB; it does not request altering persistence save semantics or adding debounce/skip-save behavior post-reset.",
       "evidence": [
-        "frontend/src/rank/rankCache.ts",
-        "frontend/src/rank/RankingService.ts: saveToCacheCompat/loadFromCacheCompat"
-      ]
-    },
-    {
-      "description": "Added confetti/top-3 celebration UI behavior in the ranking screen.",
-      "reason": "Confetti behavior is not mentioned in the BuildRequest requirements or acceptance criteria.",
-      "evidence": [
-        "frontend/src/rank/RankingScreen.tsx (truncated): showConfetti state and ConfettiBurst import/usage"
-      ]
-    },
-    {
-      "description": "Backend migration removes/neutralizes email by setting it to null in migrated user data and returns a placeholder email value 'not-implemented' in getUserProfile.",
-      "reason": "Email field changes are not part of the ranking visibility/sorting/pagination/weekly snapshot requirements and appear unrelated to the requested ranking fixes.",
-      "evidence": [
-        "backend/migration.mo: email = null // Remove the email field in new version.",
-        "backend/main.mo (truncated): getUserProfile sets email = \"not-implemented\""
+        "frontend/src/state/appStore.tsx"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.66,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/rank/RankPage.tsx",
-    "frontend/src/rank/RankingModel.ts",
-    "frontend/src/rank/RankingRepository.ts",
-    "frontend/src/rank/RankingScreen.tsx",
-    "frontend/src/rank/RankingService.ts",
-    "frontend/src/rank/rankCache.ts",
+    "frontend/src/components/settings/LogoutCard.tsx",
+    "frontend/src/pages/SettingsPage.tsx",
+    "frontend/src/state/appStore.tsx",
     "project_state.json"
   ]
 }

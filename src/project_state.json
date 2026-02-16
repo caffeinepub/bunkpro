@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 37,
+  "projectStateVersion": 39,
   "summary": "Enhance BunkPro by upgrading and fixing the Global Weekly Ranking System to be fully cloud-based and truly global using Firebase Firestore as the only ranking source (no local-only/device-specific ranking). All users must be mutually visible and realtime-synced, ranks computed dynamically at runtime using deterministic tie-breakers, with weekly Sunday 12:00 AM rollover guarded by a last-update timestamp, and a premium leaderboard UI (Top-3 + dynamic rank badges, current-user highlight, pagination for 100+ users).",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -21,7 +21,7 @@
     "UI regression: “Mark Today’s Classes” and “View Rankings” buttons changed to black; should be purple per app theme.",
     "Global Ranking visibility bug: users are not mutually visible (leaderboard appears device-specific/partially loaded/incorrectly filtered; may only show current user or be truncated)."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -550,6 +550,22 @@
         "REQ-78"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-add-a-logout-button-in-the-settings-screen-that-when-confirmed-1-deletes-the-current-user-from-the-backend-ranking-database-and-2-erases-all-locally-stored-app-data-on-the-device-then-returns-the-user-to-the-login-screen",
+      "title": "Add a Logout button in the Settings screen that, when confirmed, (1) deletes the current user from the backend ranking database and (2) erases all locally stored app data on the device, then returns the user to the Login screen.",
+      "reqIds": [
+        "REQ-80"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-logout-flow-also-logs-the-user-out-of-internet-identity-so-the-next-session-starts-unauthenticated",
+      "title": "Ensure the logout flow also logs the user out of Internet Identity so the next session starts unauthenticated.",
+      "reqIds": [
+        "REQ-81"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -794,6 +810,20 @@
       "summary": "Implement and/or correct weekly ranking snapshot/rollover logic so weekly recalculation does not run multiple times unnecessarily: store a last_update_date (or equivalent timestamp) and only recalculate when the local time condition matches the chosen weekly boundary (Sunday 12:00 AM) and the last update is older than the current weekly boundary.",
       "reqIds": [
         "REQ-76"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-68",
+      "summary": "Add a Logout button that, when pressed, deletes the user’s data from the global ranking backend/database (removing them from the leaderboard) and clears any locally stored user/profile data.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-69",
+      "summary": "Add a backend canister endpoint that lets the authenticated caller delete their own user record so they are removed from the global leaderboard/ranking data.",
+      "reqIds": [
+        "REQ-79"
       ],
       "status": "pending"
     }

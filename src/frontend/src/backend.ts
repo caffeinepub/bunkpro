@@ -119,6 +119,7 @@ export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addPoints(pointsToAdd: bigint): Promise<AddPointsResult>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    deleteCallerUser(): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getGlobalRankingPaginated(start: bigint, count: bigint): Promise<Array<RankingDetails>>;
@@ -169,6 +170,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n3(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async deleteCallerUser(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteCallerUser();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteCallerUser();
             return result;
         }
     }

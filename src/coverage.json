@@ -1,128 +1,66 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T16:00:53.478Z",
+  "generatedAt": "2026-02-16T16:57:48.510Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 8,
-    "implemented": 5,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-71",
-        "summary": "Remove any device-specific or caller-only ranking behavior so the Rank screen always loads a truly global leaderboard from the Internet Computer canister (not from local cache/state), and ensure no code path filters rankings down to the current user only.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/rank/RankingRepository.ts",
-          "frontend/src/rank/RankingService.ts",
-          "frontend/src/rank/rankCache.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/rank/RankingRepository.ts",
-          "frontend/src/rank/RankingService.ts",
-          "frontend/src/rank/rankCache.ts"
-        ]
-      },
-      {
-        "id": "REQ-72",
-        "summary": "Upgrade the backend ranking data contract to expose all public ranking fields required by the UI for every user: user_id, name, college, total_points, current_streak, longest_streak, and join_date, and ensure the backend returns global results for all users (no per-caller filtering).",
+        "id": "REQ-79",
+        "summary": "Add a backend canister endpoint that lets the authenticated caller delete their own user record so they are removed from the global leaderboard/ranking data.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-73",
-        "summary": "Correct rank calculation to be deterministic and computed at runtime from the full global dataset using the exact tie-breakers: total_points (descending), longest_streak (descending), join_date (ascending), and assign rank = index + 1 without persisting a static rank value as user data.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-74",
-        "summary": "Fix pagination/incremental loading so that the Rank screen can scale to 100+ users without truncation, while still ensuring the UI can load and render the complete global ranking list (either via repeated page fetches until exhaustion or via an explicit 'load more' flow).",
+        "id": "REQ-80",
+        "summary": "Add a Logout button in the Settings screen that, when confirmed, (1) deletes the current user from the backend ranking database and (2) erases all locally stored app data on the device, then returns the user to the Login screen.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/rank/RankingRepository.ts",
-          "frontend/src/rank/RankingService.ts",
-          "frontend/src/rank/RankingScreen.tsx"
+          "frontend/src/components/settings/LogoutCard.tsx",
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/storage/indexedDbClient.ts",
+          "frontend/src/rank/rankCache.ts",
+          "frontend/src/state/appStore.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/rank/RankingRepository.ts",
-          "frontend/src/rank/RankingService.ts",
-          "frontend/src/rank/RankingScreen.tsx"
+          "frontend/src/components/settings/LogoutCard.tsx",
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/state/appStore.tsx"
         ]
       },
       {
-        "id": "REQ-75",
-        "summary": "Ensure the Rank UI highlights the current logged-in user reliably (even if other users share the same display name) and auto-scrolls them into view when they are not in the Top 3.",
+        "id": "REQ-81",
+        "summary": "Ensure the logout flow also logs the user out of Internet Identity so the next session starts unauthenticated.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/backend.d.ts",
-          "frontend/src/rank/RankingModel.ts",
-          "frontend/src/rank/RankPage.tsx",
-          "frontend/src/rank/RankingScreen.tsx"
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/hooks/useInternetIdentity.ts"
         ],
         "matchedFiles": [
-          "frontend/src/backend.d.ts",
-          "frontend/src/rank/RankingModel.ts",
-          "frontend/src/rank/RankPage.tsx",
-          "frontend/src/rank/RankingScreen.tsx"
-        ]
-      },
-      {
-        "id": "REQ-76",
-        "summary": "Implement and/or correct weekly ranking snapshot/rollover logic so weekly recalculation does not run multiple times unnecessarily: store a last_update_date (or equivalent timestamp) and only recalculate when the local time condition matches the chosen weekly boundary (Sunday 12:00 AM) and the last update is older than the current weekly boundary.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-77",
-        "summary": "Preserve near-real-time leaderboard updates without WebSockets by ensuring polling/refetching is safe (no memory leaks) and results remain consistent across devices; do not allow cached/stale data to override fresh global results when the backend is reachable.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/rank/RankingScreen.tsx",
-          "frontend/src/rank/RankingService.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/rank/RankingScreen.tsx",
-          "frontend/src/rank/RankingService.ts"
-        ]
-      },
-      {
-        "id": "REQ-78",
-        "summary": "Update all user-facing text in the ranking flow to be clear English, including explicit messaging when data is stale (cached fallback) or when the leaderboard cannot be loaded.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/rank/RankingService.ts",
-          "frontend/src/rank/RankingScreen.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/rank/RankingService.ts",
-          "frontend/src/rank/RankingScreen.tsx"
+          "frontend/src/pages/SettingsPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
+    "frontend/src/components/settings/LogoutCard.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/rank/RankPage.tsx",
-    "frontend/src/rank/RankingModel.ts",
-    "frontend/src/rank/RankingRepository.ts",
-    "frontend/src/rank/RankingScreen.tsx",
-    "frontend/src/rank/RankingService.ts",
-    "frontend/src/rank/rankCache.ts",
+    "frontend/src/pages/SettingsPage.tsx",
+    "frontend/src/state/appStore.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

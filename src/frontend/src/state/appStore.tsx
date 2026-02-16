@@ -1,6 +1,5 @@
-// Global app state management using React Context
-
-import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+// Global app state management using React Context with automatic persistence and logout support
+import React, { createContext, useContext, useReducer, useEffect, useRef, type ReactNode } from 'react';
 import type { AppState, Subject, ClassEvent, TimetableSlot, ClassExchange, AppSettings } from '../domain/attendanceTypes';
 import { DEFAULT_STATE } from '../domain/attendanceTypes';
 import { attendanceReducer, type AttendanceAction } from '../domain/attendanceReducer';
@@ -17,6 +16,7 @@ const AppContext = createContext<AppContextValue | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(attendanceReducer, DEFAULT_STATE);
   const [isLoading, setIsLoading] = React.useState(true);
+  const isResettingRef = useRef(false);
 
   // Load state on mount
   useEffect(() => {
@@ -42,14 +42,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Save state on changes (debounced)
+  // Save state on changes (debounced), but skip saving immediately after RESET_ALL
   useEffect(() => {
     if (isLoading) return;
     
+    // Check if this is a reset action
+    if (state === DEFAULT_STATE && !isResettingRef.current) {
+      isResettingRef.current = true;
+      // Don't save the reset state immediately
+      return;
+    }
+    
+    // Reset the flag after the first render following a reset
+    if (isResettingRef.current && state !== DEFAULT_STATE) {
+      isResettingRef.current = false;
+    }
+    
     const timeoutId = setTimeout(() => {
-      saveState(state).catch(error => {
-        console.error('Failed to save state:', error);
-      });
+      if (!isResettingRef.current) {
+        saveState(state).catch(error => {
+          console.error('Failed to save state:', error);
+        });
+      }
     }, 500);
     
     return () => clearTimeout(timeoutId);

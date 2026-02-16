@@ -1,175 +1,91 @@
 {
   "kind": "build_request",
-  "title": "Fix Global Ranking System visibility, sorting, and weekly snapshot logic",
+  "title": "Add Logout button that deletes user data locally and from global rankings",
   "projectName": "BunkPro",
-  "priority": "high",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-71",
-      "text": "Remove any device-specific or caller-only ranking behavior so the Rank screen always loads a truly global leaderboard from the Internet Computer canister (not from local cache/state), and ensure no code path filters rankings down to the current user only.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "All users are NOT visible to each other. Ranking is either device-specific, partially loaded, or incorrectly filtered.",
-          "Remove any ranking logic based on: Local storage ... Current-user-only filtering",
-          "Remove any query like: where user_id == current_user_id"
-        ]
-      },
-      "acceptanceCriteria": [
-        "With at least 3 different authenticated users, each user can open Rank and see all users (not only themselves).",
-        "No fetch call used by the Rank screen applies a filter that restricts results to the current caller.",
-        "Local storage / IndexedDB / in-memory app state is not used as the primary ranking source; if any cache is used, it is only a stale fallback when the canister cannot be reached and must be clearly labeled stale in UI."
-      ]
-    },
-    {
-      "id": "REQ-72",
-      "text": "Upgrade the backend ranking data contract to expose all public ranking fields required by the UI for every user: user_id, name, college, total_points, current_streak, longest_streak, and join_date, and ensure the backend returns global results for all users (no per-caller filtering).",
+      "id": "REQ-79",
+      "text": "Add a backend canister endpoint that lets the authenticated caller delete their own user record so they are removed from the global leaderboard/ranking data.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-5"
         ],
         "quotes": [
-          "Each document must contain: user_id name college total_points current_streak longest_streak join_date",
-          "Every logged-in user must fetch ALL users"
+          "and also add a logut button , if we press  it the data should be erased  from the the database and ranking"
         ]
       },
       "acceptanceCriteria": [
-        "Backend exposes a leaderboard query that returns entries containing: userId (or equivalent stable identifier), displayName/name, college, totalPoints, currentStreak, longestStreak, joinDate for every visible user.",
-        "The returned leaderboard data is global (derived from the canister’s full user set), not scoped to the caller.",
-        "No backend query used for leaderboard applies an unintended filter (e.g., by caller, by college substring in name, etc.)."
+        "A new shared backend method exists in `backend/main.mo` that deletes the `users` map entry for `caller` (no other users can be deleted by a non-admin).",
+        "After deletion, the caller no longer appears in `getGlobalRankingPaginated` results.",
+        "If the caller has no stored user record, the method returns a safe, non-trapping result indicating nothing was deleted (or a successful no-op).",
+        "The method enforces the same authorization expectations as other user-mutating endpoints (must be an authenticated user, not an anonymous/guest caller)."
       ]
     },
     {
-      "id": "REQ-73",
-      "text": "Correct rank calculation to be deterministic and computed at runtime from the full global dataset using the exact tie-breakers: total_points (descending), longest_streak (descending), join_date (ascending), and assign rank = index + 1 without persisting a static rank value as user data.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Sort by: total_points (descending) longest_streak (descending) join_date (ascending)",
-          "Assign ranks dynamically: For index i in sorted list: rank = i + 1",
-          "Do NOT store static rank in database. Rank must be calculated at runtime."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Given sample data (User A 100 points, User B 150 points, User C 80 points), all devices/users see ranks: 1 User B, 2 User A, 3 User C.",
-        "Ranks in the returned list are strictly increasing 1..N with no missing numbers and no duplicates.",
-        "If two users have equal total points, the user with higher longest streak ranks above; if still tied, the earlier join date ranks above.",
-        "Reopening the app without any backend data changes does not change ordering or rank numbers."
-      ]
-    },
-    {
-      "id": "REQ-74",
-      "text": "Fix pagination/incremental loading so that the Rank screen can scale to 100+ users without truncation, while still ensuring the UI can load and render the complete global ranking list (either via repeated page fetches until exhaustion or via an explicit 'load more' flow).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Display ALL users in scrollable list. No truncation. No limit unless pagination for 100+ users.",
-          "Be scalable to 100+ users"
-        ]
-      },
-      "acceptanceCriteria": [
-        "For N users (including N > 100), the UI can render all users in correct rank order (1..N) without truncation.",
-        "If pagination is used, fetching subsequent pages does not change earlier ranks and does not create duplicate/missing ranks.",
-        "Scrolling remains smooth and the layout does not overflow or jank with large lists."
-      ]
-    },
-    {
-      "id": "REQ-75",
-      "text": "Ensure the Rank UI highlights the current logged-in user reliably (even if other users share the same display name) and auto-scrolls them into view when they are not in the Top 3.",
+      "id": "REQ-80",
+      "text": "Add a Logout button in the Settings screen that, when confirmed, (1) deletes the current user from the backend ranking database and (2) erases all locally stored app data on the device, then returns the user to the Login screen.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-5"
         ],
         "quotes": [
-          "Highlight current user.",
-          "Ensure: • Highlight the current user."
+          "add a logut button , if we press  it the data should be erased  from the the database and ranking"
         ]
       },
       "acceptanceCriteria": [
-        "Current user highlight does not rely on displayName equality alone; it uses a stable user identifier from the backend (e.g., principal/user_id) to identify the row.",
-        "When the Rank screen opens and the current user is not in the Top 3, the list auto-scrolls to the highlighted row.",
-        "If multiple users have the same name, only the correct current user row is highlighted and labeled “You”."
+        "Settings displays a clearly labeled button: \"Log out\".",
+        "Pressing \"Log out\" opens a confirmation step with clear English copy explaining deletion impact (local data will be erased and leaderboard data will be deleted).",
+        "On confirm, the app calls the new backend delete endpoint when a backend actor is available; failure to reach the backend is shown as a clear English error and the app does not claim the leaderboard deletion succeeded.",
+        "On confirm, the app clears local app persistence by clearing IndexedDB (via the existing IndexedDB client) and resets in-memory state using the existing reducer action `RESET_ALL` so `state.userProfile` becomes null.",
+        "On confirm, the app clears any locally cached ranking data (e.g., the `rankCache` localStorage cache) so stale leaderboard data is not shown after logout.",
+        "After local erase completes, the UI returns to the Login flow (login gate is shown because `state.userProfile` is null)."
       ]
     },
     {
-      "id": "REQ-76",
-      "text": "Implement and/or correct weekly ranking snapshot/rollover logic so weekly recalculation does not run multiple times unnecessarily: store a last_update_date (or equivalent timestamp) and only recalculate when the local time condition matches the chosen weekly boundary (Sunday 12:00 AM) and the last update is older than the current weekly boundary.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "If weekly ranking is used: • Do NOT duplicate recalculation multiple times. • Store last_update_date. • Recalculate only if current day is Sunday AND last_update_date is older."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend stores a single authoritative last ranking update timestamp (or last snapshotted week marker) in stable state.",
-        "Weekly ranking recalculation is idempotent: repeated calls within the same week do not create duplicate snapshots or inconsistent results.",
-        "A week boundary rollover triggers at most one recalculation per week boundary and produces deterministic rankings based on the tie-breaker rules."
-      ]
-    },
-    {
-      "id": "REQ-77",
-      "text": "Preserve near-real-time leaderboard updates without WebSockets by ensuring polling/refetching is safe (no memory leaks) and results remain consistent across devices; do not allow cached/stale data to override fresh global results when the backend is reachable.",
+      "id": "REQ-81",
+      "text": "Ensure the logout flow also logs the user out of Internet Identity so the next session starts unauthenticated.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-5"
         ],
         "quotes": [
-          "The corrected ranking system must: • Be real-time synced • Be consistent across all devices"
+          "add a logut button"
         ]
       },
       "acceptanceCriteria": [
-        "While the Rank screen is visible, periodic refresh updates the leaderboard when backend data changes (e.g., points updates) without requiring a full app reload.",
-        "Timers/intervals are cleaned up on unmount/navigation and do not accumulate duplicate polling loops.",
-        "When backend fetch succeeds, the UI uses backend results (not cached data) and clears any stale-warning state."
-      ]
-    },
-    {
-      "id": "REQ-78",
-      "text": "Update all user-facing text in the ranking flow to be clear English, including explicit messaging when data is stale (cached fallback) or when the leaderboard cannot be loaded.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Use English for any user-facing text in the build request."
-        ]
-      },
-      "acceptanceCriteria": [
-        "When showing cached/fallback rankings, the UI displays a clear English warning that the leaderboard may be stale.",
-        "When the leaderboard cannot be loaded and no cache exists, the UI shows a clear English error state with a retry action.",
-        "No non-English strings are introduced in the ranking-related UI."
+        "The logout flow calls Internet Identity clear/logout using the existing `useInternetIdentity().clear()` API (without modifying any immutable files).",
+        "After logout, backend actor calls requiring authentication are no longer possible until the user logs in again via Internet Identity (where applicable).",
+        "User-facing error/success messages during logout are in English and do not show raw stack traces."
       ]
     }
   ],
   "constraints": [
-    "Do not rebuild the app; implement targeted fixes to the existing ranking architecture only.",
-    "Backend must remain a single Motoko actor in backend/main.mo; introduce backend/migration.mo only if stable state schema changes require migration.",
-    "Do not edit files under frontend/src/components/ui (read-only).",
-    "Firebase Firestore integration and security rules cannot be implemented on this platform; use the existing Internet Computer (Motoko) canister as the single global ranking source instead while achieving the same functional goals (global visibility, deterministic sorting, scalable loading)."
+    "Do not edit any files listed under `SYSTEM_CONTEXT.frontend.immutablePaths`.",
+    "Backend must remain a single-actor Motoko canister; implement changes in `backend/main.mo` only.",
+    "Do not introduce external databases or third-party auth providers beyond Internet Identity.",
+    "Use English for all user-facing text added or modified."
   ],
   "nonGoals": [
-    "Do not change any attendance tracking calculations or subject/timetable features.",
-    "Do not add third-party authentication providers; continue using Internet Identity.",
-    "Do not implement WebSockets or real-time sockets for leaderboard updates."
+    "Do not change core attendance tracking logic or calculations.",
+    "Do not add account recovery, multi-account switching, or admin user management UI.",
+    "Do not implement scheduled/background deletions; deletion happens only when the user explicitly logs out and confirms."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

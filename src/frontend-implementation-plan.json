@@ -1,130 +1,65 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "BunkPro: Fix global leaderboard visibility, pagination, highlighting, polling, and English messaging",
+  "title": "BunkPro — Logout with local wipe + leaderboard removal + Internet Identity sign-out",
   "requirements": [
     {
-      "id": "REQ-71",
-      "summary": "Ensure Rank always loads a truly global leaderboard from the canister (no caller-only/device-only filtering), with cache only as clearly-labeled stale fallback.",
+      "id": "REQ-80",
+      "summary": "Add a Settings-screen Log out button with confirmation that deletes leaderboard data (when possible) and wipes all local app persistence before returning to the Login flow.",
       "acceptanceCriteria": [
-        "With at least 3 different authenticated users, each user can open Rank and see all users (not only themselves).",
-        "No fetch call used by the Rank screen applies a filter that restricts results to the current caller.",
-        "Local storage / IndexedDB / in-memory app state is not used as the primary ranking source; if any cache is used, it is only a stale fallback when the canister cannot be reached and must be clearly labeled stale in UI."
+        "Settings displays a clearly labeled button: \"Log out\".",
+        "Pressing \"Log out\" opens a confirmation step with clear English copy explaining deletion impact (local data will be erased and leaderboard data will be deleted).",
+        "On confirm, the app calls the new backend delete endpoint when a backend actor is available; failure to reach the backend is shown as a clear English error and the app does not claim the leaderboard deletion succeeded.",
+        "On confirm, the app clears local app persistence by clearing IndexedDB (via the existing IndexedDB client) and resets in-memory state using the existing reducer action `RESET_ALL` so `state.userProfile` becomes null.",
+        "On confirm, the app clears any locally cached ranking data (e.g., the `rankCache` localStorage cache) so stale leaderboard data is not shown after logout.",
+        "After local erase completes, the UI returns to the Login flow (login gate is shown because `state.userProfile` is null)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/rank/RankingRepository.ts",
-          "operation": "modify",
-          "description": "Remove/avoid any non-global or compatibility method usage and fetch leaderboard exclusively via the canister’s global ranking capability (use getGlobalRankingPaginated). Ensure no code path requests caller-only subsets or college-filtered rankings for the main Rank screen, and preserve stable rank numbering across pages."
+          "path": "frontend/src/components/settings/LogoutCard.tsx",
+          "operation": "create",
+          "description": "Create a Settings \"Log out\" (destructive) UI section that uses the existing ConfirmDestructiveDialog (shadcn/ui AlertDialog wrapper) to present an English confirmation describing both local wipe and leaderboard deletion; on confirm it triggers the logout flow (backend deletion attempt + local wipes) and shows English success/error toasts. Use shadcn-ui Card/Button primitives for consistent styling. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/rank/RankingService.ts",
+          "path": "frontend/src/pages/SettingsPage.tsx",
           "operation": "modify",
-          "description": "Make backend fetch the primary source every time Rank loads/refreshes; only read from local cache when the backend cannot be reached. Ensure fresh backend results always override any cached/stale data and clear stale state on success."
+          "description": "Wire the new LogoutCard into the Settings screen so a clearly labeled \"Log out\" button is visible; connect it to the existing app store dispatch (RESET_ALL), IndexedDB clearing via the existing indexedDbClient, and ranking cache clearing via rankCache; call the backend delete capability via the existing actor (deleteCallerUser) only when appropriate, and show clear English error messages without stack traces. Use existing shadcn-ui layout components already used on this page. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/storage/indexedDbClient.ts",
+          "operation": "modify",
+          "description": "Ensure the local wipe path can reliably clear persisted app state by using the existing IndexedDB clear functionality (clearIndexedDB) and keeping the API stable for the Settings logout flow."
         },
         {
           "path": "frontend/src/rank/rankCache.ts",
           "operation": "modify",
-          "description": "Adjust cache shape to support a minimal stale fallback without implying it is authoritative; keep cache strictly optional for offline fallback and ensure it can be invalidated/cleared cleanly (no device-specific filtering logic)."
+          "description": "Ensure the logout flow can fully remove cached leaderboard data by using/confirming a single clear function (clearRankingCache) that removes the localStorage ranking cache key used by RankingService."
+        },
+        {
+          "path": "frontend/src/state/appStore.tsx",
+          "operation": "modify",
+          "description": "Adjust persistence behavior to avoid re-saving user data immediately after a logout reset (RESET_ALL) so the IndexedDB clear performed during logout is not immediately repopulated with prior state; keep login gating behavior intact (LoginPage shown when state.userProfile is null)."
         }
       ]
     },
     {
-      "id": "REQ-74",
-      "summary": "Fix scalable pagination/incremental loading so Rank can render complete global lists (100+ users) without truncation or rank instability.",
+      "id": "REQ-81",
+      "summary": "Extend the logout flow to also clear Internet Identity session so subsequent interactions are unauthenticated until login.",
       "acceptanceCriteria": [
-        "For N users (including N > 100), the UI can render all users in correct rank order (1..N) without truncation.",
-        "If pagination is used, fetching subsequent pages does not change earlier ranks and does not create duplicate/missing ranks.",
-        "Scrolling remains smooth and the layout does not overflow or jank with large lists."
+        "The logout flow calls Internet Identity clear/logout using the existing `useInternetIdentity().clear()` API (without modifying any immutable files).",
+        "After logout, backend actor calls requiring authentication are no longer possible until the user logs in again via Internet Identity (where applicable).",
+        "User-facing error/success messages during logout are in English and do not show raw stack traces."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/rank/RankingRepository.ts",
+          "path": "frontend/src/pages/SettingsPage.tsx",
           "operation": "modify",
-          "description": "Ensure pagination implementation supports repeated page fetching until exhaustion and computes ranks deterministically as (start + index + 1) without reshuffling earlier entries. Use the global ranking backend capability for each page."
+          "description": "Invoke Internet Identity logout via the existing useInternetIdentity().clear() as part of the confirmed logout sequence, ensuring the app returns to the login gate (state.userProfile becomes null) and user-facing messaging remains English and sanitized. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/rank/RankingService.ts",
+          "path": "frontend/src/hooks/useInternetIdentity.ts",
           "operation": "modify",
-          "description": "Expose and use a safe incremental loading flow (page-by-page) that can either auto-fetch until complete or support an explicit 'Load more' pattern without duplicating entries or altering existing ranks."
-        },
-        {
-          "path": "frontend/src/rank/RankingScreen.tsx",
-          "operation": "modify",
-          "description": "Update the Rank UI to support scalable incremental loading for 100+ users (either auto-fetching additional pages until complete, or adding an explicit 'Load more' action). Ensure the rendered list is complete and remains in stable rank order, without truncation."
-        }
-      ]
-    },
-    {
-      "id": "REQ-75",
-      "summary": "Highlight the current logged-in user by stable identifier (not displayName) and auto-scroll them into view when not in Top 3.",
-      "acceptanceCriteria": [
-        "Current user highlight does not rely on displayName equality alone; it uses a stable user identifier from the backend (e.g., principal/user_id) to identify the row.",
-        "When the Rank screen opens and the current user is not in the Top 3, the list auto-scrolls to the highlighted row.",
-        "If multiple users have the same name, only the correct current user row is highlighted and labeled “You”."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/backend.d.ts",
-          "operation": "modify",
-          "description": "Update frontend type definitions to match the upgraded leaderboard data contract needed by the Rank UI (include a stable user identifier field in the ranking entry type, plus college/points/streak/joinDate as exposed)."
-        },
-        {
-          "path": "frontend/src/rank/RankingModel.ts",
-          "operation": "modify",
-          "description": "Extend RankingUIEntry to include a stable user identifier (e.g., userId as string/Principal text) and map the backend ranking entry fields accurately (college, totalPoints, currentStreak, longestStreak, joinDate). Avoid any name-based identity assumptions."
-        },
-        {
-          "path": "frontend/src/rank/RankPage.tsx",
-          "operation": "modify",
-          "description": "Pass the current user’s stable identifier (from Internet Identity principal) into the ranking UI so highlighting/scrolling can be based on identifier rather than displayName."
-        },
-        {
-          "path": "frontend/src/rank/RankingScreen.tsx",
-          "operation": "modify",
-          "description": "Replace all current-user matching logic (highlighting, 'You' label, confetti eligibility, auto-scroll target) to use the stable user identifier from backend data + current principal, not displayName. Ensure auto-scroll triggers only when the identified row exists and user rank is > 3."
-        }
-      ]
-    },
-    {
-      "id": "REQ-77",
-      "summary": "Maintain near-real-time leaderboard updates via safe polling/refetching without memory leaks, never letting stale cache override fresh reachable backend results.",
-      "acceptanceCriteria": [
-        "While the Rank screen is visible, periodic refresh updates the leaderboard when backend data changes (e.g., points updates) without requiring a full app reload.",
-        "Timers/intervals are cleaned up on unmount/navigation and do not accumulate duplicate polling loops.",
-        "When backend fetch succeeds, the UI uses backend results (not cached data) and clears any stale-warning state."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/rank/RankingScreen.tsx",
-          "operation": "modify",
-          "description": "Harden polling lifecycle: ensure exactly one interval exists while the screen is mounted, clean up on unmount/actor change, and avoid overlapping refreshes. Ensure successful fetch clears stale-warning state and uses backend results."
-        },
-        {
-          "path": "frontend/src/rank/RankingService.ts",
-          "operation": "modify",
-          "description": "Ensure polling/refetch uses backend-first logic and never allows cached data to replace fresh results when backend fetch succeeds. Keep fallback cache strictly for failure scenarios."
-        }
-      ]
-    },
-    {
-      "id": "REQ-78",
-      "summary": "Ensure all ranking UI text is clear English, including explicit stale-data and cannot-load messaging with a retry action.",
-      "acceptanceCriteria": [
-        "When showing cached/fallback rankings, the UI displays a clear English warning that the leaderboard may be stale.",
-        "When the leaderboard cannot be loaded and no cache exists, the UI shows a clear English error state with a retry action.",
-        "No non-English strings are introduced in the ranking-related UI."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/rank/RankingService.ts",
-          "operation": "modify",
-          "description": "Standardize error messages returned to the UI in clear English, distinguishing between (a) cached stale fallback and (b) total failure without cache."
-        },
-        {
-          "path": "frontend/src/rank/RankingScreen.tsx",
-          "operation": "modify",
-          "description": "Update Rank screen messaging to clear English for all states (loading, empty, stale cached fallback, hard failure). Add an explicit retry action for failure-without-cache and ensure stale state is visibly labeled as cached/stale."
+          "description": "Validate that the clear() behavior supports the Settings logout flow (clears identity state and stored auth state cleanly) and that errors are surfaced as safe, English messages to the UI without exposing raw stack traces."
         }
       ]
     }

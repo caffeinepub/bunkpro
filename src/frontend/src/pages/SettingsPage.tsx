@@ -1,4 +1,4 @@
-// Settings page with profile editor, theme controls, and backend profile sync with proper success/error toasts
+// Settings page with profile editor, theme controls, backend profile sync, and logout functionality
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,14 +10,19 @@ import { ThemeSelector } from '../components/settings/ThemeSelector';
 import { AboutCard } from '../components/settings/AboutCard';
 import { NotificationsCard } from '../components/settings/NotificationsCard';
 import { ProfileDisplayNameEditor } from '../components/settings/ProfileDisplayNameEditor';
+import { LogoutCard } from '../components/settings/LogoutCard';
 import { useActor } from '../hooks/useActor';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { toast } from 'sonner';
 import type { UserProfile as BackendUserProfile } from '../backend';
 import type { AppState } from '../domain/attendanceTypes';
+import { clearIndexedDB } from '../storage/indexedDbClient';
+import { clearRankingCache } from '../rank/rankCache';
 
 export function SettingsPage() {
   const { state, dispatch } = useAppStore();
   const { actor } = useActor();
+  const { clear: clearIdentity } = useInternetIdentity();
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const handleSaveDisplayName = async (newName: string) => {
@@ -55,6 +60,42 @@ export function SettingsPage() {
       toast.error('Failed to update profile');
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      // Step 1: Delete user data from backend
+      if (actor) {
+        try {
+          await actor.deleteCallerUser();
+        } catch (error: any) {
+          console.error('Failed to delete user from backend:', error);
+          const errorMessage = error?.message || 'Unknown error';
+          toast.error(`Failed to delete leaderboard data: ${errorMessage}`);
+          throw error; // Stop logout process if backend deletion fails
+        }
+      } else {
+        toast.error('Not connected to backend. Cannot delete leaderboard data.');
+        throw new Error('Backend actor not available');
+      }
+
+      // Step 2: Clear ranking cache
+      clearRankingCache();
+
+      // Step 3: Clear IndexedDB
+      await clearIndexedDB();
+
+      // Step 4: Reset app state
+      dispatch({ type: 'RESET_ALL' });
+
+      // Step 5: Clear Internet Identity session
+      await clearIdentity();
+
+      toast.success('Logged out successfully. All data has been deleted.');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Error toast already shown in specific steps above
     }
   };
 
@@ -223,6 +264,11 @@ export function SettingsPage() {
         currentState={state}
         onRestore={handleRestore}
       />
+
+      <Separator />
+
+      {/* Logout */}
+      <LogoutCard onLogout={handleLogout} />
 
       <Separator />
 

@@ -36,6 +36,7 @@ export enum UserRole {
 export interface backendInterface {
     addPoints(pointsToAdd: bigint): Promise<AddPointsResult>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    deleteCallerUser(): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getGlobalRankingPaginated(start: bigint, count: bigint): Promise<Array<RankingDetails>>;

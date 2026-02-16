@@ -1,4 +1,4 @@
-// Persistence layer connecting app store to IndexedDB with validation and fallback to defaults for new settings fields
+// Persistence layer connecting app store to IndexedDB with validation and fallback to defaults for new fields
 
 import type { AppState } from '../domain/attendanceTypes';
 import { DEFAULT_STATE, DEFAULT_SETTINGS } from '../domain/attendanceTypes';
@@ -28,12 +28,15 @@ export async function loadState(): Promise<AppState | null> {
     }
     
     // Merge settings with defaults to ensure new fields are populated
+    // Merge user profile and gamification fields with defaults
     return {
       ...state,
       settings: {
         ...DEFAULT_SETTINGS,
         ...state.settings,
       },
+      userProfile: state.userProfile || null,
+      streakMilestones: state.streakMilestones || [],
     };
   } catch (error) {
     console.error('Failed to load state:', error);

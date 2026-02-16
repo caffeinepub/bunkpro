@@ -1,6 +1,6 @@
-// Home dashboard page with responsive layout, overall stats, subject cards with premium insights, Mark Today functionality, and notification support
+// Home dashboard page with streak milestone detection and point awards
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../state/appStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,10 @@ import { calculateSubjectStats, calculateOverallStats, getInsightMessage, calcul
 import { getTrendDirection } from '../domain/premiumInsights';
 import { sendNotification, getNotificationPermission } from '../notifications/notificationsApi';
 import { getMultipleMarkingsNotification } from '../notifications/localNotificationMessages';
+import { computeContinuousDayStreak, checkMilestoneEligibility } from '../domain/streakMilestones';
+import { useActor } from '../hooks/useActor';
+import { submitPoints } from '../rank/rankApi';
+import { toast } from 'sonner';
 import type { Subject, ClassEvent } from '../domain/attendanceTypes';
 
 interface HomeDashboardPageProps {
@@ -21,6 +25,7 @@ interface HomeDashboardPageProps {
 
 export function HomeDashboardPage({ onSubjectClick }: HomeDashboardPageProps) {
   const { state, dispatch } = useAppStore();
+  const { actor } = useActor();
   const [showMarkToday, setShowMarkToday] = useState(false);
   const [showAddSubject, setShowAddSubject] = useState(false);
 
@@ -31,7 +36,7 @@ export function HomeDashboardPage({ onSubjectClick }: HomeDashboardPageProps) {
     dispatch({ type: 'ADD_SUBJECT', payload: subject });
   };
 
-  const handleSaveMarkToday = (events: ClassEvent[]) => {
+  const handleSaveMarkToday = async (events: ClassEvent[]) => {
     dispatch({ type: 'ADD_EVENTS', payload: events });
 
     // Send notification if enabled and permission granted
@@ -47,6 +52,50 @@ export function HomeDashboardPage({ onSubjectClick }: HomeDashboardPageProps) {
           body: notification.body,
           tag: 'mark-classes',
         });
+      }
+    }
+
+    // Check for streak milestones after adding events
+    setTimeout(() => checkStreakMilestones(), 100);
+  };
+
+  const checkStreakMilestones = async () => {
+    const allEvents = [...state.events];
+    const currentStreak = computeContinuousDayStreak(allEvents);
+    
+    const milestone = checkMilestoneEligibility(currentStreak, state.streakMilestones);
+    
+    if (milestone && state.userProfile) {
+      // Award milestone locally
+      dispatch({
+        type: 'AWARD_MILESTONE',
+        payload: {
+          points: milestone.points,
+          milestone: {
+            streakId: milestone.streakId,
+            milestoneType: milestone.type,
+            awardedAt: Date.now(),
+          },
+        },
+      });
+
+      // Show congratulatory message
+      const message = milestone.type === '3-day' 
+        ? '🎉 Congrats on your hat-trick! 3-day streak achieved! +5 points'
+        : '🔥 Amazing! 6-day streak achieved! +10 points';
+      
+      toast.success(message, {
+        duration: 5000,
+      });
+
+      // Submit points to backend
+      if (actor) {
+        const result = await submitPoints(actor, state.userProfile.displayName, milestone.points);
+        if (!result.success) {
+          toast.error(result.error || 'Failed to sync points to leaderboard', {
+            duration: 4000,
+          });
+        }
       }
     }
   };

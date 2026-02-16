@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 17,
-  "summary": "Build “BunkPro”, a fully functional Android smart attendance manager for college students with BunkWell-equivalent core features/logic, redesigned premium modern UI/UX, offline local storage, backup/restore, and thorough testing.",
+  "projectStateVersion": 19,
+  "summary": "Build “BunkPro”, a fully functional Android smart attendance manager for college students with BunkWell-equivalent core features/logic, redesigned premium modern UI/UX, offline local storage, backup/restore, thorough testing, plus a simple login/name profile and streak-based points with weekly user rankings.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
     "Offline-first app using local Room/SQLite database (secure local storage)",
@@ -10,13 +10,13 @@
     "Ensure the user-provided BunkPro logo is integrated into the app branding (app icon/header as applicable) and splash/launch screen during final polish.",
     "Ensure no third-party/white-label branding (e.g., “Build with Caffeine AI”) appears anywhere in the app UI, splash screen, settings/about, or build artifacts.",
     "Notifications scope added: implement web push notifications, desktop notifications, and local notifications (clarify platform support/approach for Android vs web/desktop).",
-    "Branding scope: create new BunkPro logo assets (icon-only + full wordmark) with dark/light variants; must be flat, minimal, and legible at small sizes (48x48)."
+    "Branding scope: create new BunkPro logo assets (icon-only + full wordmark) with dark/light variants; must be flat, minimal, and legible at small sizes (48x48).",
+    "New scope: introduce user identity/profile (name) persistence and a points/streak system, plus weekly ranking logic organized under a dedicated “rank” module/folder."
   ],
   "known_issues": [
     "\"Send test notification\" does not show/appear (notification seems inactive/not visible) when pressed."
   ],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- BunkPro app icon artwork (square, dark navy background, circular gradient ring emblem with cap+check+bar graph, soft glow) (bunkpro-logo-icon.dim_4096x4096.png)\n- BunkPro horizontal logo/wordmark on dark navy background, with emblem + “Bunk” purple gradient and “Pro” blue gradient, subtle glow/shadow (bunkpro-logo-horizontal.dim_4096x1536.png)\n- Favicon derived from the new logo icon (bunkpro-favicon.dim_32x32.png)",
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -305,6 +305,54 @@
         "REQ-38"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-add-an-initial-login-screen-that-is-shown-on-app-start-when-no-user-name-has-been-set-yet-with-a-single-name-input-and-a-continue-login-action-the-login-form-must-validate-that-the-entered-value-is-a-good-name-letters-and-spaces-only-trimmed-non-empty-and-within-a-reasonable-length-and-display-an-english-validation-error-when-invalid-after-a-successful-login-persist-the-user-name-in-app-state-so-it-remains-available-throughout-the-app-and-across-refreshes-via-the-existing-indexeddb-persistence",
+      "title": "Add an initial Login screen that is shown on app start when no user name has been set yet, with a single name input and a continue/login action. The login form must validate that the entered value is a “good name” (letters and spaces only, trimmed, non-empty, and within a reasonable length) and display an English validation error when invalid. After a successful login, persist the user name in app state so it remains available throughout the app and across refreshes via the existing IndexedDB persistence.",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-extend-the-frontend-domain-state-and-reducer-to-support-a-user-profile-and-gamification-fields-needed-for-streak-points-including-at-minimum-user-name-total-points-streak-tracking-metadata-needed-to-compute-a-continuous-day-streak-and-a-record-of-which-streak-milestones-have-already-been-awarded-so-points-are-not-repeatedly-re-awarded-for-the-same-milestone",
+      "title": "Extend the frontend domain state and reducer to support a user profile and gamification fields needed for streak points, including at minimum: user name, total points, streak tracking metadata needed to compute a continuous day streak, and a record of which streak milestones have already been awarded so points are not repeatedly re-awarded for the same milestone.",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-continuous-day-streak-detection-based-on-recorded-classevent-activity-treat-a-day-as-completed-if-at-least-one-classevent-exists-for-that-calendar-date-compute-the-current-streak-as-the-number-of-consecutive-completed-days-ending-at-today-using-local-time-date-strings-already-stored-in-events-when-the-streak-reaches-3-days-for-the-first-time-award-5-points-and-show-an-english-congratulatory-message-congrats-on-your-hat-trick-5-points-when-the-streak-reaches-6-days-for-the-first-time-award-10-points-and-show-an-english-congratulatory-message-congrats-on-your-6-day-streak-10-points",
+      "title": "Implement continuous day streak detection based on recorded ClassEvent activity: treat a day as “completed” if at least one ClassEvent exists for that calendar date; compute the current streak as the number of consecutive completed days ending at today (using local time date strings already stored in events). When the streak reaches 3 days for the first time, award +5 points and show an English congratulatory message: “Congrats on your hat-trick! +5 points.” When the streak reaches 6 days for the first time, award +10 points and show an English congratulatory message: “Congrats on your 6-day streak! +10 points.”",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-separate-frontend-folder-named-rank-to-contain-all-ranking-related-ui-and-logic-add-a-rank-screen-that-can-be-navigated-to-from-the-app-e-g-via-a-settings-link-button-without-breaking-existing-navigation-the-rank-screen-must-show-an-english-weekly-leaderboard-list-of-users-ordered-by-points-for-the-current-week-including-each-user-s-rank-number-display-name-and-points",
+      "title": "Create a separate frontend folder named \"rank\" to contain all ranking-related UI and logic. Add a Rank screen that can be navigated to from the app (e.g., via a Settings link/button) without breaking existing navigation. The Rank screen must show an English weekly leaderboard list of users ordered by points for the current week, including each user’s rank number, display name, and points.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-wire-the-frontend-streak-points-awarding-to-the-backend-ranking-system-when-the-app-awards-5-or-10-points-for-a-milestone-it-must-also-submit-the-points-increment-to-the-backend-for-the-logged-in-user-and-ensure-the-user-s-display-name-is-registered-updated-in-the-backend-the-rank-screen-must-fetch-the-weekly-ranking-list-from-the-backend-and-display-it",
+      "title": "Wire the frontend streak points awarding to the backend ranking system: when the app awards +5 or +10 points for a milestone, it must also submit the points increment to the backend for the logged-in user and ensure the user’s display name is registered/updated in the backend. The Rank screen must fetch the weekly ranking list from the backend and display it.",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-local-persistence-and-backup-restore-to-include-the-new-user-profile-and-gamification-fields-user-name-points-streak-metadata-and-milestone-award-state-while-remaining-backward-compatible-with-existing-stored-data-and-older-backups-by-merging-missing-fields-with-defaults",
+      "title": "Update local persistence and backup/restore to include the new user profile and gamification fields (user name, points, streak metadata, and milestone award state) while remaining backward compatible with existing stored data and older backups by merging missing fields with defaults.",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -436,6 +484,32 @@
       "id": "AR-34",
       "summary": "Create a new premium modern BunkPro logo per spec (circular purple→blue gradient ring, graduation cap + bold checkmark, rising bar graph, soft glow, dark navy background, gradient “Bunk”/“Pro” typography, subtle 3D depth) in high resolution (4K/8K) and integrate it into the app branding.",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Add an initial login page that captures a user’s name (validated as a ‘good name’) and persist it for use throughout the app session/experience.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-36",
+      "summary": "Implement streak-based gamification: award 5 points at a continuous 3-day streak with a congratulatory ‘hat-trick’ message, and award 10 points at a continuous 6-day streak with an appropriate congratulatory message.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-37",
+      "summary": "Add weekly user ranking: rank all users once per week and organize related code in a separate module/folder named “rank”.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-42",
+      "summary": "Implement backend support for multi-user weekly ranking in the single Motoko actor (backend/main.mo): store users keyed by a stable identifier (principal when available, otherwise reject unauthenticated writes), store weekly points totals, and expose query/update methods to (a) register/update a user’s display name, (b) record earned points increments for the current week, and (c) fetch the current week’s ordered ranking list. The backend must compute the “current week” deterministically (e.g., by week-start timestamp) and ensure the ranking list reflects the current week only.",
+      "reqIds": [
+        "REQ-43"
+      ],
       "status": "pending"
     }
   ],

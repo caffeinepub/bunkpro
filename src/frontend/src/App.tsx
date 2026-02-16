@@ -1,4 +1,4 @@
-// Main application component with routing
+// Main application component with login gate and ranking navigation
 
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useAppStore } from './state/appStore';
@@ -6,29 +6,56 @@ import { ErrorBoundary } from './components/system/ErrorBoundary';
 import { InitialLoadSplash } from './components/system/InitialLoadSplash';
 import { AppShell } from './components/layout/AppShell';
 import { BottomNav } from './components/navigation/BottomNav';
+import { LoginPage } from './pages/LoginPage';
 import { HomeDashboardPage } from './pages/HomeDashboardPage';
 import { SubjectDetailsPage } from './pages/SubjectDetailsPage';
 import { TimetablePage } from './pages/TimetablePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { RankPage } from './rank/RankPage';
 import { Toaster } from '@/components/ui/sonner';
 import { initializeTheme } from './theme/themeManager';
+import { useActor } from './hooks/useActor';
+import { registerUserDisplayName } from './rank/rankApi';
+import { toast } from 'sonner';
+import type { UserProfile } from './domain/attendanceTypes';
 
 type Route = 
   | { type: 'home' }
   | { type: 'subject-details'; subjectId: string }
   | { type: 'timetable' }
-  | { type: 'settings' };
+  | { type: 'settings' }
+  | { type: 'rank' };
 
 function AppContent() {
-  const { state, isLoading } = useAppStore();
+  const { state, dispatch, isLoading } = useAppStore();
+  const { actor } = useActor();
   const [route, setRoute] = useState<Route>({ type: 'home' });
 
   useEffect(() => {
     initializeTheme(state.settings);
   }, [state.settings]);
 
+  const handleLogin = async (profile: UserProfile) => {
+    dispatch({ type: 'SET_USER_PROFILE', payload: profile });
+
+    // Register display name with backend
+    if (actor) {
+      const result = await registerUserDisplayName(actor, profile.displayName);
+      if (!result.success) {
+        toast.error(result.error || 'Failed to sync profile to server', {
+          duration: 4000,
+        });
+      }
+    }
+  };
+
   if (isLoading) {
     return <InitialLoadSplash />;
+  }
+
+  // Show login page if no user profile
+  if (!state.userProfile) {
+    return <LoginPage onLogin={handleLogin} />;
   }
 
   const getActiveTab = (): 'home' | 'timetable' | 'settings' => {
@@ -51,6 +78,14 @@ function AppContent() {
     setRoute({ type: 'home' });
   };
 
+  const handleNavigateToRank = () => {
+    setRoute({ type: 'rank' });
+  };
+
+  const handleBackFromRank = () => {
+    setRoute({ type: 'settings' });
+  };
+
   return (
     <AppShell>
       {route.type === 'home' && (
@@ -60,7 +95,12 @@ function AppContent() {
         <SubjectDetailsPage subjectId={route.subjectId} onBack={handleBack} />
       )}
       {route.type === 'timetable' && <TimetablePage />}
-      {route.type === 'settings' && <SettingsPage />}
+      {route.type === 'settings' && (
+        <SettingsPage onNavigateToRank={handleNavigateToRank} />
+      )}
+      {route.type === 'rank' && (
+        <RankPage onBack={handleBackFromRank} />
+      )}
 
       <BottomNav activeTab={getActiveTab()} onTabChange={handleTabChange} />
       <Toaster />

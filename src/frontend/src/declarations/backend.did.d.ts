@@ -10,7 +10,15 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface _SERVICE {}
+export interface RankingEntry { 'displayName' : string, 'points' : bigint }
+export type RankingError = { 'userNotAuthenticated' : null } |
+  { 'displayNameUpdateFailed' : null } |
+  { 'pointsUpdateFailed' : null };
+export interface _SERVICE {
+  'addPoints' : ActorMethod<[string, bigint], RankingError>,
+  'getCurrentWeekRanking' : ActorMethod<[], Array<RankingEntry>>,
+  'registerDisplayName' : ActorMethod<[string], boolean>,
+}
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
 export declare const idlFactory: IDL.InterfaceFactory;

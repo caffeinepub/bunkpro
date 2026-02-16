@@ -1,4 +1,4 @@
-// Core domain types for BunkPro attendance tracking with notification preferences
+// Core domain types for BunkPro attendance tracking with notification preferences, user profile, and gamification
 
 export type ClassStatus = 'attended' | 'missed' | 'cancelled';
 
@@ -53,12 +53,26 @@ export interface AppSettings {
   enableNotifications: boolean;
 }
 
+export interface UserProfile {
+  displayName: string;
+  totalPoints: number;
+  registeredAt: number;
+}
+
+export interface StreakMilestone {
+  streakId: string; // Unique identifier for the streak (e.g., start date)
+  milestoneType: '3-day' | '6-day';
+  awardedAt: number;
+}
+
 export interface AppState {
   subjects: Subject[];
   events: ClassEvent[];
   timetable: TimetableSlot[];
   exchanges: ClassExchange[];
   settings: AppSettings;
+  userProfile: UserProfile | null;
+  streakMilestones: StreakMilestone[];
   version: number;
 }
 
@@ -78,5 +92,7 @@ export const DEFAULT_STATE: AppState = {
   timetable: [],
   exchanges: [],
   settings: DEFAULT_SETTINGS,
+  userProfile: null,
+  streakMilestones: [],
   version: 1,
 };

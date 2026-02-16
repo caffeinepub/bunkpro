@@ -1,63 +1,183 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Integrate new premium BunkPro logo assets across app branding",
+  "title": "Name-based login, streak points, and weekly ranking (frontend)",
   "requirements": [
     {
-      "id": "REQ-36",
-      "summary": "Add new high-resolution BunkPro logo, horizontal wordmark, and favicon image assets per provided spec under the required generated assets paths.",
+      "id": "REQ-39",
+      "summary": "Add a name-based Login screen shown on app start until a valid user name is saved and persisted via IndexedDB.",
       "acceptanceCriteria": [
-        "New static image assets are added under frontend/public/assets/generated using the exact filenames specified in this build request’s imageRequirements.required entries.",
-        "The generated icon artwork remains clear when viewed at 48×48 and when visually cropped to a circle (no critical details cut off).",
-        "The wordmark clearly reads “BunkPro” with the requested gradient split between “Bunk” and “Pro” and a modern sans-serif look.",
-        "The background is dark navy and there is a visible soft glow under the emblem as part of the artwork in the provided exports."
+        "When the app loads with no saved user name, the Login screen is displayed instead of the main app screens.",
+        "The Login screen contains only the user name field and a continue/login button (no extra required fields).",
+        "Name validation rejects empty input, whitespace-only input, and any characters outside A–Z/a–z and spaces, showing an English error message.",
+        "After successful login, the user name is stored in the persisted app state and remains after page refresh.",
+        "After login, the user can access the existing Home/Timetable/Settings flow as before."
       ],
       "file_operations": [
         {
-          "path": "frontend/public/assets/generated/bunkpro-logo-icon.dim_4096x4096.png",
+          "path": "frontend/src/pages/LoginPage.tsx",
           "operation": "create",
-          "description": "Add the new square app icon artwork export (dark navy background; circular purple-to-blue gradient ring; cap+checkmark+bar-graph; subtle 3D depth; soft glow), ensuring legibility at small sizes and safe circular crop."
+          "description": "Create a dedicated Login page with a single name input and a continue action; validate “good name” (trimmed, non-empty, reasonable length, letters/spaces only) and show an English inline error. Use shadcn-ui building blocks (e.g., Card/Input/Button) for consistent styling. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/public/assets/generated/bunkpro-logo-horizontal.dim_4096x1536.png",
-          "operation": "create",
-          "description": "Add the new horizontal logo/wordmark export (dark navy background; emblem + “Bunk” purple gradient and “Pro” blue gradient; modern sans-serif; subtle glow/shadow), ensuring the wordmark remains readable at typical UI sizes."
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Gate the main app screens behind the persisted user name: if missing, render LoginPage instead of existing routes; after login success, allow normal navigation to Home/Timetable/Settings as before."
         },
         {
-          "path": "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png",
-          "operation": "create",
-          "description": "Add the new 32×32 favicon derived from the new icon artwork for browser tab usage."
+          "path": "frontend/src/domain/attendanceReducer.ts",
+          "operation": "modify",
+          "description": "Add reducer actions to set the logged-in user name via the existing action/reducer pattern (no ad-hoc mutation)."
+        },
+        {
+          "path": "frontend/src/domain/attendanceTypes.ts",
+          "operation": "modify",
+          "description": "Extend AppState defaults/types to include a persisted user profile with display name so the value remains available across refreshes."
         }
       ]
     },
     {
-      "id": "REQ-37",
-      "summary": "Update branding helpers so existing logo placements (Initial Loading Splash and Settings → About) automatically use the new generated logo assets without changing component logic.",
+      "id": "REQ-40",
+      "summary": "Extend persisted domain state/reducer with user profile + gamification fields needed for streak points and one-time milestone awarding.",
       "acceptanceCriteria": [
-        "frontend/src/lib/branding.ts references the new generated logo filenames for getAppIcon(...) and getHorizontalLogo(...).",
-        "Initial loading splash screen displays the new logo without layout regressions (image loads, remains contained, and animations still run).",
-        "Settings → About displays the new horizontal/wordmark logo without breaking existing About content (app name, version text, and founder line remain)."
+        "App state includes persisted fields for user name and points.",
+        "State updates for points and streak milestone awards are implemented via the existing reducer/action pattern (no ad-hoc mutation).",
+        "Existing persistence, load, and save flows continue to work without crashes after adding the new fields."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/lib/branding.ts",
+          "path": "frontend/src/domain/attendanceTypes.ts",
           "operation": "modify",
-          "description": "Update BRANDING.getAppIcon(...) to return /assets/generated/bunkpro-logo-icon.dim_4096x4096.png and BRANDING.getHorizontalLogo(...) to return /assets/generated/bunkpro-logo-horizontal.dim_4096x1536.png, using the same assets for light and dark themes (no separate variants provided)."
+          "description": "Add user gamification fields to AppState (at minimum: user name, total points, streak tracking metadata needed for continuous-day streak, and milestone-award record so awards aren’t repeated), and extend DEFAULT_STATE accordingly."
+        },
+        {
+          "path": "frontend/src/domain/attendanceReducer.ts",
+          "operation": "modify",
+          "description": "Add actions and reducer handling for updating total points, streak metadata, and recording milestone awards (e.g., mark milestone as awarded for a given streak identifier)."
+        },
+        {
+          "path": "frontend/src/state/persistence.ts",
+          "operation": "modify",
+          "description": "Update IndexedDB load merge logic to safely default/merge newly added non-settings fields (user profile/gamification) for backward compatibility with older stored states."
         }
       ]
     },
     {
-      "id": "REQ-38",
-      "summary": "Point the browser favicon link to the newly generated BunkPro favicon asset.",
+      "id": "REQ-41",
+      "summary": "Implement continuous day streak detection from ClassEvent dates and award milestone points (+5 at 3 days, +10 at 6 days) exactly once per streak with congratulatory English messages.",
       "acceptanceCriteria": [
-        "frontend/index.html references the new favicon filename specified in imageRequirements.required.",
-        "After a hard refresh, the browser tab icon uses the new favicon (no reference to the previous bunkpro-uploaded-favicon.dim_32x32.png)."
+        "If the user has at least one class event on three consecutive dates ending today, the app awards exactly +5 points once and shows the hat-trick message once.",
+        "If the user has at least one class event on six consecutive dates ending today, the app awards exactly +10 points once and shows the 6-day streak message once.",
+        "Points are not re-awarded on subsequent app loads or subsequent events if the milestone was already awarded for the current/ongoing streak.",
+        "If a day is missed (no events on that date), the continuous day streak resets appropriately.",
+        "Milestone award logic is triggered in a deterministic place in the app flow (e.g., after saving Mark Today events) so that awarding occurs reliably."
       ],
       "file_operations": [
         {
-          "path": "frontend/index.html",
+          "path": "frontend/src/domain/streakMilestones.ts",
+          "operation": "create",
+          "description": "Add pure utilities to compute the current continuous-day streak from ClassEvent calendar-date strings (local time) and to derive a stable streak identifier (e.g., streak start date) for one-time milestone awarding."
+        },
+        {
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
           "operation": "modify",
-          "description": "Update the existing favicon <link> to reference /assets/generated/bunkpro-favicon.dim_32x32.png (replacing /assets/generated/bunkpro-uploaded-favicon.dim_32x32.png)."
+          "description": "After saving Mark Today events, deterministically compute the updated continuous-day streak and, when hitting 3 or 6 days for the first time for the current streak, dispatch reducer actions to award points and record the milestone; show the required English congratulatory messages using the existing toast system (sonner Toaster is already mounted)."
+        },
+        {
+          "path": "frontend/src/domain/attendanceReducer.ts",
+          "operation": "modify",
+          "description": "Support atomic milestone award updates (increment points + record milestone) via reducer actions so re-awards are prevented by persisted milestone state."
+        }
+      ]
+    },
+    {
+      "id": "REQ-42",
+      "summary": "Add a new rank module folder and a Rank screen reachable from the app that shows a weekly points leaderboard with rank number, name, and points.",
+      "acceptanceCriteria": [
+        "A new folder exists at frontend/src/rank (or equivalent under frontend/src) containing the rank page/components/modules.",
+        "The app provides a visible navigation entry point to the Rank screen (with English label, e.g., “Weekly Ranking”) and allows returning back.",
+        "The Rank screen renders a leaderboard ordered by points descending with clear rank numbering.",
+        "If no ranking data is available, the Rank screen shows an English empty state message."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/rank/RankPage.tsx",
+          "operation": "create",
+          "description": "Create the Rank screen UI under frontend/src/rank that renders an English weekly leaderboard list with rank numbering, display name, and points, plus an English empty state when no data exists. Use shadcn-ui components for list/layout (e.g., Card/Button) where appropriate. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/rank/rankApi.ts",
+          "operation": "create",
+          "description": "Create ranking data-access helpers for fetching the current week leaderboard from the backend actor and mapping it into UI-friendly data. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/SettingsPage.tsx",
+          "operation": "modify",
+          "description": "Add a visible Settings navigation entry (English label like “Weekly Ranking”) that navigates to the Rank screen without breaking existing Settings content. Use shadcn-ui components (e.g., Card/Button) for the navigation row. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Extend the app’s route union and rendering to include a Rank route; wire Settings -> Rank navigation and provide a way to return back (e.g., back button callback passed into RankPage)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-44",
+      "summary": "Wire frontend point awards and ranking UI to backend ranking capabilities, with resilient non-blocking error handling.",
+      "acceptanceCriteria": [
+        "When a milestone award occurs, the frontend increments local points and also calls the backend to increment weekly points.",
+        "If backend calls fail, the app shows an English non-blocking error and does not crash; local points still remain consistent locally.",
+        "The Rank screen retrieves its leaderboard data from the backend and renders it.",
+        "User display name used in ranking matches the name saved from the Login screen."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/rank/rankApi.ts",
+          "operation": "modify",
+          "description": "Implement helpers to register/update the user’s display name and add weekly points using the backend actor (registerDisplayName, addPoints) and to fetch the leaderboard (getCurrentWeekRanking), returning typed results for the UI. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/LoginPage.tsx",
+          "operation": "modify",
+          "description": "After successful local login (persisting the name in app state), call the ranking helper to register/update the display name in the backend; if it fails, show an English non-blocking error without preventing app use. Use the existing toast approach (sonner) or NonBlockingErrorToast pattern. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
+          "operation": "modify",
+          "description": "When awarding +5/+10 milestone points locally, also call the ranking helper to submit the points increment to the backend for the logged-in user; on failure, show an English non-blocking error and keep local points consistent."
+        },
+        {
+          "path": "frontend/src/rank/RankPage.tsx",
+          "operation": "modify",
+          "description": "Fetch the weekly ranking list via the backend actor using the rankApi helper and render it; handle load/empty/error states with English messaging and non-blocking error UI. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-45",
+      "summary": "Update backup/export and restore/import flows to include new user profile and gamification fields with backward-compatible migrations/defaulting.",
+      "acceptanceCriteria": [
+        "After updating, existing users with prior IndexedDB data can still load the app without errors and new fields are defaulted safely.",
+        "Exported backup files include the new user/profile and points fields.",
+        "Importing a backup correctly restores the user name and points fields.",
+        "Validation/migration logic tolerates backups created before this feature (missing new fields)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/backup/backupSchema.ts",
+          "operation": "modify",
+          "description": "Update backup validation and migration to tolerate older backups while ensuring new user/profile and gamification fields are merged with defaults when missing (backward compatible)."
+        },
+        {
+          "path": "frontend/src/backup/backupIO.ts",
+          "operation": "modify",
+          "description": "Ensure export/import continues to round-trip the extended AppState (including user name, points, streak metadata, and milestone award state) without errors and with clear English error messages on invalid backups."
+        },
+        {
+          "path": "frontend/src/state/persistence.ts",
+          "operation": "modify",
+          "description": "Align IndexedDB load merging with backup migration behavior so older stored data missing the new fields is safely defaulted, preventing crashes on load."
         }
       ]
     }

@@ -89,10 +89,77 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface backendInterface {
+export interface RankingEntry {
+    displayName: string;
+    points: bigint;
 }
+export enum RankingError {
+    userNotAuthenticated = "userNotAuthenticated",
+    displayNameUpdateFailed = "displayNameUpdateFailed",
+    pointsUpdateFailed = "pointsUpdateFailed"
+}
+export interface backendInterface {
+    addPoints(displayName: string, points: bigint): Promise<RankingError>;
+    getCurrentWeekRanking(): Promise<Array<RankingEntry>>;
+    registerDisplayName(displayName: string): Promise<boolean>;
+}
+import type { RankingError as _RankingError } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    async addPoints(arg0: string, arg1: bigint): Promise<RankingError> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addPoints(arg0, arg1);
+                return from_candid_RankingError_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addPoints(arg0, arg1);
+            return from_candid_RankingError_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCurrentWeekRanking(): Promise<Array<RankingEntry>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCurrentWeekRanking();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCurrentWeekRanking();
+            return result;
+        }
+    }
+    async registerDisplayName(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.registerDisplayName(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.registerDisplayName(arg0);
+            return result;
+        }
+    }
+}
+function from_candid_RankingError_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RankingError): RankingError {
+    return from_candid_variant_n2(_uploadFile, _downloadFile, value);
+}
+function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    userNotAuthenticated: null;
+} | {
+    displayNameUpdateFailed: null;
+} | {
+    pointsUpdateFailed: null;
+}): RankingError {
+    return "userNotAuthenticated" in value ? RankingError.userNotAuthenticated : "displayNameUpdateFailed" in value ? RankingError.displayNameUpdateFailed : "pointsUpdateFailed" in value ? RankingError.pointsUpdateFailed : value;
 }
 export interface CreateActorOptions {
     agent?: Agent;

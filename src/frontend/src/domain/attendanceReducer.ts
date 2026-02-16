@@ -1,6 +1,6 @@
-// State management reducer for attendance operations
+// State management reducer for attendance operations with user profile and gamification support
 
-import type { AppState, Subject, ClassEvent, TimetableSlot, ClassExchange, AppSettings } from './attendanceTypes';
+import type { AppState, Subject, ClassEvent, TimetableSlot, ClassExchange, AppSettings, UserProfile, StreakMilestone } from './attendanceTypes';
 import { DEFAULT_STATE } from './attendanceTypes';
 
 export type AttendanceAction =
@@ -16,6 +16,9 @@ export type AttendanceAction =
   | { type: 'DELETE_TIMETABLE_SLOT'; payload: string }
   | { type: 'ADD_EXCHANGE'; payload: ClassExchange }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<AppSettings> }
+  | { type: 'SET_USER_PROFILE'; payload: UserProfile }
+  | { type: 'ADD_POINTS'; payload: number }
+  | { type: 'AWARD_MILESTONE'; payload: { points: number; milestone: StreakMilestone } }
   | { type: 'RESTORE_STATE'; payload: AppState }
   | { type: 'RESET_ALL' };
 
@@ -115,6 +118,33 @@ export function attendanceReducer(state: AppState, action: AttendanceAction): Ap
       return {
         ...state,
         settings: { ...state.settings, ...action.payload },
+      };
+    
+    case 'SET_USER_PROFILE':
+      return {
+        ...state,
+        userProfile: action.payload,
+      };
+    
+    case 'ADD_POINTS':
+      if (!state.userProfile) return state;
+      return {
+        ...state,
+        userProfile: {
+          ...state.userProfile,
+          totalPoints: state.userProfile.totalPoints + action.payload,
+        },
+      };
+    
+    case 'AWARD_MILESTONE':
+      if (!state.userProfile) return state;
+      return {
+        ...state,
+        userProfile: {
+          ...state.userProfile,
+          totalPoints: state.userProfile.totalPoints + action.payload.points,
+        },
+        streakMilestones: [...state.streakMilestones, action.payload.milestone],
       };
     
     case 'RESTORE_STATE':

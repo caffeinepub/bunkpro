@@ -1,26 +1,75 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T12:41:08.855Z",
-  "summary": "REQ-37 and REQ-38 appear implemented via updates to branding.ts and index.html, but the required generated image assets themselves were not added to the repo, leaving REQ-36 unmet (and preventing full verification of the integration at runtime).",
+  "generatedAt": "2026-02-16T14:01:34.251Z",
+  "summary": "The diff implements a name-only Login page, adds rank/leaderboard UI under frontend/src/rank, extends persisted frontend state with userProfile and streakMilestones, adds streak computation utilities, and adds Motoko backend methods for weekly ranking. However, several requirements/AC are only partially met, especially the exact streak milestone behavior/messages and backend addPoints/auth/error semantics.",
   "missing_requirements": [
     {
-      "id": "REQ-36",
-      "requirement": "Add the new high-resolution generated logo image assets under frontend/public/assets/generated using the exact required filenames (icon, horizontal, favicon) and matching the provided visual spec/legibility constraints.",
-      "reason": "The diff shows no newly added files, so the required static image assets are not present under frontend/public/assets/generated. Without the files, the artwork/legibility/glow/gradient requirements also cannot be satisfied or verified.",
+      "id": "REQ-41",
+      "requirement": "Streak computation must use local-time calendar dates stored in events, and milestone award messages must exactly match: “Congrats on your hat-trick! +5 points.” and “Congrats on your 6-day streak! +10 points.”",
+      "reason": "Streak uses `new Date().toISOString().split('T')[0]` (UTC date) rather than local-date logic, and the toast messages differ from the required exact English strings (also includes emojis and extra wording).",
       "evidence": [
-        "<file-diff>: ADDED FILES: none",
-        "frontend/src/lib/branding.ts (references /assets/generated/bunkpro-logo-icon.dim_4096x4096.png and /assets/generated/bunkpro-logo-horizontal.dim_4096x1536.png)",
-        "frontend/index.html (references /assets/generated/bunkpro-favicon.dim_32x32.png)"
+        "frontend/src/domain/streakMilestones.ts",
+        "frontend/src/pages/HomeDashboardPage.tsx"
+      ]
+    },
+    {
+      "id": "REQ-41",
+      "requirement": "Points are not re-awarded for the same milestone within the same ongoing streak; streak milestone tracking must be stable for a streak.",
+      "reason": "The streak identifier is derived from `getStreakIdentifier(streakLength)` which uses the *current* streak length to compute a start date; as the streak length increases day by day, this identifier can change, risking re-award behavior for the same underlying streak.",
+      "evidence": [
+        "frontend/src/domain/streakMilestones.ts"
+      ]
+    },
+    {
+      "id": "REQ-43",
+      "requirement": "Backend add-points method should succeed for authenticated callers and reject unauthenticated writes; it must correctly represent success/failure and update weekly points for the caller.",
+      "reason": "`addPoints` returns a `RankingError` variant but appears to always return `#displayNameUpdateFailed` even after updating the user data, and there is no explicit unauthenticated/anonymous principal rejection despite having a `#userNotAuthenticated` error type.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-44",
+      "requirement": "When a milestone award occurs, frontend must increment local points and call backend to increment weekly points; backend failures must show an English non-blocking error without crashing, while keeping local points consistent.",
+      "reason": "The milestone award flow is truncated; the diff shows backend submission (`submitPoints`) but does not clearly show the required non-blocking error handling path and message for backend failure in the milestone-award code section.",
+      "evidence": [
+        "frontend/src/pages/HomeDashboardPage.tsx (truncated)"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.78,
+  "hallucinated_features": [
+    {
+      "description": "Simulated async login behavior using `setTimeout` before calling onLogin.",
+      "reason": "REQ-39 does not request simulated delays; it only requires validation and persistence.",
+      "evidence": [
+        "frontend/src/pages/LoginPage.tsx"
+      ]
+    },
+    {
+      "description": "Leaderboard UI includes decorative icons (Trophy/Medal/Award) and copy like “Top performers this week” and “Rankings reset every week. Keep your streak going to earn more points!”.",
+      "reason": "REQ-42 requires a weekly leaderboard with rank/name/points and an empty state; additional iconography and motivational copy were not requested.",
+      "evidence": [
+        "frontend/src/rank/RankPage.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.72,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/index.html",
-    "frontend/src/lib/branding.ts",
+    "frontend/src/App.tsx",
+    "frontend/src/backup/backupIO.ts",
+    "frontend/src/backup/backupSchema.ts",
+    "frontend/src/domain/attendanceReducer.ts",
+    "frontend/src/domain/attendanceTypes.ts",
+    "frontend/src/domain/streakMilestones.ts",
+    "frontend/src/pages/HomeDashboardPage.tsx",
+    "frontend/src/pages/LoginPage.tsx",
+    "frontend/src/pages/SettingsPage.tsx",
+    "frontend/src/rank/RankPage.tsx",
+    "frontend/src/rank/rankApi.ts",
+    "frontend/src/state/persistence.ts",
     "project_state.json"
   ]
 }

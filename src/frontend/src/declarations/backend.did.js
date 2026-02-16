@@ -8,10 +8,40 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const idlService = IDL.Service({});
+export const RankingError = IDL.Variant({
+  'userNotAuthenticated' : IDL.Null,
+  'displayNameUpdateFailed' : IDL.Null,
+  'pointsUpdateFailed' : IDL.Null,
+});
+export const RankingEntry = IDL.Record({
+  'displayName' : IDL.Text,
+  'points' : IDL.Nat,
+});
+
+export const idlService = IDL.Service({
+  'addPoints' : IDL.Func([IDL.Text, IDL.Nat], [RankingError], []),
+  'getCurrentWeekRanking' : IDL.Func([], [IDL.Vec(RankingEntry)], ['query']),
+  'registerDisplayName' : IDL.Func([IDL.Text], [IDL.Bool], []),
+});
 
 export const idlInitArgs = [];
 
-export const idlFactory = ({ IDL }) => { return IDL.Service({}); };
+export const idlFactory = ({ IDL }) => {
+  const RankingError = IDL.Variant({
+    'userNotAuthenticated' : IDL.Null,
+    'displayNameUpdateFailed' : IDL.Null,
+    'pointsUpdateFailed' : IDL.Null,
+  });
+  const RankingEntry = IDL.Record({
+    'displayName' : IDL.Text,
+    'points' : IDL.Nat,
+  });
+  
+  return IDL.Service({
+    'addPoints' : IDL.Func([IDL.Text, IDL.Nat], [RankingError], []),
+    'getCurrentWeekRanking' : IDL.Func([], [IDL.Vec(RankingEntry)], ['query']),
+    'registerDisplayName' : IDL.Func([IDL.Text], [IDL.Bool], []),
+  });
+};
 
 export const init = ({ IDL }) => { return []; };

@@ -1,8 +1,9 @@
-// Settings page with theme controls, target percentage, premium features, notifications, backup/restore, and about section
+// Settings page with navigation to weekly ranking
 
 import React from 'react';
 import { useAppStore } from '../state/appStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ThemeSelector } from '../components/settings/ThemeSelector';
@@ -10,10 +11,14 @@ import { TargetPercentageControl } from '../components/settings/TargetPercentage
 import { NotificationsCard } from '../components/settings/NotificationsCard';
 import { BackupRestoreCard } from '../components/settings/BackupRestoreCard';
 import { AboutCard } from '../components/settings/AboutCard';
-import { Sparkles, TrendingUp } from 'lucide-react';
+import { Sparkles, TrendingUp, Trophy, ChevronRight } from 'lucide-react';
 import type { AppState } from '../domain/attendanceTypes';
 
-export function SettingsPage() {
+interface SettingsPageProps {
+  onNavigateToRank?: () => void;
+}
+
+export function SettingsPage({ onNavigateToRank }: SettingsPageProps) {
   const { state, dispatch } = useAppStore();
 
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
@@ -40,51 +45,85 @@ export function SettingsPage() {
     dispatch({ type: 'UPDATE_SETTINGS', payload: { enableNotifications: enabled } });
   };
 
-  const handleRestore = (restoredState: AppState) => {
+  const handleRestoreState = (restoredState: AppState) => {
     dispatch({ type: 'RESTORE_STATE', payload: restoredState });
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Customize your experience</p>
       </div>
 
-      {/* Theme Settings */}
+      {/* User Profile Card */}
+      {state.userProfile && (
+        <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+          <CardHeader>
+            <CardTitle>Your Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Name</span>
+                <span className="font-semibold text-lg">{state.userProfile.displayName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Points</span>
+                <span className="font-bold text-2xl text-primary">{state.userProfile.totalPoints}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Weekly Ranking Navigation */}
+      {onNavigateToRank && (
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={onNavigateToRank}>
+          <CardContent className="flex items-center justify-between p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Trophy className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold">Weekly Ranking</p>
+                <p className="text-sm text-muted-foreground">View leaderboard</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+      )}
+
       <ThemeSelector
         settings={state.settings}
         onThemeChange={handleThemeChange}
         onVariantChange={handleVariantChange}
       />
 
-      {/* Target Percentage */}
       <TargetPercentageControl
         value={state.settings.targetPercentage}
         onChange={handleTargetChange}
       />
 
-      {/* Notifications */}
       <NotificationsCard
         enabled={state.settings.enableNotifications}
         onToggle={handleToggleNotifications}
       />
 
-      {/* Premium Features */}
       <Card>
         <CardHeader>
-          <CardTitle>Premium Features</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            Premium Features
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1 flex-1 min-w-0">
-              <Label htmlFor="premium-insights" className="flex items-center gap-2 cursor-pointer">
-                <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                <span>Premium Insights</span>
-              </Label>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="premium-insights">Premium Insights</Label>
               <p className="text-sm text-muted-foreground">
-                Show trend predictions and danger zone warnings
+                Show trends and predictions
               </p>
             </div>
             <Switch
@@ -94,14 +133,11 @@ export function SettingsPage() {
             />
           </div>
 
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1 flex-1 min-w-0">
-              <Label htmlFor="streak-counter" className="flex items-center gap-2 cursor-pointer">
-                <TrendingUp className="w-4 h-4 text-primary shrink-0" />
-                <span>Streak Counter</span>
-              </Label>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="streak-counter">Streak Counter</Label>
               <p className="text-sm text-muted-foreground">
-                Track consecutive attendance streaks
+                Track consecutive attendance
               </p>
             </div>
             <Switch
@@ -113,13 +149,11 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Backup & Restore */}
       <BackupRestoreCard
         currentState={state}
-        onRestore={handleRestore}
+        onRestore={handleRestoreState}
       />
 
-      {/* About */}
       <AboutCard />
     </div>
   );

@@ -2,9 +2,14 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-create-new-high-resolution-bunkpro-logo-artwork-matching-the-user-s-spec-circular-emblem-with-a-smooth-purple-to-blue-gradient-ring-inside-the-circle-a-graduation-cap-combined-with-a-bold-checkmark-include-a-small-rising-bar-graph-element-clean-minimal-futuristic-look-with-subtle-3d-depth-soft-glow-under-the-logo-dark-navy-background-for-contrast-typography-in-a-bold-modern-sans-serif-with-bunk-in-a-purple-gradient-and-pro-in-a-blue-gradient-with-slight-glow-and-smooth-shadow-ensure-it-remains-legible-and-recognizable-at-small-sizes-and-works-well-in-a-circular-mobile-icon-crop",
-      "featureTitle": "Create new high-resolution BunkPro logo artwork matching the user’s spec: circular emblem with a smooth purple-to-blue gradient ring; inside the circle a graduation cap combined with a bold checkmark; include a small rising bar-graph element; clean minimal futuristic look with subtle 3D depth; soft glow under the logo; dark navy background for contrast; typography in a bold modern sans-serif with “Bunk” in a purple gradient and “Pro” in a blue gradient, with slight glow and smooth shadow; ensure it remains legible and recognizable at small sizes and works well in a circular mobile icon crop.",
-      "files": [],
+      "featureId": "feature-add-an-initial-login-screen-that-is-shown-on-app-start-when-no-user-name-has-been-set-yet-with-a-single-name-input-and-a-continue-login-action-the-login-form-must-validate-that-the-entered-value-is-a-good-name-letters-and-spaces-only-trimmed-non-empty-and-within-a-reasonable-length-and-display-an-english-validation-error-when-invalid-after-a-successful-login-persist-the-user-name-in-app-state-so-it-remains-available-throughout-the-app-and-across-refreshes-via-the-existing-indexeddb-persistence",
+      "featureTitle": "Add an initial Login screen that is shown on app start when no user name has been set yet, with a single name input and a continue/login action. The login form must validate that the entered value is a “good name” (letters and spaces only, trimmed, non-empty, and within a reasonable length) and display an English validation error when invalid. After a successful login, persist the user name in app state so it remains available throughout the app and across refreshes via the existing IndexedDB persistence.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/domain/attendanceReducer.ts",
+        "frontend/src/domain/attendanceTypes.ts",
+        "frontend/src/pages/LoginPage.tsx"
+      ],
       "components": [
         "core-infrastructure@1.0.2",
         "shadcn-ui@1.0.0",
@@ -13,15 +18,17 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-36"
+        "REQ-39"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-integrate-the-newly-generated-bunkpro-logo-assets-into-the-app-so-all-existing-logo-placements-use-the-new-artwork-update-frontend-src-lib-branding-ts-to-return-the-new-generated-asset-paths-for-both-getappicon-and-gethorizontallogo-use-the-same-images-for-both-dark-and-light-themes-unless-separate-variants-are-explicitly-provided-ensure-the-initial-loading-splash-and-settings-about-automatically-reflect-the-updated-branding-without-changing-their-components-logic",
-      "featureTitle": "Integrate the newly generated BunkPro logo assets into the app so all existing logo placements use the new artwork: update frontend/src/lib/branding.ts to return the new generated asset paths for both getAppIcon and getHorizontalLogo (use the same images for both dark and light themes unless separate variants are explicitly provided). Ensure the Initial Loading Splash and Settings → About automatically reflect the updated branding without changing their components’ logic.",
+      "featureId": "feature-extend-the-frontend-domain-state-and-reducer-to-support-a-user-profile-and-gamification-fields-needed-for-streak-points-including-at-minimum-user-name-total-points-streak-tracking-metadata-needed-to-compute-a-continuous-day-streak-and-a-record-of-which-streak-milestones-have-already-been-awarded-so-points-are-not-repeatedly-re-awarded-for-the-same-milestone",
+      "featureTitle": "Extend the frontend domain state and reducer to support a user profile and gamification fields needed for streak points, including at minimum: user name, total points, streak tracking metadata needed to compute a continuous day streak, and a record of which streak milestones have already been awarded so points are not repeatedly re-awarded for the same milestone.",
       "files": [
-        "frontend/src/lib/branding.ts"
+        "frontend/src/domain/attendanceReducer.ts",
+        "frontend/src/domain/attendanceTypes.ts",
+        "frontend/src/state/persistence.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -31,15 +38,17 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-37"
+        "REQ-40"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-browser-favicon-to-match-the-newly-generated-bunkpro-logo-by-pointing-frontend-index-html-s-favicon-link-to-the-new-generated-favicon-asset-under-frontend-public-assets-generated",
-      "featureTitle": "Update the browser favicon to match the newly generated BunkPro logo by pointing frontend/index.html’s favicon link to the new generated favicon asset under frontend/public/assets/generated.",
+      "featureId": "feature-implement-continuous-day-streak-detection-based-on-recorded-classevent-activity-treat-a-day-as-completed-if-at-least-one-classevent-exists-for-that-calendar-date-compute-the-current-streak-as-the-number-of-consecutive-completed-days-ending-at-today-using-local-time-date-strings-already-stored-in-events-when-the-streak-reaches-3-days-for-the-first-time-award-5-points-and-show-an-english-congratulatory-message-congrats-on-your-hat-trick-5-points-when-the-streak-reaches-6-days-for-the-first-time-award-10-points-and-show-an-english-congratulatory-message-congrats-on-your-6-day-streak-10-points",
+      "featureTitle": "Implement continuous day streak detection based on recorded ClassEvent activity: treat a day as “completed” if at least one ClassEvent exists for that calendar date; compute the current streak as the number of consecutive completed days ending at today (using local time date strings already stored in events). When the streak reaches 3 days for the first time, award +5 points and show an English congratulatory message: “Congrats on your hat-trick! +5 points.” When the streak reaches 6 days for the first time, award +10 points and show an English congratulatory message: “Congrats on your 6-day streak! +10 points.”",
       "files": [
-        "frontend/index.html"
+        "frontend/src/domain/attendanceReducer.ts",
+        "frontend/src/domain/streakMilestones.ts",
+        "frontend/src/pages/HomeDashboardPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -49,7 +58,69 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-38"
+        "REQ-41"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-separate-frontend-folder-named-rank-to-contain-all-ranking-related-ui-and-logic-add-a-rank-screen-that-can-be-navigated-to-from-the-app-e-g-via-a-settings-link-button-without-breaking-existing-navigation-the-rank-screen-must-show-an-english-weekly-leaderboard-list-of-users-ordered-by-points-for-the-current-week-including-each-user-s-rank-number-display-name-and-points",
+      "featureTitle": "Create a separate frontend folder named \"rank\" to contain all ranking-related UI and logic. Add a Rank screen that can be navigated to from the app (e.g., via a Settings link/button) without breaking existing navigation. The Rank screen must show an English weekly leaderboard list of users ordered by points for the current week, including each user’s rank number, display name, and points.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/SettingsPage.tsx",
+        "frontend/src/rank/RankPage.tsx",
+        "frontend/src/rank/rankApi.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-42"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-wire-the-frontend-streak-points-awarding-to-the-backend-ranking-system-when-the-app-awards-5-or-10-points-for-a-milestone-it-must-also-submit-the-points-increment-to-the-backend-for-the-logged-in-user-and-ensure-the-user-s-display-name-is-registered-updated-in-the-backend-the-rank-screen-must-fetch-the-weekly-ranking-list-from-the-backend-and-display-it",
+      "featureTitle": "Wire the frontend streak points awarding to the backend ranking system: when the app awards +5 or +10 points for a milestone, it must also submit the points increment to the backend for the logged-in user and ensure the user’s display name is registered/updated in the backend. The Rank screen must fetch the weekly ranking list from the backend and display it.",
+      "files": [
+        "frontend/src/pages/HomeDashboardPage.tsx",
+        "frontend/src/pages/LoginPage.tsx",
+        "frontend/src/rank/RankPage.tsx",
+        "frontend/src/rank/rankApi.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-44"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-local-persistence-and-backup-restore-to-include-the-new-user-profile-and-gamification-fields-user-name-points-streak-metadata-and-milestone-award-state-while-remaining-backward-compatible-with-existing-stored-data-and-older-backups-by-merging-missing-fields-with-defaults",
+      "featureTitle": "Update local persistence and backup/restore to include the new user profile and gamification fields (user name, points, streak metadata, and milestone award state) while remaining backward compatible with existing stored data and older backups by merging missing fields with defaults.",
+      "files": [
+        "frontend/src/backup/backupIO.ts",
+        "frontend/src/backup/backupSchema.ts",
+        "frontend/src/state/persistence.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-45"
       ],
       "confidence": "high"
     }

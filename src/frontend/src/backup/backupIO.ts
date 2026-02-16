@@ -1,4 +1,4 @@
-// Backup export/import utilities
+// Backup export/import utilities with support for user profile and gamification fields
 
 import type { AppState } from '../domain/attendanceTypes';
 import { createBackup, validateBackup, migrateBackup } from './backupSchema';

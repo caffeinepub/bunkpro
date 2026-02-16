@@ -1,102 +1,80 @@
 {
   "kind": "build_request",
-  "title": "Design and integrate new BunkPro logo set (icon + wordmark) with dark/light variants",
+  "title": "Generate and integrate new premium BunkPro logo per provided spec",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-27",
-      "text": "Generate a new modern, minimal, professional BunkPro logo set that follows the provided style requirements (flat, clean, premium/tech, Gen‑Z, recognizable at 48×48) and includes: (1) app icon only (square), (2) full horizontal logo with text, each in both dark-background and light-background variants, using the palette centered on deep purple #6C4DFF (optionally an indigo gradient) with soft white/light gray and an optional subtle neon blue/pink accent; typography must be modern geometric sans-serif with rounded edges, with “Bunk” bold and “Pro” lighter, and the tagline text exactly “Track Smart.”.",
+      "id": "REQ-36",
+      "text": "Create new high-resolution BunkPro logo artwork matching the user’s spec: circular emblem with a smooth purple-to-blue gradient ring; inside the circle a graduation cap combined with a bold checkmark; include a small rising bar-graph element; clean minimal futuristic look with subtle 3D depth; soft glow under the logo; dark navy background for contrast; typography in a bold modern sans-serif with “Bunk” in a purple gradient and “Pro” in a blue gradient, with slight glow and smooth shadow; ensure it remains legible and recognizable at small sizes and works well in a circular mobile icon crop.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-4"
         ],
         "quotes": [
-          "Create a modern, minimal, and professional logo... Layout versions required: App icon only (square format) Full logo with text (horizontal layout) Dark background version Light background version ... Tagline below in small font: “Track Smart.”"
+          "Create a premium modern logo for a college attendance app named “BunkPro.” ... A circular emblem with a smooth purple-to-blue gradient ring ... Inside the circle: a graduation cap combined with a bold checkmark ... A small rising bar graph element ... Soft glow effect under the logo ... Dark navy background for contrast ... “Bunk” in purple gradient ... “Pro” in blue gradient ... High resolution (4K or 8K clarity) ... App icon friendly (must look good in circular mobile icon format) ... add this logo"
         ]
       },
       "acceptanceCriteria": [
-        "Four logo images are produced as static assets (icon + horizontal wordmark) with both dark-background and light-background variants.",
-        "Logos are flat/minimal (no heavy 3D), avoid mascots/playful fonts/too many colors/complex illustrations.",
-        "Primary color uses deep purple #6C4DFF or an indigo gradient; secondary colors are soft white/light gray; any accent glow is subtle and does not reduce legibility.",
-        "The icon remains clearly recognizable when rasterized/viewed at 48×48.",
-        "Typography matches: modern sans-serif, geometric/rounded feel; “Bunk” visually heavier than “Pro”; tagline text exactly “Track Smart.” appears in the full logo variant."
+        "New static image assets are added under frontend/public/assets/generated using the exact filenames specified in this build request’s imageRequirements.required entries.",
+        "The generated icon artwork remains clear when viewed at 48×48 and when visually cropped to a circle (no critical details cut off).",
+        "The wordmark clearly reads “BunkPro” with the requested gradient split between “Bunk” and “Pro” and a modern sans-serif look.",
+        "The background is dark navy and there is a visible soft glow under the emblem as part of the artwork in the provided exports."
       ]
     },
     {
-      "id": "REQ-28",
-      "text": "Add the newly generated logo assets to the app as static files under frontend/public/assets/generated and wire them into all existing branding placements (at minimum: Initial loading splash and Settings → About), selecting the appropriate dark/light variant based on current theme.",
+      "id": "REQ-37",
+      "text": "Integrate the newly generated BunkPro logo assets into the app so all existing logo placements use the new artwork: update frontend/src/lib/branding.ts to return the new generated asset paths for both getAppIcon and getHorizontalLogo (use the same images for both dark and light themes unless separate variants are explicitly provided). Ensure the Initial Loading Splash and Settings → About automatically reflect the updated branding without changing their components’ logic.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-4"
         ],
         "quotes": [
-          "Layout versions required: ... Dark background version Light background version"
+          "add this logo"
         ]
       },
       "acceptanceCriteria": [
-        "All new logo files exist under frontend/public/assets/generated and are referenced via absolute paths (e.g., /assets/generated/...).",
-        "Initial loading splash and Settings → About display the new logo, with a dark-variant used in dark mode and a light-variant used in light mode.",
-        "No remaining UI surfaces show the previous generated logo file path(s)."
+        "frontend/src/lib/branding.ts references the new generated logo filenames for getAppIcon(...) and getHorizontalLogo(...).",
+        "Initial loading splash screen displays the new logo without layout regressions (image loads, remains contained, and animations still run).",
+        "Settings → About displays the new horizontal/wordmark logo without breaking existing About content (app name, version text, and founder line remain)."
       ]
     },
     {
-      "id": "REQ-29",
-      "text": "Update the app’s branding constants so that (a) the tagline displayed in the UI uses the exact text “Track Smart.” and (b) the logo path(s) support theme-aware dark/light selection without editing any immutable frontend paths.",
+      "id": "REQ-38",
+      "text": "Update the browser favicon to match the newly generated BunkPro logo by pointing frontend/index.html’s favicon link to the new generated favicon asset under frontend/public/assets/generated.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-4"
         ],
         "quotes": [
-          "Tagline below in small font: “Track Smart.”"
+          "add this logo"
         ]
       },
       "acceptanceCriteria": [
-        "The displayed tagline in Settings → About is exactly “Track Smart.”.",
-        "Branding constants provide a clear way to retrieve the correct logo asset for dark vs light mode (used by splash and about views).",
-        "No changes are made to any paths listed as immutable in SYSTEM_CONTEXT."
-      ]
-    },
-    {
-      "id": "REQ-30",
-      "text": "Generate and set a matching favicon based on the new app icon, and ensure frontend/index.html references the updated favicon file under frontend/public/assets/generated.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "Suitable for mobile app icon",
-          "Easily recognizable at small sizes (48x48px)"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A 32×32 PNG favicon asset is present under frontend/public/assets/generated.",
-        "frontend/index.html references the new favicon file path.",
-        "Browser tab icon updates to the new design after reload (with normal cache-busting expectations during development)."
+        "frontend/index.html references the new favicon filename specified in imageRequirements.required.",
+        "After a hard refresh, the browser tab icon uses the new favicon (no reference to the previous bunkpro-uploaded-favicon.dim_32x32.png)."
       ]
     }
   ],
   "constraints": [
-    "Frontend must remain React + TypeScript + Tailwind + React Query; do not introduce other frameworks.",
-    "Do not modify any files under frontend/src/components/ui or any path listed in frontend.immutablePaths.",
-    "Keep all changes limited to branding/assets integration; do not alter attendance logic or persistence behavior.",
-    "Backend (Motoko) is not required for this change; do not add backend features."
+    "Do not modify any files under frontend/src/components/ui (Shadcn UI components are immutable).",
+    "Do not edit any immutable frontend paths listed by the platform (e.g., frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
+    "Keep the backend as a single Motoko actor; no backend changes are required for this request.",
+    "Use English for any user-facing text.",
+    "Do not change core attendance logic, persistence, backup/restore behavior, or notification logic as part of this branding update."
   ],
   "nonGoals": [
-    "Do not redesign or change any attendance tracking functionality, calculations, notifications behavior, or data storage.",
-    "Do not add new screens or navigation items.",
-    "Do not introduce third-party font/CDN dependencies unless already present in the project."
+    "Redesigning or refactoring Home/Timetable/Subject Details/Settings layouts beyond what is required to display the new logo assets.",
+    "Changing the app name or tagline text displayed in the UI.",
+    "Implementing new authentication, payment, or external integrations."
   ],
   "imageRequirements": {
     "required": [
-      "Minimal flat app icon mark (calendar/checkmark OR calendar/graph arrow OR progress-ring ‘B’), deep purple #6C4DFF with subtle indigo gradient (bunkpro-app-icon-light.dim_1024x1024.png)",
-      "Minimal flat app icon mark (same design), optimized for dark backgrounds (bunkpro-app-icon-dark.dim_1024x1024.png)",
-      "Horizontal logo with icon + ‘BunkPro’ wordmark (Bunk bold, Pro lighter) + tagline ‘Track Smart.’, optimized for light backgrounds (bunkpro-logo-horizontal-light.dim_1600x500.png)",
-      "Horizontal logo with icon + ‘BunkPro’ wordmark (Bunk bold, Pro lighter) + tagline ‘Track Smart.’, optimized for dark backgrounds (bunkpro-logo-horizontal-dark.dim_1600x500.png)",
-      "Favicon derived from the app icon mark (bunkpro-favicon.dim_32x32.png)"
+      "BunkPro app icon artwork (square, dark navy background, circular gradient ring emblem with cap+check+bar graph, soft glow) (bunkpro-logo-icon.dim_4096x4096.png)",
+      "BunkPro horizontal logo/wordmark on dark navy background, with emblem + “Bunk” purple gradient and “Pro” blue gradient, subtle glow/shadow (bunkpro-logo-horizontal.dim_4096x1536.png)",
+      "Favicon derived from the new logo icon (bunkpro-favicon.dim_32x32.png)"
     ],
     "edits": []
   },

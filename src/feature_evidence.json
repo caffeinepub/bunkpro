@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-generate-a-new-modern-minimal-professional-bunkpro-logo-set-that-follows-the-provided-style-requirements-flat-clean-premium-tech-gen-z-recognizable-at-48-48-and-includes-1-app-icon-only-square-2-full-horizontal-logo-with-text-each-in-both-dark-background-and-light-background-variants-using-the-palette-centered-on-deep-purple-6c4dff-optionally-an-indigo-gradient-with-soft-white-light-gray-and-an-optional-subtle-neon-blue-pink-accent-typography-must-be-modern-geometric-sans-serif-with-rounded-edges-with-bunk-bold-and-pro-lighter-and-the-tagline-text-exactly-track-smart",
-      "featureTitle": "Generate a new modern, minimal, professional BunkPro logo set that follows the provided style requirements (flat, clean, premium/tech, Gen‑Z, recognizable at 48×48) and includes: (1) app icon only (square), (2) full horizontal logo with text, each in both dark-background and light-background variants, using the palette centered on deep purple #6C4DFF (optionally an indigo gradient) with soft white/light gray and an optional subtle neon blue/pink accent; typography must be modern geometric sans-serif with rounded edges, with “Bunk” bold and “Pro” lighter, and the tagline text exactly “Track Smart.”.",
+      "featureId": "feature-create-new-high-resolution-bunkpro-logo-artwork-matching-the-user-s-spec-circular-emblem-with-a-smooth-purple-to-blue-gradient-ring-inside-the-circle-a-graduation-cap-combined-with-a-bold-checkmark-include-a-small-rising-bar-graph-element-clean-minimal-futuristic-look-with-subtle-3d-depth-soft-glow-under-the-logo-dark-navy-background-for-contrast-typography-in-a-bold-modern-sans-serif-with-bunk-in-a-purple-gradient-and-pro-in-a-blue-gradient-with-slight-glow-and-smooth-shadow-ensure-it-remains-legible-and-recognizable-at-small-sizes-and-works-well-in-a-circular-mobile-icon-crop",
+      "featureTitle": "Create new high-resolution BunkPro logo artwork matching the user’s spec: circular emblem with a smooth purple-to-blue gradient ring; inside the circle a graduation cap combined with a bold checkmark; include a small rising bar-graph element; clean minimal futuristic look with subtle 3D depth; soft glow under the logo; dark navy background for contrast; typography in a bold modern sans-serif with “Bunk” in a purple gradient and “Pro” in a blue gradient, with slight glow and smooth shadow; ensure it remains legible and recognizable at small sizes and works well in a circular mobile icon crop.",
       "files": [],
       "components": [
         "core-infrastructure@1.0.2",
@@ -13,34 +13,14 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-27"
+        "REQ-36"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-the-newly-generated-logo-assets-to-the-app-as-static-files-under-frontend-public-assets-generated-and-wire-them-into-all-existing-branding-placements-at-minimum-initial-loading-splash-and-settings-about-selecting-the-appropriate-dark-light-variant-based-on-current-theme",
-      "featureTitle": "Add the newly generated logo assets to the app as static files under frontend/public/assets/generated and wire them into all existing branding placements (at minimum: Initial loading splash and Settings → About), selecting the appropriate dark/light variant based on current theme.",
+      "featureId": "feature-integrate-the-newly-generated-bunkpro-logo-assets-into-the-app-so-all-existing-logo-placements-use-the-new-artwork-update-frontend-src-lib-branding-ts-to-return-the-new-generated-asset-paths-for-both-getappicon-and-gethorizontallogo-use-the-same-images-for-both-dark-and-light-themes-unless-separate-variants-are-explicitly-provided-ensure-the-initial-loading-splash-and-settings-about-automatically-reflect-the-updated-branding-without-changing-their-components-logic",
+      "featureTitle": "Integrate the newly generated BunkPro logo assets into the app so all existing logo placements use the new artwork: update frontend/src/lib/branding.ts to return the new generated asset paths for both getAppIcon and getHorizontalLogo (use the same images for both dark and light themes unless separate variants are explicitly provided). Ensure the Initial Loading Splash and Settings → About automatically reflect the updated branding without changing their components’ logic.",
       "files": [
-        "frontend/src/components/settings/AboutCard.tsx",
-        "frontend/src/components/system/InitialLoadSplash.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-28"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-app-s-branding-constants-so-that-a-the-tagline-displayed-in-the-ui-uses-the-exact-text-track-smart-and-b-the-logo-path-s-support-theme-aware-dark-light-selection-without-editing-any-immutable-frontend-paths",
-      "featureTitle": "Update the app’s branding constants so that (a) the tagline displayed in the UI uses the exact text “Track Smart.” and (b) the logo path(s) support theme-aware dark/light selection without editing any immutable frontend paths.",
-      "files": [
-        "frontend/src/components/settings/AboutCard.tsx",
         "frontend/src/lib/branding.ts"
       ],
       "components": [
@@ -51,14 +31,16 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-29"
+        "REQ-37"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-generate-and-set-a-matching-favicon-based-on-the-new-app-icon-and-ensure-frontend-index-html-references-the-updated-favicon-file-under-frontend-public-assets-generated",
-      "featureTitle": "Generate and set a matching favicon based on the new app icon, and ensure frontend/index.html references the updated favicon file under frontend/public/assets/generated.",
-      "files": [],
+      "featureId": "feature-update-the-browser-favicon-to-match-the-newly-generated-bunkpro-logo-by-pointing-frontend-index-html-s-favicon-link-to-the-new-generated-favicon-asset-under-frontend-public-assets-generated",
+      "featureTitle": "Update the browser favicon to match the newly generated BunkPro logo by pointing frontend/index.html’s favicon link to the new generated favicon asset under frontend/public/assets/generated.",
+      "files": [
+        "frontend/index.html"
+      ],
       "components": [
         "core-infrastructure@1.0.2",
         "shadcn-ui@1.0.0",
@@ -67,7 +49,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-30"
+        "REQ-38"
       ],
       "confidence": "high"
     }

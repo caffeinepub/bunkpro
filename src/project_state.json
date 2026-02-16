@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
+  "projectStateVersion": 17,
   "summary": "Build “BunkPro”, a fully functional Android smart attendance manager for college students with BunkWell-equivalent core features/logic, redesigned premium modern UI/UX, offline local storage, backup/restore, and thorough testing.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -12,9 +12,11 @@
     "Notifications scope added: implement web push notifications, desktop notifications, and local notifications (clarify platform support/approach for Android vs web/desktop).",
     "Branding scope: create new BunkPro logo assets (icon-only + full wordmark) with dark/light variants; must be flat, minimal, and legible at small sizes (48x48)."
   ],
-  "known_issues": [],
+  "known_issues": [
+    "\"Send test notification\" does not show/appear (notification seems inactive/not visible) when pressed."
+  ],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Minimal flat app icon mark (calendar/checkmark OR calendar/graph arrow OR progress-ring ‘B’), deep purple #6C4DFF with subtle indigo gradient (bunkpro-app-icon-light.dim_1024x1024.png)\n- Minimal flat app icon mark (same design), optimized for dark backgrounds (bunkpro-app-icon-dark.dim_1024x1024.png)\n- Horizontal logo with icon + ‘BunkPro’ wordmark (Bunk bold, Pro lighter) + tagline ‘Track Smart.’, optimized for light backgrounds (bunkpro-logo-horizontal-light.dim_1600x500.png)\n- Horizontal logo with icon + ‘BunkPro’ wordmark (Bunk bold, Pro lighter) + tagline ‘Track Smart.’, optimized for dark backgrounds (bunkpro-logo-horizontal-dark.dim_1600x500.png)\n- Favicon derived from the app icon mark (bunkpro-favicon.dim_32x32.png)",
+  "imageRequirements": "## Required Images\n- BunkPro app icon artwork (square, dark navy background, circular gradient ring emblem with cap+check+bar graph, soft glow) (bunkpro-logo-icon.dim_4096x4096.png)\n- BunkPro horizontal logo/wordmark on dark navy background, with emblem + “Bunk” purple gradient and “Pro” blue gradient, subtle glow/shadow (bunkpro-logo-horizontal.dim_4096x1536.png)\n- Favicon derived from the new logo icon (bunkpro-favicon.dim_32x32.png)",
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -239,6 +241,70 @@
         "REQ-30"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-settings-about-section-to-display-the-exact-text-founded-by-basavaraj-hiremath-english-with-this-exact-capitalization-in-addition-to-the-existing-about-content-without-removing-existing-app-name-tagline-version-copyright",
+      "title": "Update the Settings → About section to display the exact text \"Founded by Basavaraj Hiremath\" (English, with this exact capitalization) in addition to the existing About content, without removing existing app name/tagline/version/copyright.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-debug-and-fix-the-settings-notifications-send-test-notification-action-so-that-pressing-the-button-reliably-results-in-a-visible-browser-notification-when-notifications-are-supported-permission-is-granted-and-notifications-are-enabled-additionally-provide-clear-in-app-feedback-when-a-test-notification-cannot-be-sent-e-g-unsupported-browser-permission-not-granted-denied-or-send-failure",
+      "title": "Debug and fix the Settings → Notifications → \"Send Test Notification\" action so that pressing the button reliably results in a visible browser notification when notifications are supported, permission is granted, and notifications are enabled; additionally, provide clear in-app feedback when a test notification cannot be sent (e.g., unsupported browser, permission not granted/denied, or send failure).",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-the-newly-uploaded-logo-image-ea2777cf-279d-4438-9134-41dc0fd0b5d9-png-to-the-app-as-static-assets-under-frontend-public-assets-generated-preserving-the-logo-exactly-as-provided-no-redesign-no-re-draw",
+      "title": "Add the newly uploaded logo image (ea2777cf-279d-4438-9134-41dc0fd0b5d9.png) to the app as static assets under frontend/public/assets/generated, preserving the logo exactly as provided (no redesign, no re-draw).",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-app-s-branding-constants-so-all-existing-logo-usages-including-the-initial-loading-splash-and-settings-about-render-the-newly-uploaded-logo-assets-using-the-same-image-for-both-dark-and-light-themes-theme-aware-switching-may-remain-but-must-resolve-to-the-uploaded-logo-in-both-modes",
+      "title": "Update the app’s branding constants so all existing logo usages (including the initial loading splash and Settings → About) render the newly uploaded logo assets, using the same image for both dark and light themes (theme-aware switching may remain but must resolve to the uploaded logo in both modes).",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-browser-favicon-to-match-the-newly-uploaded-logo-exactly-by-pointing-frontend-index-html-to-the-new-favicon-asset-under-frontend-public-assets-generated",
+      "title": "Update the browser favicon to match the newly uploaded logo exactly by pointing frontend/index.html to the new favicon asset under frontend/public/assets/generated.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-new-high-resolution-bunkpro-logo-artwork-matching-the-user-s-spec-circular-emblem-with-a-smooth-purple-to-blue-gradient-ring-inside-the-circle-a-graduation-cap-combined-with-a-bold-checkmark-include-a-small-rising-bar-graph-element-clean-minimal-futuristic-look-with-subtle-3d-depth-soft-glow-under-the-logo-dark-navy-background-for-contrast-typography-in-a-bold-modern-sans-serif-with-bunk-in-a-purple-gradient-and-pro-in-a-blue-gradient-with-slight-glow-and-smooth-shadow-ensure-it-remains-legible-and-recognizable-at-small-sizes-and-works-well-in-a-circular-mobile-icon-crop",
+      "title": "Create new high-resolution BunkPro logo artwork matching the user’s spec: circular emblem with a smooth purple-to-blue gradient ring; inside the circle a graduation cap combined with a bold checkmark; include a small rising bar-graph element; clean minimal futuristic look with subtle 3D depth; soft glow under the logo; dark navy background for contrast; typography in a bold modern sans-serif with “Bunk” in a purple gradient and “Pro” in a blue gradient, with slight glow and smooth shadow; ensure it remains legible and recognizable at small sizes and works well in a circular mobile icon crop.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-integrate-the-newly-generated-bunkpro-logo-assets-into-the-app-so-all-existing-logo-placements-use-the-new-artwork-update-frontend-src-lib-branding-ts-to-return-the-new-generated-asset-paths-for-both-getappicon-and-gethorizontallogo-use-the-same-images-for-both-dark-and-light-themes-unless-separate-variants-are-explicitly-provided-ensure-the-initial-loading-splash-and-settings-about-automatically-reflect-the-updated-branding-without-changing-their-components-logic",
+      "title": "Integrate the newly generated BunkPro logo assets into the app so all existing logo placements use the new artwork: update frontend/src/lib/branding.ts to return the new generated asset paths for both getAppIcon and getHorizontalLogo (use the same images for both dark and light themes unless separate variants are explicitly provided). Ensure the Initial Loading Splash and Settings → About automatically reflect the updated branding without changing their components’ logic.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-browser-favicon-to-match-the-newly-generated-bunkpro-logo-by-pointing-frontend-index-html-s-favicon-link-to-the-new-generated-favicon-asset-under-frontend-public-assets-generated",
+      "title": "Update the browser favicon to match the newly generated BunkPro logo by pointing frontend/index.html’s favicon link to the new generated favicon asset under frontend/public/assets/generated.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -345,6 +411,30 @@
     {
       "id": "AR-30",
       "summary": "Design a modern, minimal BunkPro logo/branding set with icon + typography, including app icon (square), full horizontal logo, and dark/light background variants, matching the specified purple/indigo tech aesthetic and Gen‑Z premium style.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Update Settings → About section copy to include the text: \"founded by Basavaraj Hiremath\".",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Debug/fix the \"Send test notification\" action so notifications reliably appear when enabled and permitted (correct permission/toggle state handling and visibility).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-33",
+      "summary": "Replace the app’s current branding with the newly provided logo exactly as-is (no redesign), and use it consistently wherever the logo appears (e.g., app icon and splash/loading branding).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-34",
+      "summary": "Create a new premium modern BunkPro logo per spec (circular purple→blue gradient ring, graduation cap + bold checkmark, rising bar graph, soft glow, dark navy background, gradient “Bunk”/“Pro” typography, subtle 3D depth) in high resolution (4K/8K) and integrate it into the app branding.",
       "reqIds": [],
       "status": "pending"
     }

@@ -6,14 +6,12 @@ export const BRANDING = {
   logoAlt: 'BunkPro Logo',
   
   // App icon (square format) - for splash screen
+  // Using the new premium logo icon for both light and dark themes
   getAppIcon: (isDark: boolean) => 
-    isDark 
-      ? '/assets/generated/bunkpro-app-icon-dark.dim_1024x1024.png'
-      : '/assets/generated/bunkpro-app-icon-light.dim_1024x1024.png',
+    '/assets/generated/bunkpro-logo-icon.dim_4096x4096.png',
   
   // Horizontal logo with wordmark - for about section
+  // Using the new premium horizontal logo for both light and dark themes
   getHorizontalLogo: (isDark: boolean) =>
-    isDark
-      ? '/assets/generated/bunkpro-logo-horizontal-dark.dim_1600x500.png'
-      : '/assets/generated/bunkpro-logo-horizontal-light.dim_1600x500.png',
+    '/assets/generated/bunkpro-logo-horizontal.dim_4096x1536.png',
 } as const;

@@ -1,62 +1,25 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-15T12:49:26.211Z",
-  "summary": "Diff updates theme-aware branding helpers and wires new logo paths into InitialLoadSplash and Settings → About, but it does not add the required static image assets or update index.html for the favicon, and the UI does not display the required tagline text in About.",
+  "generatedAt": "2026-02-16T12:41:08.855Z",
+  "summary": "REQ-37 and REQ-38 appear implemented via updates to branding.ts and index.html, but the required generated image assets themselves were not added to the repo, leaving REQ-36 unmet (and preventing full verification of the integration at runtime).",
   "missing_requirements": [
     {
-      "id": "REQ-27",
-      "requirement": "Produce four new logo image assets (app icon light/dark, horizontal logo light/dark) as static files matching the specified style and containing tagline “Track Smart.” in the full logo.",
-      "reason": "No new image assets were added in the diff (no files under frontend/public/assets/generated were introduced), so the required generated logo set is not present/verified.",
+      "id": "REQ-36",
+      "requirement": "Add the new high-resolution generated logo image assets under frontend/public/assets/generated using the exact required filenames (icon, horizontal, favicon) and matching the provided visual spec/legibility constraints.",
+      "reason": "The diff shows no newly added files, so the required static image assets are not present under frontend/public/assets/generated. Without the files, the artwork/legibility/glow/gradient requirements also cannot be satisfied or verified.",
       "evidence": [
-        "File diff summary shows “Added: 0” and “ADDED FILES: none”",
-        "frontend/src/lib/branding.ts (references /assets/generated/... but does not add them)"
-      ]
-    },
-    {
-      "id": "REQ-28",
-      "requirement": "Add newly generated logo assets under frontend/public/assets/generated and ensure all existing branding placements use them with theme-aware dark/light selection; remove any previous generated logo path usage.",
-      "reason": "The code references new /assets/generated paths, but the assets themselves were not added. Also, the diff summary does not provide evidence that all other branding placements (beyond the two modified files) were updated or that old logo paths were fully removed.",
-      "evidence": [
-        "ADDED FILES: none (no frontend/public/assets/generated assets added)",
-        "frontend/src/components/system/InitialLoadSplash.tsx",
-        "frontend/src/components/settings/AboutCard.tsx",
-        "frontend/src/lib/branding.ts"
-      ]
-    },
-    {
-      "id": "REQ-29",
-      "requirement": "Ensure the displayed tagline in Settings → About is exactly “Track Smart.” and branding constants support theme-aware logo selection.",
-      "reason": "Branding constants include tagline: 'Track Smart.' and theme-aware getters, but Settings → About (AboutCard) does not render BRANDING.tagline anywhere, so the displayed tagline requirement is not met.",
-      "evidence": [
-        "frontend/src/lib/branding.ts (tagline: 'Track Smart.')",
-        "frontend/src/components/settings/AboutCard.tsx (no usage of BRANDING.tagline; displays “A smart attendance manager for college students”)"
-      ]
-    },
-    {
-      "id": "REQ-30",
-      "requirement": "Add a 32×32 PNG favicon under frontend/public/assets/generated and update frontend/index.html to reference it.",
-      "reason": "No favicon asset was added and frontend/index.html was not modified in the diff, so the favicon cannot be updated as required.",
-      "evidence": [
-        "ADDED FILES: none (no /assets/generated/bunkpro-favicon.dim_32x32.png)",
-        "Modified files list does not include frontend/index.html"
+        "<file-diff>: ADDED FILES: none",
+        "frontend/src/lib/branding.ts (references /assets/generated/bunkpro-logo-icon.dim_4096x4096.png and /assets/generated/bunkpro-logo-horizontal.dim_4096x1536.png)",
+        "frontend/index.html (references /assets/generated/bunkpro-favicon.dim_32x32.png)"
       ]
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Changed InitialLoadSplash background to a purple/blue gradient (bg-gradient-to-br from-purple-600 via-blue-600 to-purple-800).",
-      "reason": "The BuildRequest focuses on branding/assets integration and wiring logos; it does not request changing the splash screen background styling. This may be an unrequested UI change beyond asset integration.",
-      "evidence": [
-        "frontend/src/components/system/InitialLoadSplash.tsx"
-      ]
-    }
-  ],
-  "confidence": 0.84,
+  "hallucinated_features": [],
+  "confidence": 0.78,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/components/settings/AboutCard.tsx",
-    "frontend/src/components/system/InitialLoadSplash.tsx",
+    "frontend/index.html",
     "frontend/src/lib/branding.ts",
     "project_state.json"
   ]

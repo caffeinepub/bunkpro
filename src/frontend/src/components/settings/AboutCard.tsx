@@ -1,4 +1,4 @@
-// About section card displaying the BunkPro logo, app information, and version details using theme-aware branding
+// About section card displaying the BunkPro logo, app information, version details, and founder information using theme-aware branding
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +42,9 @@ export function AboutCard() {
           <p className="text-muted-foreground">Version 1.0.0</p>
           <p className="text-muted-foreground">
             A smart attendance manager for college students
+          </p>
+          <p className="text-muted-foreground font-medium">
+            Founded by Basavaraj Hiremath
           </p>
         </div>
 

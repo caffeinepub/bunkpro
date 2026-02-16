@@ -1,4 +1,4 @@
-// Settings card for managing browser notification preferences with permission handling and test notification
+// Settings card for managing browser notification preferences with permission handling, test notification, and clear feedback
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Bell, BellOff, AlertCircle } from 'lucide-react';
+import { Bell, BellOff, AlertCircle, CheckCircle } from 'lucide-react';
 import {
   isNotificationSupported,
   getNotificationPermission,
@@ -23,6 +23,7 @@ export function NotificationsCard({ enabled, onToggle }: NotificationsCardProps)
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isRequesting, setIsRequesting] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const supported = isNotificationSupported();
 
@@ -46,17 +47,39 @@ export function NotificationsCard({ enabled, onToggle }: NotificationsCardProps)
     }
   };
 
-  const handleSendTest = () => {
+  const handleSendTest = async () => {
     setIsSendingTest(true);
-    sendNotification({
-      title: '🎉 Test Notification',
-      body: 'Notifications are working! You will receive updates when you mark classes.',
-      tag: 'test-notification',
-    });
+    setTestResult(null);
     
-    setTimeout(() => {
+    try {
+      const result = sendNotification({
+        title: '🎉 Test Notification',
+        body: 'Notifications are working! You will receive updates when you mark classes.',
+        tag: 'test-notification',
+      });
+      
+      if (result.success) {
+        setTestResult({
+          success: true,
+          message: 'Test notification sent successfully! Check your system notifications.',
+        });
+      } else {
+        let message = 'Failed to send notification. ';
+        if (result.reason === 'unsupported') {
+          message += 'Your browser does not support notifications.';
+        } else if (result.reason === 'permission-denied') {
+          message += 'Permission not granted. Please enable notifications in your browser settings.';
+        } else {
+          message += result.errorMessage || 'An unknown error occurred.';
+        }
+        setTestResult({
+          success: false,
+          message,
+        });
+      }
+    } finally {
       setIsSendingTest(false);
-    }, 1000);
+    }
   };
 
   const canSendNotifications = supported && permission === 'granted';
@@ -138,7 +161,7 @@ export function NotificationsCard({ enabled, onToggle }: NotificationsCardProps)
 
         {/* Test Notification Button */}
         {canSendNotifications && enabled && (
-          <div className="pt-4 border-t">
+          <div className="pt-4 border-t space-y-3">
             <Button 
               onClick={handleSendTest}
               disabled={isSendingTest}
@@ -147,6 +170,20 @@ export function NotificationsCard({ enabled, onToggle }: NotificationsCardProps)
             >
               {isSendingTest ? 'Sending...' : 'Send Test Notification'}
             </Button>
+            
+            {/* Test Result Feedback */}
+            {testResult && (
+              <Alert variant={testResult.success ? 'default' : 'destructive'}>
+                {testResult.success ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <AlertCircle className="h-4 w-4" />
+                )}
+                <AlertDescription>
+                  {testResult.message}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         )}
 

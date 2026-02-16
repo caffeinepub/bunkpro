@@ -1,69 +1,50 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-15T12:49:26.214Z",
+  "generatedAt": "2026-02-16T12:41:08.859Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 4,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
-        "id": "REQ-27",
-        "summary": "Generate a new modern, minimal, professional BunkPro logo set that follows the provided style requirements (flat, clean, premium/tech, Gen‑Z, recognizable at 48×48) and includes: (1) app icon only (square), (2) full horizontal logo with text, each in both dark-background and light-background variants, using the palette centered on deep purple #6C4DFF (optionally an indigo gradient) with soft white/light gray and an optional subtle neon blue/pink accent; typography must be modern geometric sans-serif with rounded edges, with “Bunk” bold and “Pro” lighter, and the tagline text exactly “Track Smart.”.",
+        "id": "REQ-36",
+        "summary": "Create new high-resolution BunkPro logo artwork matching the user’s spec: circular emblem with a smooth purple-to-blue gradient ring; inside the circle a graduation cap combined with a bold checkmark; include a small rising bar-graph element; clean minimal futuristic look with subtle 3D depth; soft glow under the logo; dark navy background for contrast; typography in a bold modern sans-serif with “Bunk” in a purple gradient and “Pro” in a blue gradient, with slight glow and smooth shadow; ensure it remains legible and recognizable at small sizes and works well in a circular mobile icon crop.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/public/assets/generated/bunkpro-app-icon-light.dim_1024x1024.png",
-          "frontend/public/assets/generated/bunkpro-app-icon-dark.dim_1024x1024.png",
-          "frontend/public/assets/generated/bunkpro-logo-horizontal-light.dim_1600x500.png",
-          "frontend/public/assets/generated/bunkpro-logo-horizontal-dark.dim_1600x500.png"
+          "frontend/public/assets/generated/bunkpro-logo-icon.dim_4096x4096.png",
+          "frontend/public/assets/generated/bunkpro-logo-horizontal.dim_4096x1536.png",
+          "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png"
         ],
         "matchedFiles": [
-          "frontend/public/assets/generated/bunkpro-app-icon-light.dim_1024x1024.png",
-          "frontend/public/assets/generated/bunkpro-app-icon-dark.dim_1024x1024.png",
-          "frontend/public/assets/generated/bunkpro-logo-horizontal-light.dim_1600x500.png",
-          "frontend/public/assets/generated/bunkpro-logo-horizontal-dark.dim_1600x500.png"
+          "frontend/public/assets/generated/bunkpro-logo-icon.dim_4096x4096.png",
+          "frontend/public/assets/generated/bunkpro-logo-horizontal.dim_4096x1536.png",
+          "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png"
         ]
       },
       {
-        "id": "REQ-28",
-        "summary": "Add the newly generated logo assets to the app as static files under frontend/public/assets/generated and wire them into all existing branding placements (at minimum: Initial loading splash and Settings → About), selecting the appropriate dark/light variant based on current theme.",
+        "id": "REQ-37",
+        "summary": "Integrate the newly generated BunkPro logo assets into the app so all existing logo placements use the new artwork: update frontend/src/lib/branding.ts to return the new generated asset paths for both getAppIcon and getHorizontalLogo (use the same images for both dark and light themes unless separate variants are explicitly provided). Ensure the Initial Loading Splash and Settings → About automatically reflect the updated branding without changing their components’ logic.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/system/InitialLoadSplash.tsx",
-          "frontend/src/components/settings/AboutCard.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/lib/branding.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/system/InitialLoadSplash.tsx",
-          "frontend/src/components/settings/AboutCard.tsx"
+          "frontend/src/lib/branding.ts"
         ]
       },
       {
-        "id": "REQ-29",
-        "summary": "Update the app’s branding constants so that (a) the tagline displayed in the UI uses the exact text “Track Smart.” and (b) the logo path(s) support theme-aware dark/light selection without editing any immutable frontend paths.",
+        "id": "REQ-38",
+        "summary": "Update the browser favicon to match the newly generated BunkPro logo by pointing frontend/index.html’s favicon link to the new generated favicon asset under frontend/public/assets/generated.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/lib/branding.ts",
-          "frontend/src/components/settings/AboutCard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/lib/branding.ts",
-          "frontend/src/components/settings/AboutCard.tsx"
-        ]
-      },
-      {
-        "id": "REQ-30",
-        "summary": "Generate and set a matching favicon based on the new app icon, and ensure frontend/index.html references the updated favicon file under frontend/public/assets/generated.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png",
           "frontend/index.html"
         ],
         "matchedFiles": [
-          "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png"
+          "frontend/index.html"
         ]
       }
     ]
@@ -73,13 +54,10 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/public/assets/generated/bunkpro-app-icon-dark.dim_1024x1024.png",
-    "frontend/public/assets/generated/bunkpro-app-icon-light.dim_1024x1024.png",
+    "frontend/index.html",
     "frontend/public/assets/generated/bunkpro-favicon.dim_32x32.png",
-    "frontend/public/assets/generated/bunkpro-logo-horizontal-dark.dim_1600x500.png",
-    "frontend/public/assets/generated/bunkpro-logo-horizontal-light.dim_1600x500.png",
-    "frontend/src/components/settings/AboutCard.tsx",
-    "frontend/src/components/system/InitialLoadSplash.tsx",
+    "frontend/public/assets/generated/bunkpro-logo-horizontal.dim_4096x1536.png",
+    "frontend/public/assets/generated/bunkpro-logo-icon.dim_4096x4096.png",
     "frontend/src/lib/branding.ts",
     "project_state.json",
     "scratch/component-selection.json",

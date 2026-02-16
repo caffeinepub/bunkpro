@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Refresh BunkPro branding by generating a new modern, minimal logo set (icon + horizontal wordmark) with dark/light variants, and integrate it across the app with theme-aware selection.
+**Goal:** Generate a new premium BunkPro logo set (app icon, horizontal wordmark, favicon) per the provided visual spec and integrate it across the app’s branding.
 
 **Planned changes:**
-- Generate four new logo assets (square app icon + horizontal logo with “BunkPro” and tagline “Track Smart.”), each with light-background and dark-background variants.
-- Add the new logo assets under `frontend/public/assets/generated` and update branding placements (at minimum: initial loading splash and Settings → About) to use theme-appropriate variants via absolute `/assets/generated/...` paths.
-- Update branding constants to (a) use the exact tagline text “Track Smart.” and (b) provide theme-aware logo path selection for splash and about views.
-- Generate a matching 32×32 favicon derived from the new app icon and update `frontend/index.html` to reference it.
+- Add new generated logo assets (icon, horizontal logo/wordmark, favicon) under `frontend/public/assets/generated` using the specified filenames.
+- Update `frontend/src/lib/branding.ts` so `getAppIcon(...)` and `getHorizontalLogo(...)` point to the new generated assets (using the same assets for dark/light themes unless separate variants are provided).
+- Update `frontend/index.html` to reference the new generated favicon asset.
 
-**User-visible outcome:** The app displays the new BunkPro icon/wordmark and the exact “Track Smart.” tagline on the splash and About screen, automatically switching the correct light/dark logo variant with the current theme, and the browser tab favicon matches the new icon.
+**User-visible outcome:** The app’s splash/loading screen, Settings → About branding, and the browser tab favicon all display the new BunkPro logo artwork without changing existing app logic or layouts.

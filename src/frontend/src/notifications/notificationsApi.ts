@@ -1,4 +1,4 @@
-// Browser Notifications API wrapper with permission handling and support detection
+// Browser Notifications API wrapper with permission handling, support detection, and actionable result feedback
 
 export type NotificationPermission = 'default' | 'granted' | 'denied';
 
@@ -7,6 +7,13 @@ export interface NotificationOptions {
   body: string;
   icon?: string;
   tag?: string;
+}
+
+export interface NotificationResult {
+  success: boolean;
+  notification?: Notification;
+  reason?: 'unsupported' | 'permission-denied' | 'error';
+  errorMessage?: string;
 }
 
 /**
@@ -44,17 +51,23 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 }
 
 /**
- * Send a notification if permission is granted
+ * Send a notification if permission is granted, returns actionable result
  */
-export function sendNotification(options: NotificationOptions): Notification | null {
+export function sendNotification(options: NotificationOptions): NotificationResult {
   if (!isNotificationSupported()) {
-    console.warn('Notifications are not supported in this browser');
-    return null;
+    return {
+      success: false,
+      reason: 'unsupported',
+      errorMessage: 'Notifications are not supported in this browser',
+    };
   }
 
   if (Notification.permission !== 'granted') {
-    console.warn('Notification permission not granted');
-    return null;
+    return {
+      success: false,
+      reason: 'permission-denied',
+      errorMessage: 'Notification permission not granted',
+    };
   }
 
   try {
@@ -70,9 +83,16 @@ export function sendNotification(options: NotificationOptions): Notification | n
       notification.close();
     }, 5000);
 
-    return notification;
+    return {
+      success: true,
+      notification,
+    };
   } catch (error) {
     console.error('Failed to send notification:', error);
-    return null;
+    return {
+      success: false,
+      reason: 'error',
+      errorMessage: error instanceof Error ? error.message : 'Failed to create notification',
+    };
   }
 }

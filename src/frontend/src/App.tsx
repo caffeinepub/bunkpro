@@ -1,5 +1,5 @@
-// Main app component with 5-tab navigation, login gate, and proper profile sync to canister backend
-import React, { useState, useEffect } from 'react';
+// Main app component with hardened profile sync that prevents post-logout errors and proper cancellation handling
+import React, { useState, useEffect, useRef } from 'react';
 import { AppProvider, useAppStore } from './state/appStore';
 import { ErrorBoundary } from './components/system/ErrorBoundary';
 import { InitialLoadSplash } from './components/system/InitialLoadSplash';
@@ -15,7 +15,6 @@ import { RankPage } from './rank/RankPage';
 import { Toaster } from '@/components/ui/sonner';
 import { initializeTheme } from './theme/themeManager';
 import { useActor } from './hooks/useActor';
-import { toast } from 'sonner';
 import type { UserProfile as DomainUserProfile } from './domain/attendanceTypes';
 import type { UserProfile as BackendUserProfile } from './backend';
 
@@ -33,6 +32,9 @@ function AppContent() {
   const [route, setRoute] = useState<Route>({ type: 'home' });
   const [isInitializing, setIsInitializing] = useState(true);
   const [isSyncingProfile, setIsSyncingProfile] = useState(false);
+  
+  // Cancellation flag to prevent post-logout sync
+  const syncCancelledRef = useRef(false);
 
   // Initialize theme on mount
   useEffect(() => {
@@ -44,25 +46,51 @@ function AppContent() {
     initializeTheme(state.settings);
   }, [state.settings.theme, state.settings.themeVariant]);
 
-  // Sync profile to backend after login
+  // Reset cancellation flag when user logs in
+  useEffect(() => {
+    if (state.userProfile) {
+      syncCancelledRef.current = false;
+    } else {
+      // User logged out - cancel any in-flight sync
+      syncCancelledRef.current = true;
+    }
+  }, [state.userProfile]);
+
+  // Sync profile to backend after login with cancellation support
   useEffect(() => {
     const syncProfileToBackend = async () => {
-      if (!actor || !state.userProfile || isSyncingProfile) return;
+      // Guard: Don't sync if no actor, no profile, already syncing, or cancelled
+      if (!actor || !state.userProfile || isSyncingProfile || syncCancelledRef.current) {
+        return;
+      }
 
       setIsSyncingProfile(true);
 
       try {
+        // Check cancellation before async operation
+        if (syncCancelledRef.current) {
+          return;
+        }
+
         const backendProfile: BackendUserProfile = {
           displayName: state.userProfile.displayName,
-          college: 'Unknown', // Default value
-          email: 'unknown@example.com', // Default value
+          college: 'Unknown',
+          email: 'unknown@example.com',
         };
 
         await actor.saveCallerUserProfile(backendProfile);
+
+        // Check cancellation after async operation
+        if (syncCancelledRef.current) {
+          return;
+        }
+
         console.log('Profile synced to backend successfully');
       } catch (error) {
-        console.error('Failed to sync profile to backend:', error);
-        // Don't show error toast - this is a background sync
+        // Only log error if not cancelled
+        if (!syncCancelledRef.current) {
+          console.error('Failed to sync profile to backend:', error);
+        }
       } finally {
         setIsSyncingProfile(false);
       }

@@ -43,6 +43,12 @@ export interface ClassExchange {
   timestamp: number;
 }
 
+export interface NotificationPreferences {
+  rankingAlerts: boolean;
+  rewardAlerts: boolean;
+  streakReminders: boolean;
+}
+
 export interface AppSettings {
   targetPercentage: number;
   theme: 'light' | 'dark' | 'system';
@@ -51,6 +57,7 @@ export interface AppSettings {
   enableStreakCounter: boolean;
   enableDangerZone: boolean;
   enableNotifications: boolean;
+  notificationPreferences: NotificationPreferences;
 }
 
 export interface UserProfile {
@@ -76,6 +83,12 @@ export interface AppState {
   version: number;
 }
 
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  rankingAlerts: true,
+  rewardAlerts: true,
+  streakReminders: true,
+};
+
 export const DEFAULT_SETTINGS: AppSettings = {
   targetPercentage: 75,
   theme: 'system',
@@ -84,6 +97,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   enableStreakCounter: true,
   enableDangerZone: true,
   enableNotifications: false,
+  notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
 };
 
 export const DEFAULT_STATE: AppState = {

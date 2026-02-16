@@ -1,4 +1,4 @@
-// Settings page with profile editor, theme controls, backend profile sync, and logout functionality
+// Settings page with resilient logout flow, notification category preferences, and proper error handling
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,17 +12,16 @@ import { NotificationsCard } from '../components/settings/NotificationsCard';
 import { ProfileDisplayNameEditor } from '../components/settings/ProfileDisplayNameEditor';
 import { LogoutCard } from '../components/settings/LogoutCard';
 import { useActor } from '../hooks/useActor';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useAuthRecovery } from '../hooks/useAuthRecovery';
 import { toast } from 'sonner';
 import type { UserProfile as BackendUserProfile } from '../backend';
-import type { AppState } from '../domain/attendanceTypes';
-import { clearIndexedDB } from '../storage/indexedDbClient';
-import { clearRankingCache } from '../rank/rankCache';
+import type { AppState, NotificationPreferences } from '../domain/attendanceTypes';
+import { clearAllSessionParameters } from '../utils/urlParams';
 
 export function SettingsPage() {
   const { state, dispatch } = useAppStore();
   const { actor } = useActor();
-  const { clear: clearIdentity } = useInternetIdentity();
+  const { performLogout } = useAuthRecovery();
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const handleSaveDisplayName = async (newName: string) => {
@@ -64,38 +63,34 @@ export function SettingsPage() {
   };
 
   const handleLogout = async () => {
+    // Step 1: Immediately trigger login gate by resetting app state
+    dispatch({ type: 'RESET_ALL' });
+
+    // Step 2: Perform complete cleanup (best-effort)
     try {
-      // Step 1: Delete user data from backend
+      // Try to delete from backend if actor is available
       if (actor) {
         try {
           await actor.deleteCallerUser();
         } catch (error: any) {
           console.error('Failed to delete user from backend:', error);
           const errorMessage = error?.message || 'Unknown error';
-          toast.error(`Failed to delete leaderboard data: ${errorMessage}`);
-          throw error; // Stop logout process if backend deletion fails
+          toast.error(`Failed to delete leaderboard data: ${errorMessage}. Local data will still be cleared.`);
+          // Continue with local cleanup even if backend deletion fails
         }
-      } else {
-        toast.error('Not connected to backend. Cannot delete leaderboard data.');
-        throw new Error('Backend actor not available');
       }
 
-      // Step 2: Clear ranking cache
-      clearRankingCache();
+      // Complete local cleanup via auth recovery hook
+      await performLogout(false); // Don't show duplicate toast
 
-      // Step 3: Clear IndexedDB
-      await clearIndexedDB();
+      // Clear sessionStorage including URL param secrets
+      clearAllSessionParameters();
 
-      // Step 4: Reset app state
-      dispatch({ type: 'RESET_ALL' });
-
-      // Step 5: Clear Internet Identity session
-      await clearIdentity();
-
-      toast.success('Logged out successfully. All data has been deleted.');
+      toast.success('Logged out successfully');
     } catch (error) {
-      console.error('Logout error:', error);
-      // Error toast already shown in specific steps above
+      console.error('Logout cleanup error:', error);
+      // Local logout already completed via RESET_ALL
+      toast.info('Logged out (some cleanup steps failed)');
     }
   };
 
@@ -148,6 +143,13 @@ export function SettingsPage() {
     });
   };
 
+  const handleNotificationPreferencesChange = (preferences: NotificationPreferences) => {
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { notificationPreferences: preferences },
+    });
+  };
+
   const handleRestore = (restoredState: AppState) => {
     dispatch({ type: 'RESTORE_STATE', payload: restoredState });
   };
@@ -191,7 +193,9 @@ export function SettingsPage() {
       {/* Notifications */}
       <NotificationsCard
         enabled={state.settings.enableNotifications}
+        preferences={state.settings.notificationPreferences}
         onToggle={handleToggleNotifications}
+        onPreferencesChange={handleNotificationPreferencesChange}
       />
 
       <Separator />

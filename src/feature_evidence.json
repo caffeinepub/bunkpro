@@ -2,12 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-logout-button-in-the-settings-screen-that-when-confirmed-1-deletes-the-current-user-from-the-backend-ranking-database-and-2-erases-all-locally-stored-app-data-on-the-device-then-returns-the-user-to-the-login-screen",
-      "featureTitle": "Add a Logout button in the Settings screen that, when confirmed, (1) deletes the current user from the backend ranking database and (2) erases all locally stored app data on the device, then returns the user to the Login screen.",
+      "featureId": "feature-fix-the-post-logout-unauthorized-user-bug-by-making-the-logout-flow-immediately-transition-the-ui-to-the-login-screen-cancel-stop-any-in-flight-backend-calls-and-prevent-any-subsequent-backend-calls-from-being-initiated-after-logout-completes",
+      "featureTitle": "Fix the post-logout “Unauthorized User” bug by making the logout flow immediately transition the UI to the Login screen, cancel/stop any in-flight backend calls, and prevent any subsequent backend calls from being initiated after logout completes.",
       "files": [
-        "frontend/src/components/settings/LogoutCard.tsx",
+        "frontend/src/App.tsx",
         "frontend/src/pages/SettingsPage.tsx",
-        "frontend/src/state/appStore.tsx"
+        "frontend/src/rank/RankingScreen.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -18,15 +18,19 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-80"
+        "REQ-82"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-logout-flow-also-logs-the-user-out-of-internet-identity-so-the-next-session-starts-unauthenticated",
-      "featureTitle": "Ensure the logout flow also logs the user out of Internet Identity so the next session starts unauthenticated.",
+      "featureId": "feature-implement-consistent-user-friendly-handling-for-authorization-related-backend-errors-so-the-app-never-shows-raw-unauthorized-text-to-users-map-authorization-failures-to-clean-ux-and-recovery-actions",
+      "featureTitle": "Implement consistent, user-friendly handling for authorization-related backend errors so the app never shows raw “Unauthorized” text to users: map authorization failures to clean UX and recovery actions.",
       "files": [
-        "frontend/src/pages/SettingsPage.tsx"
+        "frontend/src/components/system/ErrorBoundary.tsx",
+        "frontend/src/hooks/useAuthRecovery.ts",
+        "frontend/src/lib/authErrorHandling.ts",
+        "frontend/src/pages/HomeDashboardPage.tsx",
+        "frontend/src/rank/RankingService.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -37,7 +41,92 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-81"
+        "REQ-83"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-harden-the-settingspage-logout-implementation-to-be-resilient-and-ordered-correctly-always-clear-device-data-indexeddb-ranking-cache-and-internet-identity-session-without-leaving-the-app-in-a-partially-logged-out-state",
+      "featureTitle": "Harden the SettingsPage logout implementation to be resilient and ordered correctly: always clear device data (IndexedDB + ranking cache) and Internet Identity session without leaving the app in a partially logged-out state.",
+      "files": [
+        "frontend/src/components/settings/LogoutCard.tsx",
+        "frontend/src/pages/SettingsPage.tsx",
+        "frontend/src/utils/urlParams.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-84"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-upgrade-the-in-app-notification-settings-ux-to-support-separate-notification-preference-categories-ranking-alerts-reward-alerts-streak-reminders-etc-within-the-existing-supported-web-notification-system-and-persist-these-preferences-via-existing-indexeddb-backup-restore-flows",
+      "featureTitle": "Upgrade the in-app notification settings UX to support separate notification preference categories (ranking alerts, reward alerts, streak reminders, etc.) within the existing supported web notification system, and persist these preferences via existing IndexedDB + backup/restore flows.",
+      "files": [
+        "frontend/src/backup/backupSchema.ts",
+        "frontend/src/components/settings/NotificationsCard.tsx",
+        "frontend/src/domain/attendanceTypes.ts",
+        "frontend/src/pages/HomeDashboardPage.tsx",
+        "frontend/src/pages/SettingsPage.tsx",
+        "frontend/src/state/persistence.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-85"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-improve-reliability-and-clarity-of-the-existing-send-test-notification-action-to-ensure-it-consistently-provides-visible-feedback-for-all-states-supported-unsupported-enabled-disabled-permission-granted-denied-without-silent-failure",
+      "featureTitle": "Improve reliability and clarity of the existing “Send Test Notification” action to ensure it consistently provides visible feedback for all states (supported/unsupported, enabled/disabled, permission granted/denied) without silent failure.",
+      "files": [
+        "frontend/src/components/settings/NotificationsCard.tsx",
+        "frontend/src/notifications/notificationsApi.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-86"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-document-and-enforce-platform-limitations-in-settings-notifications-so-users-are-not-misled-explicitly-state-that-this-build-supports-browser-notifications-while-the-app-is-running-and-does-not-provide-true-background-push-delivery-when-the-app-is-closed",
+      "featureTitle": "Document and enforce platform limitations in Settings → Notifications so users are not misled: explicitly state that this build supports browser notifications while the app is running and does not provide true background push delivery when the app is closed.",
+      "files": [
+        "frontend/src/components/settings/NotificationsCard.tsx",
+        "frontend/src/notifications/notificationsApi.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-87"
       ],
       "confidence": "high"
     }

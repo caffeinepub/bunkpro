@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 39,
+  "projectStateVersion": 41,
   "summary": "Enhance BunkPro by upgrading and fixing the Global Weekly Ranking System to be fully cloud-based and truly global using Firebase Firestore as the only ranking source (no local-only/device-specific ranking). All users must be mutually visible and realtime-synced, ranks computed dynamically at runtime using deterministic tie-breakers, with weekly Sunday 12:00 AM rollover guarded by a last-update timestamp, and a premium leaderboard UI (Top-3 + dynamic rank badges, current-user highlight, pagination for 100+ users).",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -19,9 +19,11 @@
     "Build/deployment failed with error: \"Unable to create your app\" when attempting the placeholder text update build.",
     "Build attempt failed with error message: “AI was unable to complete your request. Try rephrasing it more clearly.” (deployment did not complete).",
     "UI regression: “Mark Today’s Classes” and “View Rankings” buttons changed to black; should be purple per app theme.",
-    "Global Ranking visibility bug: users are not mutually visible (leaderboard appears device-specific/partially loaded/incorrectly filtered; may only show current user or be truncated)."
+    "Global Ranking visibility bug: users are not mutually visible (leaderboard appears device-specific/partially loaded/incorrectly filtered; may only show current user or be truncated).",
+    "Critical: After logout, the app shows an “Unauthorized User” error (logout flow is not clearing auth/session state and/or API calls continue after logout).",
+    "Push notifications not working after APK installation (no notifications received)."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -566,6 +568,54 @@
         "REQ-81"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-fix-the-post-logout-unauthorized-user-bug-by-making-the-logout-flow-immediately-transition-the-ui-to-the-login-screen-cancel-stop-any-in-flight-backend-calls-and-prevent-any-subsequent-backend-calls-from-being-initiated-after-logout-completes",
+      "title": "Fix the post-logout “Unauthorized User” bug by making the logout flow immediately transition the UI to the Login screen, cancel/stop any in-flight backend calls, and prevent any subsequent backend calls from being initiated after logout completes.",
+      "reqIds": [
+        "REQ-82"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-consistent-user-friendly-handling-for-authorization-related-backend-errors-so-the-app-never-shows-raw-unauthorized-text-to-users-map-authorization-failures-to-clean-ux-and-recovery-actions",
+      "title": "Implement consistent, user-friendly handling for authorization-related backend errors so the app never shows raw “Unauthorized” text to users: map authorization failures to clean UX and recovery actions.",
+      "reqIds": [
+        "REQ-83"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-harden-the-settingspage-logout-implementation-to-be-resilient-and-ordered-correctly-always-clear-device-data-indexeddb-ranking-cache-and-internet-identity-session-without-leaving-the-app-in-a-partially-logged-out-state",
+      "title": "Harden the SettingsPage logout implementation to be resilient and ordered correctly: always clear device data (IndexedDB + ranking cache) and Internet Identity session without leaving the app in a partially logged-out state.",
+      "reqIds": [
+        "REQ-84"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-upgrade-the-in-app-notification-settings-ux-to-support-separate-notification-preference-categories-ranking-alerts-reward-alerts-streak-reminders-etc-within-the-existing-supported-web-notification-system-and-persist-these-preferences-via-existing-indexeddb-backup-restore-flows",
+      "title": "Upgrade the in-app notification settings UX to support separate notification preference categories (ranking alerts, reward alerts, streak reminders, etc.) within the existing supported web notification system, and persist these preferences via existing IndexedDB + backup/restore flows.",
+      "reqIds": [
+        "REQ-85"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-reliability-and-clarity-of-the-existing-send-test-notification-action-to-ensure-it-consistently-provides-visible-feedback-for-all-states-supported-unsupported-enabled-disabled-permission-granted-denied-without-silent-failure",
+      "title": "Improve reliability and clarity of the existing “Send Test Notification” action to ensure it consistently provides visible feedback for all states (supported/unsupported, enabled/disabled, permission granted/denied) without silent failure.",
+      "reqIds": [
+        "REQ-86"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-document-and-enforce-platform-limitations-in-settings-notifications-so-users-are-not-misled-explicitly-state-that-this-build-supports-browser-notifications-while-the-app-is-running-and-does-not-provide-true-background-push-delivery-when-the-app-is-closed",
+      "title": "Document and enforce platform limitations in Settings → Notifications so users are not misled: explicitly state that this build supports browser notifications while the app is running and does not provide true background push delivery when the app is closed.",
+      "reqIds": [
+        "REQ-87"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -825,6 +875,18 @@
       "reqIds": [
         "REQ-79"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-70",
+      "summary": "Fix logout flow to avoid post-logout “Unauthorized User” error: fully clear auth/session state, stop API calls after logout, redirect to login, and map 401/403 to clean UX (auto-logout/session-expired vs permission-denied).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-71",
+      "summary": "Implement a proper cross-platform push notification system using Firebase Cloud Messaging (FCM): register/store device tokens (userId, token, platform, lastUpdated), web push service worker setup, Android APK Firebase setup (google-services.json, manifest, channels), per-platform notification preferences stored server-side, secure server-only sending, dedupe/invalid-token cleanup, and end-to-end testing (foreground/background/terminated, multi-device, logout/login).",
+      "reqIds": [],
       "status": "pending"
     }
   ],

@@ -1,13 +1,15 @@
 # Specification
 
 ## Summary
-**Goal:** Add a logout flow that deletes the current user’s leaderboard record from the backend and erases all locally stored app data, fully signing the user out.
+**Goal:** Fix post-logout unauthorized errors by making logout immediately and cleanly transition to Login, and improve notification settings UX and reliability within supported browser notification capabilities.
 
 **Planned changes:**
-- Backend: Add an authenticated endpoint in `backend/main.mo` that deletes only the caller’s user record from the `users` map so they are removed from global ranking results (safe no-op if no record exists).
-- Frontend: Add a clearly labeled “Log out” button in Settings with a confirmation step explaining that local data will be erased and leaderboard data will be deleted.
-- Frontend: On confirm, call the backend delete endpoint when available; show a clear English error if the backend cannot be reached and do not claim leaderboard deletion succeeded.
-- Frontend: Clear local persistence (IndexedDB via the existing client), clear cached ranking data (e.g., `rankCache` in localStorage), reset in-memory state via `RESET_ALL` so `state.userProfile` becomes null, and return to the Login flow.
-- Frontend: Log out of Internet Identity using the existing `useInternetIdentity().clear()` API so the next session starts unauthenticated.
+- Update logout flow to immediately navigate to the Login gate, cancel/ignore in-flight React Query requests, and prevent new backend calls from starting after logout completes.
+- Harden SettingsPage logout ordering to reliably clear IndexedDB app state, ranking cache, in-memory state reset, and Internet Identity session; ensure safe completion even if backend cleanup fails.
+- Add global, user-friendly handling for authorization failures: map session-expired cases to a clear message and logout-to-login flow; map forbidden/permission-denied cases to a non-crashing “Permission denied.” message; ensure ErrorBoundary does not show raw authorization text.
+- Expand Settings → Notifications to include separate preference toggles (at minimum: Enable Notifications, Ranking alerts, Reward alerts, Streak reminders), persisted via existing IndexedDB and included in backup/restore with safe defaults for missing fields.
+- Ensure in-app notifications respect category toggles (do not show notifications for disabled categories).
+- Improve “Send Test Notification” to always provide visible results or reason-specific English feedback for unsupported/disabled/permission states, without unhandled exceptions.
+- Add clear English disclosure in Settings → Notifications describing platform limitations (browser notifications while running; not guaranteed when app/browser is closed).
 
-**User-visible outcome:** Users can tap “Log out” in Settings, confirm, and have their local app data erased, their leaderboard entry removed (when the backend call succeeds), and be returned to the Login screen fully signed out of Internet Identity.
+**User-visible outcome:** Logging out returns the user to the Login screen without “Unauthorized” errors and without stray background calls; authorization problems show clear recovery messaging; notification settings provide category-based toggles with reliable test notifications and accurate platform limitation text.

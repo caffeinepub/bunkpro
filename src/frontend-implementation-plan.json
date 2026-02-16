@@ -1,65 +1,179 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "BunkPro — Logout with local wipe + leaderboard removal + Internet Identity sign-out",
+  "title": "BunkPro: Fix logout Unauthorized bug and harden notification settings UX (web Notifications API only)",
   "requirements": [
     {
-      "id": "REQ-80",
-      "summary": "Add a Settings-screen Log out button with confirmation that deletes leaderboard data (when possible) and wipes all local app persistence before returning to the Login flow.",
+      "id": "REQ-82",
+      "summary": "Make logout immediately transition to the Login gate, cancel/ignore in-flight work, and prevent any post-logout backend calls within the same session.",
       "acceptanceCriteria": [
-        "Settings displays a clearly labeled button: \"Log out\".",
-        "Pressing \"Log out\" opens a confirmation step with clear English copy explaining deletion impact (local data will be erased and leaderboard data will be deleted).",
-        "On confirm, the app calls the new backend delete endpoint when a backend actor is available; failure to reach the backend is shown as a clear English error and the app does not claim the leaderboard deletion succeeded.",
-        "On confirm, the app clears local app persistence by clearing IndexedDB (via the existing IndexedDB client) and resets in-memory state using the existing reducer action `RESET_ALL` so `state.userProfile` becomes null.",
-        "On confirm, the app clears any locally cached ranking data (e.g., the `rankCache` localStorage cache) so stale leaderboard data is not shown after logout.",
-        "After local erase completes, the UI returns to the Login flow (login gate is shown because `state.userProfile` is null)."
+        "Tapping Settings → Log Out (and confirming) immediately returns the user to the Login screen (i.e., the login gate is reached) without showing any “Unauthorized” error UI.",
+        "Any in-flight React Query requests are cancelled/ignored during logout so they cannot surface errors after logout completes.",
+        "After logout completes, the app does not attempt background profile sync calls (e.g., saveCallerUserProfile) until the user logs in again.",
+        "The logout flow works consistently across repeated logout/login cycles in a single browser session without requiring a hard refresh."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/settings/LogoutCard.tsx",
-          "operation": "create",
-          "description": "Create a Settings \"Log out\" (destructive) UI section that uses the existing ConfirmDestructiveDialog (shadcn/ui AlertDialog wrapper) to present an English confirmation describing both local wipe and leaderboard deletion; on confirm it triggers the logout flow (backend deletion attempt + local wipes) and shows English success/error toasts. Use shadcn-ui Card/Button primitives for consistent styling. Verify the component's usage instructions before implementing."
-        },
-        {
           "path": "frontend/src/pages/SettingsPage.tsx",
           "operation": "modify",
-          "description": "Wire the new LogoutCard into the Settings screen so a clearly labeled \"Log out\" button is visible; connect it to the existing app store dispatch (RESET_ALL), IndexedDB clearing via the existing indexedDbClient, and ranking cache clearing via rankCache; call the backend delete capability via the existing actor (deleteCallerUser) only when appropriate, and show clear English error messages without stack traces. Use existing shadcn-ui layout components already used on this page. Verify the component's usage instructions before implementing."
+          "description": "Rework handleLogout ordering to immediately trigger the login gate (clear in-memory app state first), cancel React Query activity via useQueryClient, and then perform best-effort cleanup (ranking cache, IndexedDB, sessionStorage/urlParams, Internet Identity clear) while ensuring no background calls re-trigger after logout. Use the authorization component’s frontend guidance for clearing cached application data on logout. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/storage/indexedDbClient.ts",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Ensure the local wipe path can reliably clear persisted app state by using the existing IndexedDB clear functionality (clearIndexedDB) and keeping the API stable for the Settings logout flow."
+          "description": "Harden the background profile sync effect so it cannot surface post-logout errors: add a cancellation/ignore pattern (e.g., local cancelled flag or epoch ref) and ensure it short-circuits immediately when the login gate is reached (userProfile cleared). Use the authorization component’s frontend guidance about clearing cached user profile on logout. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/rank/rankCache.ts",
+          "path": "frontend/src/rank/RankingScreen.tsx",
           "operation": "modify",
-          "description": "Ensure the logout flow can fully remove cached leaderboard data by using/confirming a single clear function (clearRankingCache) that removes the localStorage ranking cache key used by RankingService."
-        },
-        {
-          "path": "frontend/src/state/appStore.tsx",
-          "operation": "modify",
-          "description": "Adjust persistence behavior to avoid re-saving user data immediately after a logout reset (RESET_ALL) so the IndexedDB clear performed during logout is not immediately repopulated with prior state; keep login gating behavior intact (LoginPage shown when state.userProfile is null)."
+          "description": "Add an additional guard so polling/refresh logic cannot continue when the UI is logged out (e.g., ensure timers are stopped and no refresh runs if the app is not authenticated / no current user context). This prevents post-logout background calls from firing after unmount/rerender cycles."
         }
       ]
     },
     {
-      "id": "REQ-81",
-      "summary": "Extend the logout flow to also clear Internet Identity session so subsequent interactions are unauthenticated until login.",
+      "id": "REQ-83",
+      "summary": "Introduce consistent authorization-error UX that never renders raw “Unauthorized” text and provides clean recovery actions (session-expired logout vs permission denied).",
       "acceptanceCriteria": [
-        "The logout flow calls Internet Identity clear/logout using the existing `useInternetIdentity().clear()` API (without modifying any immutable files).",
-        "After logout, backend actor calls requiring authentication are no longer possible until the user logs in again via Internet Identity (where applicable).",
-        "User-facing error/success messages during logout are in English and do not show raw stack traces."
+        "If the frontend encounters a backend authorization failure (e.g., error text containing \"Unauthorized\" from canister traps), the app shows English messaging: \"Your session expired. Please log in again.\" and transitions to the Login screen after clearing local session/app state.",
+        "If the frontend encounters a backend permission/forbidden-style failure (where identifiable), the app shows English messaging: \"Permission denied.\" and does not crash.",
+        "The global ErrorBoundary fallback screen does not display raw backend authorization errors; it either (a) guides the user to reload, or (b) shows a session-expired style message with a clear recovery action.",
+        "No screen in the app renders the literal strings \"Unauthorized\" / \"Unauthorized User\" to the user as an unhandled error."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/authErrorHandling.ts",
+          "operation": "create",
+          "description": "Add a small shared utility to classify backend authorization-related errors (session-expired/unauthorized vs forbidden/permission denied vs other) and to produce user-safe English messages that never include raw backend trap text. Use the authorization component’s error-handling guidance as the reference behavior. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useAuthRecovery.ts",
+          "operation": "create",
+          "description": "Create a hook that centralizes recovery actions for auth failures (clear React Query cache, clear IndexedDB/ranking cache as appropriate, reset app store, clear Internet Identity session) and exposes a safe helper like handleAuthError(error) for callers. Use the authorization component’s frontend guidance for logout/cache clearing. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/system/ErrorBoundary.tsx",
+          "operation": "modify",
+          "description": "Update the fallback UI to avoid showing raw backend authorization errors. Detect classified auth errors (via the new authErrorHandling helper) and display either “Your session expired. Please log in again.” with a clear recovery action, or a generic reload message, without ever rendering “Unauthorized” strings."
+        },
+        {
+          "path": "frontend/src/rank/RankingService.ts",
+          "operation": "modify",
+          "description": "Ensure ranking-related backend failures are mapped to clean messages and do not propagate raw authorization strings to the UI; use the shared auth error classification and (where appropriate) trigger centralized session-expired recovery instead of letting ‘Unauthorized’ bubble up."
+        },
+        {
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Wrap backend calls (e.g., points submission) with the shared auth error handling so authorization failures trigger session-expired recovery UX rather than surfacing raw backend text. Use the authorization component’s guidance for handling canister authorization traps gracefully. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-84",
+      "summary": "Make Settings logout resilient and correctly ordered: always clear IndexedDB, ranking cache, in-memory state, and Internet Identity session, even if backend deletion fails, and clear any sessionStorage secrets.",
+      "acceptanceCriteria": [
+        "On logout confirmation, the app clears: IndexedDB app state (via clearIndexedDB), rank cache (via clearRankingCache), and resets in-memory app state (dispatch RESET_ALL).",
+        "After logout, the Internet Identity session is cleared (existing clearIdentity call), and subsequent backend calls use anonymous identity until re-login.",
+        "If backend deletion (deleteCallerUser) fails, the app shows a clear English error and still provides a safe way to complete local logout (device data clearing + returning to Login) without leaving the user stuck on Settings.",
+        "No leftover per-session data used by the app (including any URL param–persisted secrets stored in sessionStorage by urlParams helpers) causes the UI to re-trigger authenticated flows after logout."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/SettingsPage.tsx",
           "operation": "modify",
-          "description": "Invoke Internet Identity logout via the existing useInternetIdentity().clear() as part of the confirmed logout sequence, ensuring the app returns to the login gate (state.userProfile becomes null) and user-facing messaging remains English and sanitized. Verify the component's usage instructions before implementing."
+          "description": "Refactor logout to (1) immediately reset app state to reach the Login gate, (2) cancel/clear React Query work, then (3) always clear ranking cache, IndexedDB, and sessionStorage (including secrets persisted by urlParams helpers), and (4) always clear Internet Identity session. Backend deleteCallerUser should be best-effort: if it fails, show a clear English message but still complete local logout. Use the authorization component’s logout/cache clearing guidance. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/hooks/useInternetIdentity.ts",
+          "path": "frontend/src/utils/urlParams.ts",
           "operation": "modify",
-          "description": "Validate that the clear() behavior supports the Settings logout flow (clears identity state and stored auth state cleanly) and that errors are surfaced as safe, English messages to the UI without exposing raw stack traces."
+          "description": "Add (or export) a safe helper to clear any session-persisted URL/secret parameters used by the app (or document using sessionStorage.clear()) so logout can reliably remove per-session secrets that might re-trigger authenticated flows."
+        },
+        {
+          "path": "frontend/src/components/settings/LogoutCard.tsx",
+          "operation": "modify",
+          "description": "Update logout confirmation UX copy (English) to reflect resilient logout behavior (local logout will complete even if leaderboard deletion fails) and ensure loading/disabled state remains correct across repeated logout/login cycles. Use existing shadcn-ui Button/Card patterns already in use. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-85",
+      "summary": "Add category-based notification preferences in Settings and persist them via IndexedDB and backup/restore; ensure in-app notifications respect category toggles using supported web Notifications API only.",
+      "acceptanceCriteria": [
+        "Settings → Notifications displays separate toggles (English labels) for at minimum: Enable Notifications, Ranking alerts, Reward alerts, Streak reminders (additional categories may be shown but must be clear and not misleading).",
+        "These notification preferences are persisted in the existing local persistence layer (IndexedDB) and included in export/import backup/restore without breaking older stored data (missing fields default safely).",
+        "Any in-app notification triggered by app events respects the new category toggles (e.g., if rankingAlert is off, ranking-related notifications are not shown).",
+        "All user-facing copy clarifies the actual supported behavior for this web build (i.e., browser notifications, not guaranteed when the app is closed)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/domain/attendanceTypes.ts",
+          "operation": "modify",
+          "description": "Extend AppSettings to include a notification preferences object (at minimum: rankingAlerts, rewardAlerts, streakReminders) with safe defaults; keep backward compatibility by defaulting missing fields. Ensure all user-facing labels remain English."
+        },
+        {
+          "path": "frontend/src/state/persistence.ts",
+          "operation": "modify",
+          "description": "Update loadState merge logic to include default values for the new notification preference fields so older IndexedDB data loads safely without breaking."
+        },
+        {
+          "path": "frontend/src/backup/backupSchema.ts",
+          "operation": "modify",
+          "description": "Ensure backup migration merges DEFAULT_SETTINGS (including new notification preference fields) so import/export supports older backups with missing fields defaulting safely."
+        },
+        {
+          "path": "frontend/src/components/settings/NotificationsCard.tsx",
+          "operation": "modify",
+          "description": "Upgrade Settings → Notifications UI to include separate category toggles (English labels) for ranking alerts, reward alerts, and streak reminders, while keeping ‘Enable Notifications’ as the master gate. Use existing shadcn-ui components (Card, Switch, Alert, Button, Label) for consistent UX. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/SettingsPage.tsx",
+          "operation": "modify",
+          "description": "Wire the expanded NotificationsCard props into AppSettings state updates so category toggles are persisted through the existing reducer + IndexedDB save flow."
+        },
+        {
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Update any in-app notification triggers related to rewards/achievements (e.g., streak milestone awards) to check the new category toggles before calling the browser Notifications wrapper; ensure no notifications are shown when the relevant category toggle is off."
+        }
+      ]
+    },
+    {
+      "id": "REQ-86",
+      "summary": "Make “Send Test Notification” reliable with visible, reason-specific feedback for supported/unsupported, enabled/disabled, and permission states, without unhandled exceptions.",
+      "acceptanceCriteria": [
+        "When Notifications are supported, permission is granted, and notifications are enabled, pressing “Send Test Notification” produces a visible system notification.",
+        "When notifications cannot be sent, the UI shows an English reason-specific message (unsupported browser, permission denied, permission not granted yet, notifications disabled).",
+        "The test notification flow never throws an unhandled exception and never triggers the global ErrorBoundary."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/settings/NotificationsCard.tsx",
+          "operation": "modify",
+          "description": "Revise the test notification action so it always provides visible, English feedback for all states: unsupported, permission denied, permission default (not granted yet), and notifications disabled. Ensure the button behavior and in-card messaging cannot silently fail and never throws to the ErrorBoundary. Use existing shadcn-ui Alert/Button components. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/notifications/notificationsApi.ts",
+          "operation": "modify",
+          "description": "Adjust the Notifications API wrapper to return more granular, actionable result reasons (including distinguishing ‘permission not granted yet’ vs ‘denied’) and ensure it never throws; keep behavior limited to the browser Notifications API."
+        }
+      ]
+    },
+    {
+      "id": "REQ-87",
+      "summary": "Document and enforce platform limitations in Settings → Notifications: browser notifications only while the app is running; no claims of FCM/APK push/background delivery.",
+      "acceptanceCriteria": [
+        "Settings → Notifications includes clear English text stating: notifications require browser permission; delivery is not guaranteed when the app/browser is closed; behavior depends on browser support.",
+        "No UI text claims Firebase/FCM/APK push support unless it is actually implemented (and on this platform it must not be claimed)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/settings/NotificationsCard.tsx",
+          "operation": "modify",
+          "description": "Update all user-facing copy to explicitly and clearly state supported limitations: browser permission required; notifications only while the app is open/running; no delivery guarantees when closed; behavior depends on browser support. Remove/avoid any wording implying FCM/APK push support. Use English only and keep the messaging consistent with the rest of Settings. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/notifications/notificationsApi.ts",
+          "operation": "modify",
+          "description": "Ensure default notification title/body strings are plain English (avoid raw ‘push’/FCM implications) and align with documented web-only behavior."
         }
       ]
     }

@@ -1,8 +1,9 @@
-// Service layer orchestrating ranking data fetch, cache, and polling behavior
+// Service layer with auth error handling for ranking operations
 import type { backendInterface } from '../backend';
 import { RankingRepository } from './RankingRepository';
 import { saveRankingCache, loadRankingCache, clearRankingCache } from './rankCache';
 import type { RankingUIEntry, RankingPageData } from './RankingModel';
+import { classifyAuthError } from '../lib/authErrorHandling';
 
 export interface FetchResult {
   success: boolean;
@@ -34,7 +35,16 @@ export class RankingService {
     } catch (error) {
       console.error('Service: Failed to fetch ranking from backend:', error);
       
-      // Only use cache as fallback when backend is unreachable
+      // Check if it's an auth error (don't use cache for auth failures)
+      const classification = classifyAuthError(error);
+      if (classification.shouldLogout) {
+        return {
+          success: false,
+          error: classification.userMessage,
+        };
+      }
+      
+      // Only use cache as fallback when backend is unreachable (non-auth errors)
       const cached = this.loadFromCacheCompat();
       if (cached && cached.length > 0) {
         return {
@@ -61,6 +71,13 @@ export class RankingService {
       return { success: true, data: entries };
     } catch (error) {
       console.error('Service: Failed to fetch page:', error);
+      
+      // Check for auth errors
+      const classification = classifyAuthError(error);
+      if (classification.shouldLogout) {
+        return { success: false, error: classification.userMessage };
+      }
+      
       return { success: false, error: 'Failed to load more entries' };
     }
   }

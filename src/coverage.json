@@ -1,66 +1,133 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T16:57:48.510Z",
+  "generatedAt": "2026-02-16T17:53:56.208Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 2,
+    "total": 6,
+    "implemented": 6,
     "items": [
       {
-        "id": "REQ-79",
-        "summary": "Add a backend canister endpoint that lets the authenticated caller delete their own user record so they are removed from the global leaderboard/ranking data.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-80",
-        "summary": "Add a Logout button in the Settings screen that, when confirmed, (1) deletes the current user from the backend ranking database and (2) erases all locally stored app data on the device, then returns the user to the Login screen.",
+        "id": "REQ-82",
+        "summary": "Fix the post-logout “Unauthorized User” bug by making the logout flow immediately transition the UI to the Login screen, cancel/stop any in-flight backend calls, and prevent any subsequent backend calls from being initiated after logout completes.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/settings/LogoutCard.tsx",
           "frontend/src/pages/SettingsPage.tsx",
-          "frontend/src/storage/indexedDbClient.ts",
-          "frontend/src/rank/rankCache.ts",
-          "frontend/src/state/appStore.tsx"
+          "frontend/src/App.tsx",
+          "frontend/src/rank/RankingScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/settings/LogoutCard.tsx",
           "frontend/src/pages/SettingsPage.tsx",
-          "frontend/src/state/appStore.tsx"
+          "frontend/src/App.tsx",
+          "frontend/src/rank/RankingScreen.tsx"
         ]
       },
       {
-        "id": "REQ-81",
-        "summary": "Ensure the logout flow also logs the user out of Internet Identity so the next session starts unauthenticated.",
+        "id": "REQ-83",
+        "summary": "Implement consistent, user-friendly handling for authorization-related backend errors so the app never shows raw “Unauthorized” text to users: map authorization failures to clean UX and recovery actions.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/authErrorHandling.ts",
+          "frontend/src/hooks/useAuthRecovery.ts",
+          "frontend/src/components/system/ErrorBoundary.tsx",
+          "frontend/src/rank/RankingService.ts",
+          "frontend/src/pages/HomeDashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/authErrorHandling.ts",
+          "frontend/src/hooks/useAuthRecovery.ts",
+          "frontend/src/components/system/ErrorBoundary.tsx",
+          "frontend/src/rank/RankingService.ts",
+          "frontend/src/pages/HomeDashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-84",
+        "summary": "Harden the SettingsPage logout implementation to be resilient and ordered correctly: always clear device data (IndexedDB + ranking cache) and Internet Identity session without leaving the app in a partially logged-out state.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/SettingsPage.tsx",
-          "frontend/src/hooks/useInternetIdentity.ts"
+          "frontend/src/utils/urlParams.ts",
+          "frontend/src/components/settings/LogoutCard.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/SettingsPage.tsx"
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/utils/urlParams.ts",
+          "frontend/src/components/settings/LogoutCard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-85",
+        "summary": "Upgrade the in-app notification settings UX to support separate notification preference categories (ranking alerts, reward alerts, streak reminders, etc.) within the existing supported web notification system, and persist these preferences via existing IndexedDB + backup/restore flows.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/domain/attendanceTypes.ts",
+          "frontend/src/state/persistence.ts",
+          "frontend/src/backup/backupSchema.ts",
+          "frontend/src/components/settings/NotificationsCard.tsx",
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/pages/HomeDashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/domain/attendanceTypes.ts",
+          "frontend/src/state/persistence.ts",
+          "frontend/src/backup/backupSchema.ts",
+          "frontend/src/components/settings/NotificationsCard.tsx",
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/pages/HomeDashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-86",
+        "summary": "Improve reliability and clarity of the existing “Send Test Notification” action to ensure it consistently provides visible feedback for all states (supported/unsupported, enabled/disabled, permission granted/denied) without silent failure.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/settings/NotificationsCard.tsx",
+          "frontend/src/notifications/notificationsApi.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/settings/NotificationsCard.tsx",
+          "frontend/src/notifications/notificationsApi.ts"
+        ]
+      },
+      {
+        "id": "REQ-87",
+        "summary": "Document and enforce platform limitations in Settings → Notifications so users are not misled: explicitly state that this build supports browser notifications while the app is running and does not provide true background push delivery when the app is closed.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/settings/NotificationsCard.tsx",
+          "frontend/src/notifications/notificationsApi.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/settings/NotificationsCard.tsx",
+          "frontend/src/notifications/notificationsApi.ts"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
+    "frontend/src/App.tsx",
+    "frontend/src/backup/backupSchema.ts",
     "frontend/src/components/settings/LogoutCard.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/src/components/settings/NotificationsCard.tsx",
+    "frontend/src/components/system/ErrorBoundary.tsx",
+    "frontend/src/domain/attendanceTypes.ts",
+    "frontend/src/hooks/useAuthRecovery.ts",
+    "frontend/src/lib/authErrorHandling.ts",
+    "frontend/src/notifications/notificationsApi.ts",
+    "frontend/src/pages/HomeDashboardPage.tsx",
     "frontend/src/pages/SettingsPage.tsx",
-    "frontend/src/state/appStore.tsx",
+    "frontend/src/rank/RankingScreen.tsx",
+    "frontend/src/rank/RankingService.ts",
+    "frontend/src/state/persistence.ts",
+    "frontend/src/utils/urlParams.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

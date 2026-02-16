@@ -1,7 +1,7 @@
 // Persistence layer connecting app store to IndexedDB with validation and fallback to defaults for new fields
 
 import type { AppState } from '../domain/attendanceTypes';
-import { DEFAULT_STATE, DEFAULT_SETTINGS } from '../domain/attendanceTypes';
+import { DEFAULT_STATE, DEFAULT_SETTINGS, DEFAULT_NOTIFICATION_PREFERENCES } from '../domain/attendanceTypes';
 import { saveToIndexedDB, loadFromIndexedDB } from '../storage/indexedDbClient';
 
 export async function saveState(state: AppState): Promise<void> {
@@ -28,12 +28,16 @@ export async function loadState(): Promise<AppState | null> {
     }
     
     // Merge settings with defaults to ensure new fields are populated
-    // Merge user profile and gamification fields with defaults
+    // Merge notification preferences with defaults
     return {
       ...state,
       settings: {
         ...DEFAULT_SETTINGS,
         ...state.settings,
+        notificationPreferences: {
+          ...DEFAULT_NOTIFICATION_PREFERENCES,
+          ...(state.settings.notificationPreferences || {}),
+        },
       },
       userProfile: state.userProfile || null,
       streakMilestones: state.streakMilestones || [],

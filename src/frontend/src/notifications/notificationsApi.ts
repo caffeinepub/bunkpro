@@ -1,30 +1,22 @@
-// Browser Notifications API wrapper with permission handling, support detection, and actionable result feedback
+/**
+ * Browser Notifications API wrapper with comprehensive result feedback
+ * Provides support detection, permission handling, and notification sending
+ * Limited to web browser notifications (no FCM/push infrastructure)
+ */
 
-export type NotificationPermission = 'default' | 'granted' | 'denied';
-
-export interface NotificationOptions {
-  title: string;
-  body: string;
-  icon?: string;
-  tag?: string;
-}
-
-export interface NotificationResult {
-  success: boolean;
-  notification?: Notification;
-  reason?: 'unsupported' | 'permission-denied' | 'error';
-  errorMessage?: string;
-}
+export type NotificationResult =
+  | { success: true }
+  | { success: false; reason: 'unsupported' | 'permission-denied' | 'permission-default' | 'disabled' | 'error'; message: string };
 
 /**
- * Check if the browser supports notifications
+ * Checks if the browser supports notifications
  */
 export function isNotificationSupported(): boolean {
   return 'Notification' in window;
 }
 
 /**
- * Get current notification permission state
+ * Gets the current notification permission status
  */
 export function getNotificationPermission(): NotificationPermission {
   if (!isNotificationSupported()) {
@@ -34,7 +26,8 @@ export function getNotificationPermission(): NotificationPermission {
 }
 
 /**
- * Request notification permission from the user
+ * Requests notification permission from the user
+ * Returns the new permission status
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!isNotificationSupported()) {
@@ -45,37 +38,63 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
     const permission = await Notification.requestPermission();
     return permission;
   } catch (error) {
-    console.error('Failed to request notification permission:', error);
+    console.error('Error requesting notification permission:', error);
     return 'denied';
   }
 }
 
 /**
- * Send a notification if permission is granted, returns actionable result
+ * Sends a browser notification with comprehensive error handling
+ * Returns detailed result with reason for failure
  */
-export function sendNotification(options: NotificationOptions): NotificationResult {
+export async function sendNotification(
+  title: string,
+  options?: NotificationOptions,
+  enabled: boolean = true
+): Promise<NotificationResult> {
+  // Check if notifications are enabled in app settings
+  if (!enabled) {
+    return {
+      success: false,
+      reason: 'disabled',
+      message: 'Notifications are disabled in settings',
+    };
+  }
+
+  // Check browser support
   if (!isNotificationSupported()) {
     return {
       success: false,
       reason: 'unsupported',
-      errorMessage: 'Notifications are not supported in this browser',
+      message: 'Your browser does not support notifications',
     };
   }
 
-  if (Notification.permission !== 'granted') {
+  // Check permission status
+  const permission = Notification.permission;
+
+  if (permission === 'denied') {
     return {
       success: false,
       reason: 'permission-denied',
-      errorMessage: 'Notification permission not granted',
+      message: 'Notification permission was denied. Please enable it in your browser settings.',
     };
   }
 
+  if (permission === 'default') {
+    return {
+      success: false,
+      reason: 'permission-default',
+      message: 'Please grant notification permission first',
+    };
+  }
+
+  // Permission is granted, send notification
   try {
-    const notification = new Notification(options.title, {
-      body: options.body,
-      icon: options.icon || '/assets/generated/bunkpro-logo.dim_1024x1024.png',
-      tag: options.tag,
-      requireInteraction: false,
+    const notification = new Notification(title, {
+      icon: '/assets/generated/bunkpro-favicon.dim_32x32.png',
+      badge: '/assets/generated/bunkpro-favicon.dim_32x32.png',
+      ...options,
     });
 
     // Auto-close after 5 seconds
@@ -83,16 +102,27 @@ export function sendNotification(options: NotificationOptions): NotificationResu
       notification.close();
     }, 5000);
 
-    return {
-      success: true,
-      notification,
-    };
+    return { success: true };
   } catch (error) {
-    console.error('Failed to send notification:', error);
+    console.error('Error sending notification:', error);
     return {
       success: false,
       reason: 'error',
-      errorMessage: error instanceof Error ? error.message : 'Failed to create notification',
+      message: 'Failed to send notification',
     };
   }
+}
+
+/**
+ * Sends a test notification to verify setup
+ */
+export async function sendTestNotification(enabled: boolean): Promise<NotificationResult> {
+  return sendNotification(
+    'BunkPro Test Notification',
+    {
+      body: 'Notifications are working! You will receive alerts for important events.',
+      tag: 'test-notification',
+    },
+    enabled
+  );
 }

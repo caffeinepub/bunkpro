@@ -1,4 +1,4 @@
-// Main ranking screen with Top-3 showcase, current user highlight, auto-scroll, and polling
+// Main ranking screen with polling guards to prevent post-logout background calls
 import React, { useEffect, useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,15 @@ export function RankingScreen({ actor, currentUserName, currentUserId }: Ranking
   const userRowRef = useRef<HTMLDivElement>(null);
   const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const serviceRef = useRef<RankingService | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Track mounted state
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Initialize service when actor changes
   useEffect(() => {
@@ -54,9 +63,12 @@ export function RankingScreen({ actor, currentUserName, currentUserId }: Ranking
     loadRankings();
   }, [actor]);
 
-  // Setup polling while mounted and actor is available
+  // Setup polling with guards to prevent post-logout calls
   useEffect(() => {
-    if (!actor || !serviceRef.current) return;
+    // Guard: Don't poll if no actor, no service, or not authenticated
+    if (!actor || !serviceRef.current || !currentUserName) {
+      return;
+    }
 
     // Clear any existing timer first
     if (pollingTimerRef.current) {
@@ -65,17 +77,20 @@ export function RankingScreen({ actor, currentUserName, currentUserId }: Ranking
 
     // Start polling
     pollingTimerRef.current = setInterval(() => {
-      refreshRankingsQuietly();
+      // Additional guard inside interval: check if still mounted and authenticated
+      if (isMountedRef.current && actor && currentUserName) {
+        refreshRankingsQuietly();
+      }
     }, POLLING_INTERVAL);
 
-    // Cleanup on unmount or actor change
+    // Cleanup on unmount or actor/user change
     return () => {
       if (pollingTimerRef.current) {
         clearInterval(pollingTimerRef.current);
         pollingTimerRef.current = null;
       }
     };
-  }, [actor]);
+  }, [actor, currentUserName]);
 
   // Show confetti if current user is in Top 3
   useEffect(() => {
@@ -154,11 +169,7 @@ export function RankingScreen({ actor, currentUserName, currentUserId }: Ranking
     if (result.success && result.data) {
       setRankings(result.data);
       setIsStale(result.isStale || false);
-      
-      // Clear error if backend fetch succeeded
-      if (!result.isStale) {
-        setError(null);
-      } else if (result.error) {
+      if (result.error) {
         setError(result.error);
       }
     } else {
@@ -169,71 +180,97 @@ export function RankingScreen({ actor, currentUserName, currentUserId }: Ranking
     setIsLoading(false);
   };
 
-  const handleRefresh = async () => {
-    if (!serviceRef.current || isRefreshing) return;
-
-    setIsRefreshing(true);
-    setError(null);
-    setIsStale(false);
+  const refreshRankingsQuietly = async () => {
+    // Guard: Don't refresh if not mounted or no service
+    if (!isMountedRef.current || !serviceRef.current) {
+      return;
+    }
 
     const result = await serviceRef.current.fetchRanking();
+
+    // Guard: Don't update state if unmounted
+    if (!isMountedRef.current) {
+      return;
+    }
 
     if (result.success && result.data) {
       setRankings(result.data);
       setIsStale(result.isStale || false);
-      
-      // Clear error if backend fetch succeeded
-      if (!result.isStale) {
-        setError(null);
-      } else if (result.error) {
+      if (result.error) {
         setError(result.error);
+      } else {
+        setError(null);
       }
-    } else {
-      setError(result.error || 'Failed to load rankings');
     }
+  };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadRankings();
     setIsRefreshing(false);
   };
 
-  const refreshRankingsQuietly = async () => {
-    if (!serviceRef.current || isRefreshing || isLoading) return;
+  if (isLoading) {
+    return (
+      <div className="space-y-6 pb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Leaderboard</h1>
+            <p className="text-muted-foreground">Loading rankings...</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-    const result = await serviceRef.current.fetchRanking();
+  if (error && rankings.length === 0) {
+    return (
+      <div className="space-y-6 pb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Leaderboard</h1>
+            <p className="text-muted-foreground">Global rankings</p>
+          </div>
+        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button onClick={handleRefresh} disabled={isRefreshing} className="w-full">
+          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Retrying...' : 'Retry'}
+        </Button>
+      </div>
+    );
+  }
 
-    if (result.success && result.data) {
-      setRankings(result.data);
-      setIsStale(result.isStale || false);
-      
-      // Clear error if backend fetch succeeded
-      if (!result.isStale) {
-        setError(null);
-      } else if (result.error) {
-        setError(result.error);
-      }
-    }
-    // Don't update error state on quiet refresh failure to avoid UI flicker
-  };
-
-  const topThree = rankings.slice(0, 3);
-  const remaining = rankings.slice(3);
+  const top3 = rankings.slice(0, 3);
+  const rest = rankings.slice(3);
+  const currentUser = findCurrentUser(rankings);
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-6 pb-6">
       {showConfetti && <ConfettiBurst />}
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Weekly Ranking</h1>
-          <p className="text-muted-foreground">Global leaderboard - all users</p>
+          <h1 className="text-3xl font-bold">Leaderboard</h1>
+          <p className="text-muted-foreground">Global rankings</p>
         </div>
         <Button
-          variant="outline"
-          size="icon"
           onClick={handleRefresh}
-          disabled={isRefreshing || isLoading}
+          disabled={isRefreshing}
+          size="sm"
+          variant="outline"
         >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
         </Button>
       </div>
 
@@ -245,182 +282,117 @@ export function RankingScreen({ actor, currentUserName, currentUserId }: Ranking
         </Alert>
       )}
 
-      {/* Error Alert with Retry */}
-      {!isStale && error && rankings.length === 0 && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>{error}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="ml-4"
-            >
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {isLoading ? (
-        <div className="space-y-6">
-          {/* Top 3 Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-56 rounded-xl" />
-            ))}
-          </div>
-          {/* List Skeleton */}
-          <Card>
-            <CardContent className="pt-6 space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="w-14 h-14 rounded-full" />
-                  <Skeleton className="h-6 flex-1" />
-                  <Skeleton className="w-24 h-6" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      ) : rankings.length === 0 ? (
-        <Card>
-          <CardContent className="pt-12 pb-12">
-            <div className="text-center">
-              <Trophy className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground text-lg font-medium">
-                No rankings yet this week
-              </p>
-              <p className="text-muted-foreground text-sm mt-2">
-                Be the first to earn points by maintaining your attendance streak!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Top 3 Premium Section */}
-          {topThree.length > 0 && (
+      {/* Top 3 Showcase */}
+      {top3.length > 0 && (
+        <Card className="bg-gradient-to-br from-yellow-500/10 via-orange-500/5 to-transparent border-yellow-500/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-500" />
+              Top 3
+            </CardTitle>
+            <CardDescription>The best performers this week</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {topThree.map((entry) => {
-                const isCurrent = isCurrentUser(entry);
-                let bgGradient = '';
-                let icon: React.ReactElement | null = null;
-                let iconColor = '';
-
-                if (entry.rank === 1) {
-                  bgGradient = 'from-yellow-400/20 via-yellow-500/10 to-yellow-600/5';
-                  icon = <Crown className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />;
-                  iconColor = 'text-yellow-600 dark:text-yellow-400';
-                } else if (entry.rank === 2) {
-                  bgGradient = 'from-gray-300/20 via-gray-400/10 to-gray-500/5';
-                  icon = <Medal className="w-8 h-8 text-gray-600 dark:text-gray-400" />;
-                  iconColor = 'text-gray-600 dark:text-gray-400';
-                } else if (entry.rank === 3) {
-                  bgGradient = 'from-amber-500/20 via-amber-600/10 to-amber-700/5';
-                  icon = <Award className="w-8 h-8 text-amber-600 dark:text-amber-400" />;
-                  iconColor = 'text-amber-600 dark:text-amber-400';
-                }
-
+              {top3.map((entry) => {
+                const isUser = isCurrentUser(entry);
                 return (
-                  <Card
-                    key={`${entry.rank}-${entry.displayName}`}
-                    className={`bg-gradient-to-br ${bgGradient} border-2 ${
-                      isCurrent ? 'border-primary shadow-lg shadow-primary/20' : 'border-transparent'
-                    } animate-in fade-in slide-in-from-bottom-4 duration-500`}
-                    style={{ animationDelay: `${entry.rank * 100}ms` }}
+                  <div
+                    key={entry.rank}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      isUser
+                        ? 'bg-primary/10 border-primary shadow-lg scale-105'
+                        : 'bg-background/50 border-border hover:border-primary/50'
+                    }`}
                   >
-                    <CardContent className="pt-6 text-center space-y-4">
-                      <div className="flex justify-center">
-                        {icon}
-                      </div>
+                    <div className="flex flex-col items-center gap-3">
                       <RankBadge rank={entry.rank} />
-                      <div>
-                        <p className="font-bold text-xl truncate flex items-center justify-center gap-2">
+                      <div className="text-center">
+                        <p className={`font-bold text-lg ${isUser ? 'text-primary' : ''}`}>
                           {entry.displayName}
-                          {isCurrent && (
-                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary text-primary-foreground">
-                              You
-                            </span>
-                          )}
+                          {isUser && ' (You)'}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-1 truncate">
-                          {entry.college}
-                        </p>
-                        <p className={`text-3xl font-bold mt-3 ${iconColor}`}>
-                          {entry.totalPoints}
-                        </p>
-                        <p className="text-sm text-muted-foreground">points</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          🔥 {entry.currentStreak} day streak
-                        </p>
+                        <p className="text-sm text-muted-foreground">{entry.college}</p>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="text-center">
+                          <p className="font-bold text-xl text-primary">{entry.totalPoints}</p>
+                          <p className="text-xs text-muted-foreground">Points</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-lg text-orange-500">🔥 {entry.currentStreak}</p>
+                          <p className="text-xs text-muted-foreground">Streak</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
-          )}
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Remaining Users List */}
-          {remaining.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-primary" />
-                  Leaderboard
-                </CardTitle>
-                <CardDescription>
-                  Rankings reset every week. Keep your streak going to earn more points!
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[500px] pr-4" ref={scrollAreaRef}>
-                  <div className="space-y-3">
-                    {remaining.map((entry) => {
-                      const isCurrent = isCurrentUser(entry);
-                      return (
-                        <div
-                          key={`${entry.rank}-${entry.displayName}`}
-                          ref={isCurrent ? userRowRef : null}
-                          className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
-                            isCurrent
-                              ? 'bg-primary/10 border-2 border-primary shadow-md'
-                              : 'bg-muted/30 hover:bg-muted/50 border border-transparent'
-                          }`}
-                        >
-                          <RankBadge rank={entry.rank} />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-lg truncate flex items-center gap-2">
-                              {entry.displayName}
-                              {isCurrent && (
-                                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary text-primary-foreground">
-                                  You
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {entry.college}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-lg">{entry.totalPoints}</p>
-                            <p className="text-xs text-muted-foreground">points</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              🔥 {entry.currentStreak}
-                            </p>
-                          </div>
+      {/* Rest of Rankings */}
+      {rest.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>All Rankings</CardTitle>
+            <CardDescription>
+              {currentUser && currentUser.rank > 3
+                ? `You are ranked #${currentUser.rank}`
+                : 'Complete leaderboard'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[500px]" ref={scrollAreaRef}>
+              <div className="space-y-2">
+                {rest.map((entry) => {
+                  const isUser = isCurrentUser(entry);
+                  return (
+                    <div
+                      key={entry.rank}
+                      ref={isUser ? userRowRef : null}
+                      className={`flex items-center gap-4 p-4 rounded-lg border transition-all ${
+                        isUser
+                          ? 'bg-primary/10 border-primary shadow-md'
+                          : 'bg-background/50 border-border hover:bg-accent/50'
+                      }`}
+                    >
+                      <RankBadge rank={entry.rank} />
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-semibold truncate ${isUser ? 'text-primary' : ''}`}>
+                          {entry.displayName}
+                          {isUser && ' (You)'}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">{entry.college}</p>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="text-right">
+                          <p className="font-bold text-primary">{entry.totalPoints}</p>
+                          <p className="text-xs text-muted-foreground">pts</p>
                         </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          )}
-        </>
+                        <div className="text-right">
+                          <p className="font-bold text-orange-500">🔥 {entry.currentStreak}</p>
+                          <p className="text-xs text-muted-foreground">streak</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      {rankings.length === 0 && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            No rankings available yet. Start tracking attendance to appear on the leaderboard!
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );

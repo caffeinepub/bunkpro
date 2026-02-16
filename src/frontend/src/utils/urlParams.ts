@@ -99,6 +99,18 @@ export function clearSessionParameter(key: string): void {
 }
 
 /**
+ * Clears all session parameters
+ * Used during logout to ensure no leftover secrets
+ */
+export function clearAllSessionParameters(): void {
+    try {
+        sessionStorage.clear();
+    } catch (error) {
+        console.warn('Failed to clear all session parameters:', error);
+    }
+}
+
+/**
  * Removes a specific parameter from the URL hash without reloading the page
  * Preserves route information and other parameters in the hash
  * Used to remove sensitive data from the address bar after extracting it
@@ -191,17 +203,8 @@ export function getSecretFromHash(paramName: string): string | null {
 }
 
 /**
- * Gets a secret parameter with fallback chain: hash -> sessionStorage
- * This is the recommended way to handle sensitive parameters like admin tokens
- *
- * Security benefits over regular URL params:
- * - Hash fragments are not sent to the server
- * - Not logged in server access logs
- * - Not sent in HTTP Referer headers
- * - Automatically cleared from URL after extraction
- *
- * @param paramName - The name of the secret parameter
- * @returns The secret value if found, null otherwise
+ * Alias for getSecretFromHash for backward compatibility
+ * @deprecated Use getSecretFromHash instead
  */
 export function getSecretParameter(paramName: string): string | null {
     return getSecretFromHash(paramName);

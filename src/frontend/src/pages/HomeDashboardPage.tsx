@@ -1,4 +1,4 @@
-// Home dashboard with streak milestone detection and proper backend points submission using RankingService
+// Home dashboard with notification category checks for reward alerts
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,9 +13,9 @@ import { calculateSubjectStats, calculateOverallStats } from '../domain/attendan
 import { computeContinuousDayStreak, checkMilestoneEligibility } from '../domain/streakMilestones';
 import { useActor } from '../hooks/useActor';
 import { RankingService } from '../rank/RankingService';
+import { sendNotification } from '../notifications/notificationsApi';
 import { toast } from 'sonner';
 import type { Subject, ClassEvent } from '../domain/attendanceTypes';
-import { generateId, getSubjectColor } from '../lib/utils';
 
 interface HomeDashboardPageProps {
   onNavigate: (route: { type: 'subject-details'; subjectId: string }) => void;
@@ -58,10 +58,26 @@ export function HomeDashboardPage({ onNavigate }: HomeDashboardPageProps) {
               },
             });
 
+            // Show toast
             toast.success(
               `🎉 ${milestone.type} streak milestone! +${milestone.points} points`,
               { duration: 5000 }
             );
+
+            // Send browser notification if enabled and reward alerts are on
+            if (
+              state.settings.enableNotifications &&
+              state.settings.notificationPreferences.rewardAlerts
+            ) {
+              await sendNotification(
+                'Streak Milestone Achieved! 🎉',
+                {
+                  body: `You've reached a ${milestone.type} streak! +${milestone.points} points earned.`,
+                  tag: 'milestone-reward',
+                },
+                true
+              );
+            }
           } else {
             console.error('Failed to submit points to backend');
           }
@@ -72,7 +88,7 @@ export function HomeDashboardPage({ onNavigate }: HomeDashboardPageProps) {
     };
 
     checkAndAwardMilestones();
-  }, [state.events, state.streakMilestones, actor, dispatch]);
+  }, [state.events, state.streakMilestones, state.settings.enableNotifications, state.settings.notificationPreferences.rewardAlerts, actor, dispatch]);
 
   const overallStats = calculateOverallStats(
     state.subjects,

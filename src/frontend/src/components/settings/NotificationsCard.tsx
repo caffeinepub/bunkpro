@@ -1,47 +1,61 @@
-// Settings card for managing browser notification preferences with permission handling, test notification, and clear feedback
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+// Settings card for managing browser notification preferences with category toggles and clear limitation messaging
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Bell, BellOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Bell, BellOff, Info, CheckCircle2, XCircle } from 'lucide-react';
 import {
   isNotificationSupported,
   getNotificationPermission,
   requestNotificationPermission,
-  sendNotification,
-} from '@/notifications/notificationsApi';
+  sendTestNotification,
+} from '../../notifications/notificationsApi';
+import type { NotificationPreferences } from '../../domain/attendanceTypes';
 
 interface NotificationsCardProps {
   enabled: boolean;
-  onToggle: (enabled: boolean) => void;
+  preferences: NotificationPreferences;
+  onToggle: () => void;
+  onPreferencesChange: (preferences: NotificationPreferences) => void;
 }
 
-export function NotificationsCard({ enabled, onToggle }: NotificationsCardProps) {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+export function NotificationsCard({ enabled, preferences, onToggle, onPreferencesChange }: NotificationsCardProps) {
+  const [permission, setPermission] = useState<NotificationPermission>(getNotificationPermission());
   const [isRequesting, setIsRequesting] = useState(false);
-  const [isSendingTest, setIsSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [isSendingTest, setIsSendingTest] = useState(false);
 
   const supported = isNotificationSupported();
-
-  useEffect(() => {
-    if (supported) {
-      setPermission(getNotificationPermission());
-    }
-  }, [supported]);
+  const canEnable = supported && permission === 'granted';
 
   const handleRequestPermission = async () => {
     setIsRequesting(true);
+    setTestResult(null);
+
     try {
       const newPermission = await requestNotificationPermission();
       setPermission(newPermission);
-      
-      if (newPermission === 'granted' && !enabled) {
-        onToggle(true);
+
+      if (newPermission === 'granted') {
+        setTestResult({
+          success: true,
+          message: 'Permission granted! You can now enable notifications.',
+        });
+      } else if (newPermission === 'denied') {
+        setTestResult({
+          success: false,
+          message: 'Permission denied. Please enable notifications in your browser settings.',
+        });
       }
+    } catch (error) {
+      console.error('Error requesting permission:', error);
+      setTestResult({
+        success: false,
+        message: 'Failed to request permission. Please try again.',
+      });
     } finally {
       setIsRequesting(false);
     }
@@ -50,153 +64,199 @@ export function NotificationsCard({ enabled, onToggle }: NotificationsCardProps)
   const handleSendTest = async () => {
     setIsSendingTest(true);
     setTestResult(null);
-    
+
     try {
-      const result = sendNotification({
-        title: '🎉 Test Notification',
-        body: 'Notifications are working! You will receive updates when you mark classes.',
-        tag: 'test-notification',
-      });
-      
+      const result = await sendTestNotification(enabled);
+
       if (result.success) {
         setTestResult({
           success: true,
-          message: 'Test notification sent successfully! Check your system notifications.',
+          message: 'Test notification sent successfully! Check your notifications.',
         });
       } else {
-        let message = 'Failed to send notification. ';
-        if (result.reason === 'unsupported') {
-          message += 'Your browser does not support notifications.';
-        } else if (result.reason === 'permission-denied') {
-          message += 'Permission not granted. Please enable notifications in your browser settings.';
-        } else {
-          message += result.errorMessage || 'An unknown error occurred.';
-        }
         setTestResult({
           success: false,
-          message,
+          message: result.message,
         });
       }
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      setTestResult({
+        success: false,
+        message: 'Failed to send test notification',
+      });
     } finally {
       setIsSendingTest(false);
     }
   };
 
-  const canSendNotifications = supported && permission === 'granted';
-  const needsPermission = supported && permission === 'default';
-  const permissionDenied = supported && permission === 'denied';
+  const handleTogglePreference = (key: keyof NotificationPreferences) => {
+    onPreferencesChange({
+      ...preferences,
+      [key]: !preferences[key],
+    });
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Bell className="w-5 h-5" />
+          {enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
           Notifications
         </CardTitle>
         <CardDescription>
-          Get notified when you mark classes. Notifications only work while the app is open in your browser.
+          Manage browser notification preferences
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Browser Support Warning */}
+      <CardContent className="space-y-4">
+        {/* Platform Limitations Notice */}
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            <strong>Browser notifications only:</strong> Notifications require browser permission and work only while the app is open. 
+            Delivery is not guaranteed when the browser or app is closed. Behavior depends on your browser's notification support.
+          </AlertDescription>
+        </Alert>
+
+        {/* Browser Support Check */}
         {!supported && (
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+            <XCircle className="h-4 w-4" />
             <AlertDescription>
-              Your browser does not support notifications.
+              Your browser does not support notifications. Please use a modern browser like Chrome, Firefox, or Safari.
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Permission Denied Warning */}
-        {permissionDenied && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Notification permission was denied. Please enable notifications in your browser settings to use this feature.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Permission Status */}
+        {supported && permission !== 'granted' && (
+          <div className="space-y-3">
+            <Alert variant={permission === 'denied' ? 'destructive' : 'default'}>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                {permission === 'denied'
+                  ? 'Notification permission was denied. Please enable it in your browser settings to receive notifications.'
+                  : 'Notification permission is required. Click the button below to grant permission.'}
+              </AlertDescription>
+            </Alert>
 
-        {/* Request Permission */}
-        {needsPermission && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex flex-col gap-3">
-              <span>Browser permission is required to send notifications.</span>
-              <Button 
+            {permission === 'default' && (
+              <Button
                 onClick={handleRequestPermission}
                 disabled={isRequesting}
-                size="sm"
-                className="w-fit"
+                className="w-full"
               >
-                {isRequesting ? 'Requesting...' : 'Grant Permission'}
+                {isRequesting ? 'Requesting Permission...' : 'Grant Notification Permission'}
               </Button>
-            </AlertDescription>
-          </Alert>
+            )}
+          </div>
         )}
 
-        {/* Enable/Disable Toggle */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-1 flex-1 min-w-0">
-            <Label htmlFor="enable-notifications" className="flex items-center gap-2 cursor-pointer">
-              {enabled ? (
-                <Bell className="w-4 h-4 text-primary shrink-0" />
-              ) : (
-                <BellOff className="w-4 h-4 text-muted-foreground shrink-0" />
-              )}
-              <span>Enable Notifications</span>
+        {/* Master Toggle */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="enable-notifications" className="text-base font-medium">
+              Enable Notifications
             </Label>
             <p className="text-sm text-muted-foreground">
-              Receive notifications when marking attendance
+              Master switch for all notifications
             </p>
           </div>
           <Switch
             id="enable-notifications"
             checked={enabled}
             onCheckedChange={onToggle}
-            disabled={!canSendNotifications}
+            disabled={!canEnable}
           />
         </div>
 
-        {/* Test Notification Button */}
-        {canSendNotifications && enabled && (
-          <div className="pt-4 border-t space-y-3">
-            <Button 
-              onClick={handleSendTest}
-              disabled={isSendingTest}
-              variant="outline"
-              className="w-full"
-            >
-              {isSendingTest ? 'Sending...' : 'Send Test Notification'}
-            </Button>
-            
-            {/* Test Result Feedback */}
-            {testResult && (
-              <Alert variant={testResult.success ? 'default' : 'destructive'}>
-                {testResult.success ? (
-                  <CheckCircle className="h-4 w-4" />
-                ) : (
-                  <AlertCircle className="h-4 w-4" />
-                )}
-                <AlertDescription>
-                  {testResult.message}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+        {/* Category Toggles */}
+        {enabled && canEnable && (
+          <>
+            <Separator />
+
+            <div className="space-y-4">
+              <p className="text-sm font-medium">Notification Categories</p>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="ranking-alerts" className="text-sm font-medium">
+                    Ranking Alerts
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Get notified about leaderboard changes
+                  </p>
+                </div>
+                <Switch
+                  id="ranking-alerts"
+                  checked={preferences.rankingAlerts}
+                  onCheckedChange={() => handleTogglePreference('rankingAlerts')}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="reward-alerts" className="text-sm font-medium">
+                    Reward Alerts
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Get notified when you earn points or achievements
+                  </p>
+                </div>
+                <Switch
+                  id="reward-alerts"
+                  checked={preferences.rewardAlerts}
+                  onCheckedChange={() => handleTogglePreference('rewardAlerts')}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="streak-reminders" className="text-sm font-medium">
+                    Streak Reminders
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Get reminded about your attendance streaks
+                  </p>
+                </div>
+                <Switch
+                  id="streak-reminders"
+                  checked={preferences.streakReminders}
+                  onCheckedChange={() => handleTogglePreference('streakReminders')}
+                />
+              </div>
+            </div>
+          </>
         )}
 
-        {/* Explanatory Text */}
-        <div className="pt-4 border-t space-y-2 text-sm text-muted-foreground">
-          <p className="font-medium">About Notifications:</p>
-          <ul className="list-disc list-inside space-y-1 pl-2">
-            <li>Notifications require browser permission</li>
-            <li>Only triggered while the app is running</li>
-            <li>No delivery guarantee when app/browser is closed</li>
-            <li>Works on desktop and mobile browsers that support notifications</li>
-          </ul>
-        </div>
+        {/* Test Notification */}
+        {enabled && canEnable && (
+          <>
+            <Separator />
+
+            <div className="space-y-3">
+              <Button
+                onClick={handleSendTest}
+                disabled={isSendingTest}
+                variant="outline"
+                className="w-full"
+              >
+                {isSendingTest ? 'Sending...' : 'Send Test Notification'}
+              </Button>
+
+              {testResult && (
+                <Alert variant={testResult.success ? 'default' : 'destructive'}>
+                  {testResult.success ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <XCircle className="h-4 w-4" />
+                  )}
+                  <AlertDescription>{testResult.message}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

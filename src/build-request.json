@@ -1,78 +1,140 @@
 {
   "kind": "build_request",
-  "title": "Add Logout button that deletes user data locally and from global rankings",
+  "title": "Fix logout Unauthorized error and harden notifications within supported web capabilities",
   "projectName": "BunkPro",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-79",
-      "text": "Add a backend canister endpoint that lets the authenticated caller delete their own user record so they are removed from the global leaderboard/ranking data.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "and also add a logut button , if we press  it the data should be erased  from the the database and ranking"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A new shared backend method exists in `backend/main.mo` that deletes the `users` map entry for `caller` (no other users can be deleted by a non-admin).",
-        "After deletion, the caller no longer appears in `getGlobalRankingPaginated` results.",
-        "If the caller has no stored user record, the method returns a safe, non-trapping result indicating nothing was deleted (or a successful no-op).",
-        "The method enforces the same authorization expectations as other user-mutating endpoints (must be an authenticated user, not an anonymous/guest caller)."
-      ]
-    },
-    {
-      "id": "REQ-80",
-      "text": "Add a Logout button in the Settings screen that, when confirmed, (1) deletes the current user from the backend ranking database and (2) erases all locally stored app data on the device, then returns the user to the Login screen.",
+      "id": "REQ-82",
+      "text": "Fix the post-logout “Unauthorized User” bug by making the logout flow immediately transition the UI to the Login screen, cancel/stop any in-flight backend calls, and prevent any subsequent backend calls from being initiated after logout completes.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-6"
         ],
         "quotes": [
-          "add a logut button , if we press  it the data should be erased  from the the database and ranking"
+          "After logout, app shows “Unauthorized User” error.",
+          "Redirect to login screen immediately",
+          "Prevent any API call after logout"
         ]
       },
       "acceptanceCriteria": [
-        "Settings displays a clearly labeled button: \"Log out\".",
-        "Pressing \"Log out\" opens a confirmation step with clear English copy explaining deletion impact (local data will be erased and leaderboard data will be deleted).",
-        "On confirm, the app calls the new backend delete endpoint when a backend actor is available; failure to reach the backend is shown as a clear English error and the app does not claim the leaderboard deletion succeeded.",
-        "On confirm, the app clears local app persistence by clearing IndexedDB (via the existing IndexedDB client) and resets in-memory state using the existing reducer action `RESET_ALL` so `state.userProfile` becomes null.",
-        "On confirm, the app clears any locally cached ranking data (e.g., the `rankCache` localStorage cache) so stale leaderboard data is not shown after logout.",
-        "After local erase completes, the UI returns to the Login flow (login gate is shown because `state.userProfile` is null)."
+        "Tapping Settings → Log Out (and confirming) immediately returns the user to the Login screen (i.e., the login gate is reached) without showing any “Unauthorized” error UI.",
+        "Any in-flight React Query requests are cancelled/ignored during logout so they cannot surface errors after logout completes.",
+        "After logout completes, the app does not attempt background profile sync calls (e.g., saveCallerUserProfile) until the user logs in again.",
+        "The logout flow works consistently across repeated logout/login cycles in a single browser session without requiring a hard refresh."
       ]
     },
     {
-      "id": "REQ-81",
-      "text": "Ensure the logout flow also logs the user out of Internet Identity so the next session starts unauthenticated.",
+      "id": "REQ-83",
+      "text": "Implement consistent, user-friendly handling for authorization-related backend errors so the app never shows raw “Unauthorized” text to users: map authorization failures to clean UX and recovery actions.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-6"
         ],
         "quotes": [
-          "add a logut button"
+          "Do NOT show raw “Unauthorized” error",
+          "Add proper error handling:\n\n401 → logout and show session expired message\n\n403 → show permission denied"
         ]
       },
       "acceptanceCriteria": [
-        "The logout flow calls Internet Identity clear/logout using the existing `useInternetIdentity().clear()` API (without modifying any immutable files).",
-        "After logout, backend actor calls requiring authentication are no longer possible until the user logs in again via Internet Identity (where applicable).",
-        "User-facing error/success messages during logout are in English and do not show raw stack traces."
+        "If the frontend encounters a backend authorization failure (e.g., error text containing \"Unauthorized\" from canister traps), the app shows English messaging: \"Your session expired. Please log in again.\" and transitions to the Login screen after clearing local session/app state.",
+        "If the frontend encounters a backend permission/forbidden-style failure (where identifiable), the app shows English messaging: \"Permission denied.\" and does not crash.",
+        "The global ErrorBoundary fallback screen does not display raw backend authorization errors; it either (a) guides the user to reload, or (b) shows a session-expired style message with a clear recovery action.",
+        "No screen in the app renders the literal strings \"Unauthorized\" / \"Unauthorized User\" to the user as an unhandled error."
+      ]
+    },
+    {
+      "id": "REQ-84",
+      "text": "Harden the SettingsPage logout implementation to be resilient and ordered correctly: always clear device data (IndexedDB + ranking cache) and Internet Identity session without leaving the app in a partially logged-out state.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Properly clear:\n\nLocal storage/session storage\n\nCached user data",
+          "On logout:\n\nInvalidate token on backend (blacklist if needed)\n\nRedirect to login screen immediately"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On logout confirmation, the app clears: IndexedDB app state (via clearIndexedDB), rank cache (via clearRankingCache), and resets in-memory app state (dispatch RESET_ALL).",
+        "After logout, the Internet Identity session is cleared (existing clearIdentity call), and subsequent backend calls use anonymous identity until re-login.",
+        "If backend deletion (deleteCallerUser) fails, the app shows a clear English error and still provides a safe way to complete local logout (device data clearing + returning to Login) without leaving the user stuck on Settings.",
+        "No leftover per-session data used by the app (including any URL param–persisted secrets stored in sessionStorage by urlParams helpers) causes the UI to re-trigger authenticated flows after logout."
+      ]
+    },
+    {
+      "id": "REQ-85",
+      "text": "Upgrade the in-app notification settings UX to support separate notification preference categories (ranking alerts, reward alerts, streak reminders, etc.) within the existing supported web notification system, and persist these preferences via existing IndexedDB + backup/restore flows.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Create notification settings:\nFor App Users:\nEnable/Disable Push\nRanking updates\nReward alerts\nStreak reminder\n...\nStore preferences in database: notificationSettings:\n\npushEnabled\n\nrankingAlert\n\nrewardAlert\n\nstreakReminder\n\nwithdrawalAlert\n\nBefore sending notification:\nCheck user settings first."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Settings → Notifications displays separate toggles (English labels) for at minimum: Enable Notifications, Ranking alerts, Reward alerts, Streak reminders (additional categories may be shown but must be clear and not misleading).",
+        "These notification preferences are persisted in the existing local persistence layer (IndexedDB) and included in export/import backup/restore without breaking older stored data (missing fields default safely).",
+        "Any in-app notification triggered by app events respects the new category toggles (e.g., if rankingAlert is off, ranking-related notifications are not shown).",
+        "All user-facing copy clarifies the actual supported behavior for this web build (i.e., browser notifications, not guaranteed when the app is closed)."
+      ]
+    },
+    {
+      "id": "REQ-86",
+      "text": "Improve reliability and clarity of the existing “Send Test Notification” action to ensure it consistently provides visible feedback for all states (supported/unsupported, enabled/disabled, permission granted/denied) without silent failure.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "FIX PUSH NOTIFICATION (NOT WORKING IN APK)",
+          "Debug and fix ... \"Send Test Notification\" ... reliably results in a visible browser notification ... provide clear in-app feedback when ... cannot be sent"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When Notifications are supported, permission is granted, and notifications are enabled, pressing “Send Test Notification” produces a visible system notification.",
+        "When notifications cannot be sent, the UI shows an English reason-specific message (unsupported browser, permission denied, permission not granted yet, notifications disabled).",
+        "The test notification flow never throws an unhandled exception and never triggers the global ErrorBoundary."
+      ]
+    },
+    {
+      "id": "REQ-87",
+      "text": "Document and enforce platform limitations in Settings → Notifications so users are not misled: explicitly state that this build supports browser notifications while the app is running and does not provide true background push delivery when the app is closed.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Use English for any user-facing text",
+          "Implement service worker (firebase-messaging-sw.js)",
+          "Ensure:\n✅ Notifications work in APK\n✅ Notifications work on Web\n✅ Real-time delivery"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Settings → Notifications includes clear English text stating: notifications require browser permission; delivery is not guaranteed when the app/browser is closed; behavior depends on browser support.",
+        "No UI text claims Firebase/FCM/APK push support unless it is actually implemented (and on this platform it must not be claimed)."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files listed under `SYSTEM_CONTEXT.frontend.immutablePaths`.",
-    "Backend must remain a single-actor Motoko canister; implement changes in `backend/main.mo` only.",
-    "Do not introduce external databases or third-party auth providers beyond Internet Identity.",
-    "Use English for all user-facing text added or modified."
+    "Upgrade the existing BunkPro app; do not rebuild from scratch.",
+    "Frontend files under immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and frontend/src/components/ui/* must remain unchanged.",
+    "Backend must remain a single Motoko actor in backend/main.mo; add backend changes only within that file unless a state migration is strictly necessary.",
+    "This platform does not support Firebase Cloud Messaging (FCM) integration, Android APK native configuration (google-services.json, AndroidManifest.xml), iOS push setup, JWT/refresh-token auth stacks, or service-worker-based FCM push. Notification improvements must be limited to supported web capabilities (browser Notifications API and in-app/local notifications while the web app is running).",
+    "Use English for all user-facing text."
   ],
   "nonGoals": [
-    "Do not change core attendance tracking logic or calculations.",
-    "Do not add account recovery, multi-account switching, or admin user management UI.",
-    "Do not implement scheduled/background deletions; deletion happens only when the user explicitly logs out and confirms."
+    "Implementing FCM token registration/storage, Firebase projects, or sending true cross-platform push notifications to Android/iOS.",
+    "Adding or managing JWT/refresh tokens, token blacklists, or token-validation middleware typical of REST backends (the app uses Internet Identity + canister calls).",
+    "Building or modifying native Android/iOS project files (AndroidManifest.xml, notification channels, icons) or producing an APK/iOS app package.",
+    "Adding real-time push delivery when the web app is closed (not supported without external push infrastructure)."
   ],
   "imageRequirements": {
     "required": [],

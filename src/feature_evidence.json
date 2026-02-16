@@ -2,125 +2,105 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-an-initial-login-screen-that-is-shown-on-app-start-when-no-user-name-has-been-set-yet-with-a-single-name-input-and-a-continue-login-action-the-login-form-must-validate-that-the-entered-value-is-a-good-name-letters-and-spaces-only-trimmed-non-empty-and-within-a-reasonable-length-and-display-an-english-validation-error-when-invalid-after-a-successful-login-persist-the-user-name-in-app-state-so-it-remains-available-throughout-the-app-and-across-refreshes-via-the-existing-indexeddb-persistence",
-      "featureTitle": "Add an initial Login screen that is shown on app start when no user name has been set yet, with a single name input and a continue/login action. The login form must validate that the entered value is a “good name” (letters and spaces only, trimmed, non-empty, and within a reasonable length) and display an English validation error when invalid. After a successful login, persist the user name in app state so it remains available throughout the app and across refreshes via the existing IndexedDB persistence.",
+      "featureId": "feature-remove-any-device-specific-or-caller-only-ranking-behavior-so-the-rank-screen-always-loads-a-truly-global-leaderboard-from-the-internet-computer-canister-not-from-local-cache-state-and-ensure-no-code-path-filters-rankings-down-to-the-current-user-only",
+      "featureTitle": "Remove any device-specific or caller-only ranking behavior so the Rank screen always loads a truly global leaderboard from the Internet Computer canister (not from local cache/state), and ensure no code path filters rankings down to the current user only.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/domain/attendanceReducer.ts",
-        "frontend/src/domain/attendanceTypes.ts",
-        "frontend/src/pages/LoginPage.tsx"
+        "frontend/src/rank/RankingRepository.ts",
+        "frontend/src/rank/RankingService.ts",
+        "frontend/src/rank/rankCache.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-39"
+        "REQ-71"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-extend-the-frontend-domain-state-and-reducer-to-support-a-user-profile-and-gamification-fields-needed-for-streak-points-including-at-minimum-user-name-total-points-streak-tracking-metadata-needed-to-compute-a-continuous-day-streak-and-a-record-of-which-streak-milestones-have-already-been-awarded-so-points-are-not-repeatedly-re-awarded-for-the-same-milestone",
-      "featureTitle": "Extend the frontend domain state and reducer to support a user profile and gamification fields needed for streak points, including at minimum: user name, total points, streak tracking metadata needed to compute a continuous day streak, and a record of which streak milestones have already been awarded so points are not repeatedly re-awarded for the same milestone.",
+      "featureId": "feature-fix-pagination-incremental-loading-so-that-the-rank-screen-can-scale-to-100-users-without-truncation-while-still-ensuring-the-ui-can-load-and-render-the-complete-global-ranking-list-either-via-repeated-page-fetches-until-exhaustion-or-via-an-explicit-load-more-flow",
+      "featureTitle": "Fix pagination/incremental loading so that the Rank screen can scale to 100+ users without truncation, while still ensuring the UI can load and render the complete global ranking list (either via repeated page fetches until exhaustion or via an explicit 'load more' flow).",
       "files": [
-        "frontend/src/domain/attendanceReducer.ts",
-        "frontend/src/domain/attendanceTypes.ts",
-        "frontend/src/state/persistence.ts"
+        "frontend/src/rank/RankingRepository.ts",
+        "frontend/src/rank/RankingScreen.tsx",
+        "frontend/src/rank/RankingService.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-40"
+        "REQ-74"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-continuous-day-streak-detection-based-on-recorded-classevent-activity-treat-a-day-as-completed-if-at-least-one-classevent-exists-for-that-calendar-date-compute-the-current-streak-as-the-number-of-consecutive-completed-days-ending-at-today-using-local-time-date-strings-already-stored-in-events-when-the-streak-reaches-3-days-for-the-first-time-award-5-points-and-show-an-english-congratulatory-message-congrats-on-your-hat-trick-5-points-when-the-streak-reaches-6-days-for-the-first-time-award-10-points-and-show-an-english-congratulatory-message-congrats-on-your-6-day-streak-10-points",
-      "featureTitle": "Implement continuous day streak detection based on recorded ClassEvent activity: treat a day as “completed” if at least one ClassEvent exists for that calendar date; compute the current streak as the number of consecutive completed days ending at today (using local time date strings already stored in events). When the streak reaches 3 days for the first time, award +5 points and show an English congratulatory message: “Congrats on your hat-trick! +5 points.” When the streak reaches 6 days for the first time, award +10 points and show an English congratulatory message: “Congrats on your 6-day streak! +10 points.”",
+      "featureId": "feature-ensure-the-rank-ui-highlights-the-current-logged-in-user-reliably-even-if-other-users-share-the-same-display-name-and-auto-scrolls-them-into-view-when-they-are-not-in-the-top-3",
+      "featureTitle": "Ensure the Rank UI highlights the current logged-in user reliably (even if other users share the same display name) and auto-scrolls them into view when they are not in the Top 3.",
       "files": [
-        "frontend/src/domain/attendanceReducer.ts",
-        "frontend/src/domain/streakMilestones.ts",
-        "frontend/src/pages/HomeDashboardPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-41"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-a-separate-frontend-folder-named-rank-to-contain-all-ranking-related-ui-and-logic-add-a-rank-screen-that-can-be-navigated-to-from-the-app-e-g-via-a-settings-link-button-without-breaking-existing-navigation-the-rank-screen-must-show-an-english-weekly-leaderboard-list-of-users-ordered-by-points-for-the-current-week-including-each-user-s-rank-number-display-name-and-points",
-      "featureTitle": "Create a separate frontend folder named \"rank\" to contain all ranking-related UI and logic. Add a Rank screen that can be navigated to from the app (e.g., via a Settings link/button) without breaking existing navigation. The Rank screen must show an English weekly leaderboard list of users ordered by points for the current week, including each user’s rank number, display name, and points.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/SettingsPage.tsx",
         "frontend/src/rank/RankPage.tsx",
-        "frontend/src/rank/rankApi.ts"
+        "frontend/src/rank/RankingModel.ts",
+        "frontend/src/rank/RankingScreen.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-42"
+        "REQ-75"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-wire-the-frontend-streak-points-awarding-to-the-backend-ranking-system-when-the-app-awards-5-or-10-points-for-a-milestone-it-must-also-submit-the-points-increment-to-the-backend-for-the-logged-in-user-and-ensure-the-user-s-display-name-is-registered-updated-in-the-backend-the-rank-screen-must-fetch-the-weekly-ranking-list-from-the-backend-and-display-it",
-      "featureTitle": "Wire the frontend streak points awarding to the backend ranking system: when the app awards +5 or +10 points for a milestone, it must also submit the points increment to the backend for the logged-in user and ensure the user’s display name is registered/updated in the backend. The Rank screen must fetch the weekly ranking list from the backend and display it.",
+      "featureId": "feature-preserve-near-real-time-leaderboard-updates-without-websockets-by-ensuring-polling-refetching-is-safe-no-memory-leaks-and-results-remain-consistent-across-devices-do-not-allow-cached-stale-data-to-override-fresh-global-results-when-the-backend-is-reachable",
+      "featureTitle": "Preserve near-real-time leaderboard updates without WebSockets by ensuring polling/refetching is safe (no memory leaks) and results remain consistent across devices; do not allow cached/stale data to override fresh global results when the backend is reachable.",
       "files": [
-        "frontend/src/pages/HomeDashboardPage.tsx",
-        "frontend/src/pages/LoginPage.tsx",
-        "frontend/src/rank/RankPage.tsx",
-        "frontend/src/rank/rankApi.ts"
+        "frontend/src/rank/RankingScreen.tsx",
+        "frontend/src/rank/RankingService.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-44"
+        "REQ-77"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-local-persistence-and-backup-restore-to-include-the-new-user-profile-and-gamification-fields-user-name-points-streak-metadata-and-milestone-award-state-while-remaining-backward-compatible-with-existing-stored-data-and-older-backups-by-merging-missing-fields-with-defaults",
-      "featureTitle": "Update local persistence and backup/restore to include the new user profile and gamification fields (user name, points, streak metadata, and milestone award state) while remaining backward compatible with existing stored data and older backups by merging missing fields with defaults.",
+      "featureId": "feature-update-all-user-facing-text-in-the-ranking-flow-to-be-clear-english-including-explicit-messaging-when-data-is-stale-cached-fallback-or-when-the-leaderboard-cannot-be-loaded",
+      "featureTitle": "Update all user-facing text in the ranking flow to be clear English, including explicit messaging when data is stale (cached fallback) or when the leaderboard cannot be loaded.",
       "files": [
-        "frontend/src/backup/backupIO.ts",
-        "frontend/src/backup/backupSchema.ts",
-        "frontend/src/state/persistence.ts"
+        "frontend/src/rank/RankingScreen.tsx",
+        "frontend/src/rank/RankingService.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-45"
+        "REQ-78"
       ],
       "confidence": "high"
     }

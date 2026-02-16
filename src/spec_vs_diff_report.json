@@ -1,75 +1,110 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T14:01:34.251Z",
-  "summary": "The diff implements a name-only Login page, adds rank/leaderboard UI under frontend/src/rank, extends persisted frontend state with userProfile and streakMilestones, adds streak computation utilities, and adds Motoko backend methods for weekly ranking. However, several requirements/AC are only partially met, especially the exact streak milestone behavior/messages and backend addPoints/auth/error semantics.",
+  "generatedAt": "2026-02-16T16:00:53.469Z",
+  "summary": "Diff adds a frontend ranking data layer (repository/service/cache), a new Rank screen with polling and some UX behaviors, and backend schema/migration scaffolding. However, the diff does not provide clear evidence that the backend now exposes the required global leaderboard contract, deterministic sorting with the specified tie-breakers, or the weekly snapshot/rollover idempotency logic. Some new UI/UX elements and cache behavior are added beyond the explicit request.",
   "missing_requirements": [
     {
-      "id": "REQ-41",
-      "requirement": "Streak computation must use local-time calendar dates stored in events, and milestone award messages must exactly match: “Congrats on your hat-trick! +5 points.” and “Congrats on your 6-day streak! +10 points.”",
-      "reason": "Streak uses `new Date().toISOString().split('T')[0]` (UTC date) rather than local-date logic, and the toast messages differ from the required exact English strings (also includes emojis and extra wording).",
+      "id": "REQ-71",
+      "requirement": "Remove any device-specific or caller-only ranking behavior so the Rank screen always loads a truly global leaderboard from the canister, with no code path filtering to the current user only.",
+      "reason": "Frontend calls a backend method named `getGlobalRankingPaginated`, but the backend diff portion shown does not include this method nor demonstrate that results are global and not filtered by caller. Without the backend endpoint implementation visible, global visibility cannot be confirmed from the provided diff summary.",
       "evidence": [
-        "frontend/src/domain/streakMilestones.ts",
-        "frontend/src/pages/HomeDashboardPage.tsx"
+        "frontend/src/rank/RankingRepository.ts",
+        "backend/main.mo (truncated)"
       ]
     },
     {
-      "id": "REQ-41",
-      "requirement": "Points are not re-awarded for the same milestone within the same ongoing streak; streak milestone tracking must be stable for a streak.",
-      "reason": "The streak identifier is derived from `getStreakIdentifier(streakLength)` which uses the *current* streak length to compute a start date; as the streak length increases day by day, this identifier can change, risking re-award behavior for the same underlying streak.",
+      "id": "REQ-72",
+      "requirement": "Upgrade backend ranking data contract to expose user_id, name, college, total_points, current_streak, longest_streak, join_date for every user, and return global results (no per-caller filtering).",
+      "reason": "Backend types shown include `RankingDetails` without any `userId`/principal field, and no leaderboard query implementation is visible in the truncated backend diff. Frontend mapping also does not populate `userId` from backend data.",
       "evidence": [
-        "frontend/src/domain/streakMilestones.ts"
+        "backend/main.mo (truncated): type RankingDetails = { displayName; college; points; streak; joinDate; longestStreak }",
+        "frontend/src/rank/RankingModel.ts: userId?: string is optional and not set in mapBackendEntryToUI",
+        "frontend/src/rank/RankingRepository.ts: expects getGlobalRankingPaginated"
       ]
     },
     {
-      "id": "REQ-43",
-      "requirement": "Backend add-points method should succeed for authenticated callers and reject unauthenticated writes; it must correctly represent success/failure and update weekly points for the caller.",
-      "reason": "`addPoints` returns a `RankingError` variant but appears to always return `#displayNameUpdateFailed` even after updating the user data, and there is no explicit unauthenticated/anonymous principal rejection despite having a `#userNotAuthenticated` error type.",
+      "id": "REQ-73",
+      "requirement": "Deterministic rank calculation at runtime using tie-breakers: total_points desc, longest_streak desc, join_date asc; rank = index + 1; do not persist static rank.",
+      "reason": "Backend comparator uses `points` then `streak` (not `longestStreak`) as the second tie-breaker. Also, no evidence is shown that the backend returns ranks computed from the full global dataset at runtime (only a sort helper is visible).",
       "evidence": [
-        "backend/main.mo"
+        "backend/main.mo (truncated): compareEntriesForRanking uses Nat.compare(b.streak, a.streak)"
       ]
     },
     {
-      "id": "REQ-44",
-      "requirement": "When a milestone award occurs, frontend must increment local points and call backend to increment weekly points; backend failures must show an English non-blocking error without crashing, while keeping local points consistent.",
-      "reason": "The milestone award flow is truncated; the diff shows backend submission (`submitPoints`) but does not clearly show the required non-blocking error handling path and message for backend failure in the milestone-award code section.",
+      "id": "REQ-74",
+      "requirement": "Fix pagination/incremental loading so Rank can scale to 100+ users without truncation and ranks remain stable across pages.",
+      "reason": "Frontend implements pagination-by-looping (`fetchAll` pulls pages of 100), but backend pagination endpoint `getGlobalRankingPaginated` is not shown in the backend diff, so end-to-end pagination correctness and non-truncation cannot be verified from the provided summary.",
       "evidence": [
-        "frontend/src/pages/HomeDashboardPage.tsx (truncated)"
+        "frontend/src/rank/RankingRepository.ts: fetchAll() loops pages of 100 using getGlobalRankingPaginated",
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-75",
+      "requirement": "Highlight current logged-in user reliably using a stable backend identifier (not displayName alone) and auto-scroll them into view when not Top 3.",
+      "reason": "The UI passes `currentUserId` from Internet Identity, but `RankingUIEntry.userId` is not populated from backend entries (mapping omits it). The `RankingScreen` function that finds the current user is truncated, so it is not verifiable that highlighting is based on stable identifier rather than name.",
+      "evidence": [
+        "frontend/src/rank/RankPage.tsx: currentUserId = identity?.getPrincipal().toString()",
+        "frontend/src/rank/RankingModel.ts: mapBackendEntryToUI does not set userId",
+        "frontend/src/rank/RankingScreen.tsx (truncated): findCurrentUser implementation not fully shown"
+      ]
+    },
+    {
+      "id": "REQ-76",
+      "requirement": "Implement/correct weekly snapshot/rollover logic with a stable last_update_date (or equivalent) so recalculation runs at most once per Sunday 12:00 AM boundary and is idempotent.",
+      "reason": "Backend adds `lastRecalculated : ?Time.Time` and migration sets it to null, but no logic is shown that computes the Sunday boundary, checks last update against the boundary, or performs idempotent weekly recalculation/snapshotting.",
+      "evidence": [
+        "backend/main.mo (truncated): var lastRecalculated : ?Time.Time = null",
+        "backend/migration.mo: lastRecalculated = null"
+      ]
+    },
+    {
+      "id": "REQ-78",
+      "requirement": "Update all user-facing text in the ranking flow to clear English, including stale cache warning and error state with retry action.",
+      "reason": "Service-layer strings include clear English stale/error messages, but the `RankingScreen` UI (where the messages and retry action must be presented) is truncated, so it is not verifiable that the UI actually displays these messages and includes a retry action when no cache exists.",
+      "evidence": [
+        "frontend/src/rank/RankingService.ts: error strings for stale and failure states",
+        "frontend/src/rank/RankingScreen.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Simulated async login behavior using `setTimeout` before calling onLogin.",
-      "reason": "REQ-39 does not request simulated delays; it only requires validation and persistence.",
+      "description": "Introduced a localStorage-based ranking cache module and compatibility mapping that stores only rank/displayName/points.",
+      "reason": "BuildRequest allows cache only as a stale fallback (which is implemented), but the specific addition of a dedicated localStorage cache module and a reduced cached schema is not explicitly requested; it is an implementation choice not stated in requirements.",
       "evidence": [
-        "frontend/src/pages/LoginPage.tsx"
+        "frontend/src/rank/rankCache.ts",
+        "frontend/src/rank/RankingService.ts: saveToCacheCompat/loadFromCacheCompat"
       ]
     },
     {
-      "description": "Leaderboard UI includes decorative icons (Trophy/Medal/Award) and copy like “Top performers this week” and “Rankings reset every week. Keep your streak going to earn more points!”.",
-      "reason": "REQ-42 requires a weekly leaderboard with rank/name/points and an empty state; additional iconography and motivational copy were not requested.",
+      "description": "Added confetti/top-3 celebration UI behavior in the ranking screen.",
+      "reason": "Confetti behavior is not mentioned in the BuildRequest requirements or acceptance criteria.",
       "evidence": [
-        "frontend/src/rank/RankPage.tsx"
+        "frontend/src/rank/RankingScreen.tsx (truncated): showConfetti state and ConfettiBurst import/usage"
+      ]
+    },
+    {
+      "description": "Backend migration removes/neutralizes email by setting it to null in migrated user data and returns a placeholder email value 'not-implemented' in getUserProfile.",
+      "reason": "Email field changes are not part of the ranking visibility/sorting/pagination/weekly snapshot requirements and appear unrelated to the requested ranking fixes.",
+      "evidence": [
+        "backend/migration.mo: email = null // Remove the email field in new version.",
+        "backend/main.mo (truncated): getUserProfile sets email = \"not-implemented\""
       ]
     }
   ],
-  "confidence": 0.72,
+  "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/backup/backupIO.ts",
-    "frontend/src/backup/backupSchema.ts",
-    "frontend/src/domain/attendanceReducer.ts",
-    "frontend/src/domain/attendanceTypes.ts",
-    "frontend/src/domain/streakMilestones.ts",
-    "frontend/src/pages/HomeDashboardPage.tsx",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/SettingsPage.tsx",
     "frontend/src/rank/RankPage.tsx",
-    "frontend/src/rank/rankApi.ts",
-    "frontend/src/state/persistence.ts",
+    "frontend/src/rank/RankingModel.ts",
+    "frontend/src/rank/RankingRepository.ts",
+    "frontend/src/rank/RankingScreen.tsx",
+    "frontend/src/rank/RankingService.ts",
+    "frontend/src/rank/rankCache.ts",
     "project_state.json"
   ]
 }

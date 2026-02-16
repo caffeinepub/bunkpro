@@ -1,123 +1,226 @@
 import Map "mo:core/Map";
-import Text "mo:core/Text";
-import Order "mo:core/Order";
-import Principal "mo:core/Principal";
 import Array "mo:core/Array";
 import Time "mo:core/Time";
+import Nat "mo:core/Nat";
+import Int "mo:core/Int";
+import Text "mo:core/Text";
 import Iter "mo:core/Iter";
+import Order "mo:core/Order";
+import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
+import Migration "migration";
 
+import MixinAuthorization "authorization/MixinAuthorization";
+import AccessControl "authorization/access-control";
+
+(with migration = Migration.run)
 actor {
-  type UserId = Principal;
+  // Mix in the authorization logic
+  let accessControlState = AccessControl.initState();
+  include MixinAuthorization(accessControlState);
 
-  type RankingEntry = {
+  type RankingDetails = {
     displayName : Text;
+    college : ?Text;
     points : Nat;
+    streak : Nat;
+    joinDate : Time.Time;
+    longestStreak : Nat;
   };
 
   type UserData = {
     displayName : Text;
     points : Nat;
-    lastUpdated : Int;
+    streak : Nat;
+    joinDate : Time.Time;
+    longestStreak : Nat;
+    currentStreak : Nat;
+    college : ?Text;
+    rankingDetails : RankingDetails;
   };
 
-  let users = Map.empty<UserId, UserData>();
+  type AddPointsResult = {
+    #success : Nat;
+    #pointsUpdateFailed;
+  };
 
-  func toRankingEntry(userData : UserData) : RankingEntry {
-    {
-      displayName = userData.displayName;
-      points = userData.points;
+  type UserProfile = {
+    displayName : Text;
+    college : Text;
+    email : Text;
+  };
+
+  let users = Map.empty<Principal, UserData>();
+  var lastRecalculated : ?Time.Time = null;
+
+  func compareEntriesForRanking(a : RankingDetails, b : RankingDetails) : Order.Order {
+    switch (Nat.compare(b.points, a.points)) {
+      case (#less) { #less };
+      case (#greater) { #greater };
+      case (#equal) {
+        switch (Nat.compare(b.streak, a.streak)) {
+          case (#less) { #less };
+          case (#greater) { #greater };
+          case (#equal) { Int.compare(a.joinDate, b.joinDate) };
+        };
+      };
     };
   };
 
-  func orderEntriesByPoints(a : RankingEntry, b : RankingEntry) : Order.Order {
-    Nat.compare(b.points, a.points);
+  func sortRankings(entries : [RankingDetails]) : [RankingDetails] {
+    entries.sort(
+      func(a, b) {
+        compareEntriesForRanking(a, b);
+      }
+    );
   };
 
-  public type RankingError = {
-    #userNotAuthenticated;
-    #pointsUpdateFailed;
-    #displayNameUpdateFailed;
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
+    switch (users.get(user)) {
+      case (null) { null };
+      case (?userData) {
+        ?{
+          displayName = userData.displayName;
+          college = switch (userData.college) {
+            case (null) { "unknown" };
+            case (?college) { college };
+          };
+          email = "not-implemented";
+        };
+      };
+    };
   };
 
-  func getCurrentWeekStart() : Int {
-    let timestamp = Time.now();
-    let seconds = timestamp / 1_000_000_000;
-    let daysSinceEpoch = seconds / 86_400;
-    let daysSinceWeekStart = daysSinceEpoch % 7;
-    let weekStartDays = daysSinceEpoch - daysSinceWeekStart;
-    let weekStartSeconds = weekStartDays * 86_400;
-    weekStartSeconds * 1_000_000_000;
-  };
-
-  public shared ({ caller }) func registerDisplayName(displayName : Text) : async Bool {
-    let userId = caller;
-    let currentWeekStart = getCurrentWeekStart();
-
-    switch (users.get(userId)) {
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    switch (users.get(caller)) {
       case (null) {
         let newUser : UserData = {
-          displayName;
+          displayName = profile.displayName;
           points = 0;
-          lastUpdated = currentWeekStart;
+          streak = 0;
+          joinDate = Time.now();
+          longestStreak = 0;
+          currentStreak = 0;
+          college = ?profile.college;
+          rankingDetails = {
+            displayName = profile.displayName;
+            points = 0;
+            streak = 0;
+            joinDate = Time.now();
+            longestStreak = 0;
+            college = ?profile.college;
+          };
         };
-        users.add(userId, newUser);
-        true;
+        users.add(caller, newUser);
       };
       case (?existingUser) {
-        if (existingUser.displayName != displayName or existingUser.lastUpdated < currentWeekStart) {
-          let updatedUser : UserData = {
-            displayName;
-            points =
-              if (existingUser.lastUpdated < currentWeekStart) { 0 } else {
-                existingUser.points;
-              };
-            lastUpdated = currentWeekStart;
-          };
-          users.add(userId, updatedUser);
-        };
-        true;
-      };
-    };
-  };
-
-  public type Ranking = {
-    displayName : Text;
-    points : Nat;
-  };
-
-  public shared ({ caller }) func addPoints(displayName : Text, points : Nat) : async RankingError {
-    let userId = caller;
-    let currentWeekStart = getCurrentWeekStart();
-
-    switch (users.get(userId)) {
-      case (null) { #displayNameUpdateFailed };
-      case (?userData) {
-        let updatedPoints =
-          (if (userData.lastUpdated < currentWeekStart) { 0 } else {
-            userData.points;
-          }) + points;
         let updatedUser : UserData = {
-          userData with
-          points = updatedPoints;
-          lastUpdated = currentWeekStart;
-          displayName;
+          existingUser with
+          displayName = profile.displayName;
+          college = ?profile.college;
+          rankingDetails = {
+            existingUser.rankingDetails with
+            displayName = profile.displayName;
+            college = ?profile.college;
+          };
         };
-        users.add(userId, updatedUser);
-        #displayNameUpdateFailed;
+        users.add(caller, updatedUser);
       };
     };
   };
 
-  public query ({ caller }) func getCurrentWeekRanking() : async [RankingEntry] {
-    let currentWeekStart = getCurrentWeekStart();
-    let rankingList = users.entries().filter(
-      func((_, userData)) {
-        userData.lastUpdated >= currentWeekStart;
-      }
-    ).map(
-      func((_, userData)) { toRankingEntry(userData) }
-    );
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access profiles");
+    };
+    switch (users.get(caller)) {
+      case (null) { null };
+      case (?userData) {
+        ?{
+          displayName = userData.displayName;
+          college = switch (userData.college) {
+            case (null) { "unknown" };
+            case (?college) { college };
+          };
+          email = "not-implemented";
+        };
+      };
+    };
+  };
 
-    rankingList.toArray().sort(orderEntriesByPoints);
+  public shared ({ caller }) func addPoints(pointsToAdd : Nat) : async AddPointsResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can add points");
+    };
+    switch (users.get(caller)) {
+      case (null) {
+        #pointsUpdateFailed;
+      };
+      case (?existingUser) {
+        let newPoints = existingUser.points + pointsToAdd;
+        let updatedUser : UserData = {
+          existingUser with
+          points = newPoints;
+          rankingDetails = {
+            existingUser.rankingDetails with
+            points = newPoints;
+          };
+        };
+        users.add(caller, updatedUser);
+        #success(newPoints);
+      };
+    };
+  };
+
+  // Public query - accessible to all users including guests
+  // Global leaderboard should be publicly accessible
+  public query func getGlobalRankingPaginated(start : Nat, count : Nat) : async [RankingDetails] {
+    let allEntries = users.values().map(func(userData) { userData.rankingDetails }).toArray();
+    let sortedEntries = allEntries.sort(compareEntriesForRanking);
+
+    if (start >= sortedEntries.size()) {
+      return [];
+    };
+
+    let end = Nat.min(start + count, sortedEntries.size());
+    let sliceSize = if (end > start) { end - start } else { 0 : Nat };
+
+    Array.tabulate<RankingDetails>(
+      sliceSize,
+      func(i) {
+        sortedEntries[start + i];
+      },
+    );
+  };
+
+  // Public query - accessible to all users including guests
+  // College-specific leaderboard should be publicly accessible
+  public query func getRankingByCollege(college : Text, start : Nat, count : Nat) : async [RankingDetails] {
+    let filteredEntries = users.values()
+      .map(func(userData) { userData.rankingDetails })
+      .filter(func(entry) { entry.displayName.contains(#text college) })
+      .toArray();
+
+    let sortedEntries = filteredEntries.sort(compareEntriesForRanking);
+
+    if (start >= sortedEntries.size()) {
+      return [];
+    };
+
+    let end = Nat.min(start + count, sortedEntries.size());
+    let sliceSize = if (end > start) { end - start } else { 0 : Nat };
+
+    Array.tabulate<RankingDetails>(
+      sliceSize,
+      func(i) {
+        sortedEntries[start + i];
+      },
+    );
   };
 };

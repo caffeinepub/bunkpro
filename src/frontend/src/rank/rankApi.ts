@@ -1,6 +1,7 @@
-// Ranking data access helpers for backend integration
-
-import type { backendInterface, RankingEntry } from '../backend';
+// Compatibility layer for ranking API - delegates to RankingService while preserving existing imports
+import type { backendInterface } from '../backend';
+import { RankingService } from './RankingService';
+import type { RankingUIEntry } from './RankingModel';
 
 export interface RankingData {
   rank: number;
@@ -8,52 +9,46 @@ export interface RankingData {
   points: number;
 }
 
-export async function registerUserDisplayName(
-  actor: backendInterface,
-  displayName: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const result = await actor.registerDisplayName(displayName);
-    if (result) {
-      return { success: true };
-    } else {
-      return { success: false, error: 'Failed to register display name' };
-    }
-  } catch (error) {
-    console.error('Error registering display name:', error);
-    return { success: false, error: 'Network error while registering name' };
-  }
-}
-
+/**
+ * Submits points for the current user
+ * @deprecated Use RankingService directly for new code
+ */
 export async function submitPoints(
   actor: backendInterface,
-  displayName: string,
   points: number
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    await actor.addPoints(displayName, BigInt(points));
-    return { success: true };
-  } catch (error) {
-    console.error('Error submitting points:', error);
-    return { success: false, error: 'Failed to submit points to leaderboard' };
-  }
+  const service = new RankingService(actor);
+  return service.submitPoints(points);
 }
 
+/**
+ * Fetches the weekly ranking with cache fallback
+ * @deprecated Use RankingService directly for new code
+ */
 export async function fetchWeeklyRanking(
   actor: backendInterface
-): Promise<{ success: boolean; data?: RankingData[]; error?: string }> {
-  try {
-    const entries: RankingEntry[] = await actor.getCurrentWeekRanking();
-    
-    const rankingData: RankingData[] = entries.map((entry, index) => ({
-      rank: index + 1,
+): Promise<{ success: boolean; data?: RankingData[]; error?: string; isStale?: boolean }> {
+  const service = new RankingService(actor);
+  const result = await service.fetchRanking();
+  
+  if (result.success && result.data) {
+    // Convert to legacy format
+    const legacyData: RankingData[] = result.data.map(entry => ({
+      rank: entry.rank,
       displayName: entry.displayName,
-      points: Number(entry.points),
+      points: entry.totalPoints,
     }));
     
-    return { success: true, data: rankingData };
-  } catch (error) {
-    console.error('Error fetching ranking:', error);
-    return { success: false, error: 'Failed to load leaderboard' };
+    return {
+      success: true,
+      data: legacyData,
+      isStale: result.isStale,
+      error: result.error,
+    };
   }
+  
+  return {
+    success: false,
+    error: result.error,
+  };
 }

@@ -1,4 +1,4 @@
-// Login page with name-only authentication and validation
+// Login page with name-only authentication using shared validation logic
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import type { UserProfile } from '../domain/attendanceTypes';
+import { validateDisplayName } from '../domain/validateDisplayName';
 
 interface LoginPageProps {
   onLogin: (profile: UserProfile) => void;
@@ -18,43 +19,20 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateName = (input: string): string | null => {
-    const trimmed = input.trim();
-    
-    if (trimmed.length === 0) {
-      return 'Please enter your name';
-    }
-    
-    if (trimmed.length < 2) {
-      return 'Name must be at least 2 characters';
-    }
-    
-    if (trimmed.length > 50) {
-      return 'Name must be less than 50 characters';
-    }
-    
-    // Only allow letters (A-Z, a-z) and spaces
-    if (!/^[A-Za-z\s]+$/.test(trimmed)) {
-      return 'Name can only contain letters and spaces';
-    }
-    
-    return null;
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    const validationError = validateName(name);
-    if (validationError) {
-      setError(validationError);
+    const validation = validateDisplayName(name);
+    if (!validation.isValid) {
+      setError(validation.error || 'Invalid name');
       return;
     }
     
     setIsSubmitting(true);
     
     const profile: UserProfile = {
-      displayName: name.trim(),
+      displayName: validation.normalizedValue,
       totalPoints: 0,
       registeredAt: Date.now(),
     };
@@ -82,7 +60,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               <Input
                 id="name"
                 type="text"
-                placeholder="e.g., Chittya"
+                placeholder="name_clg_sem"
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);

@@ -10,14 +10,42 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface RankingEntry { 'displayName' : string, 'points' : bigint }
-export type RankingError = { 'userNotAuthenticated' : null } |
-  { 'displayNameUpdateFailed' : null } |
+export type AddPointsResult = { 'success' : bigint } |
   { 'pointsUpdateFailed' : null };
+export interface RankingDetails {
+  'streak' : bigint,
+  'displayName' : string,
+  'joinDate' : Time,
+  'longestStreak' : bigint,
+  'college' : [] | [string],
+  'points' : bigint,
+}
+export type Time = bigint;
+export interface UserProfile {
+  'displayName' : string,
+  'email' : string,
+  'college' : string,
+}
+export type UserRole = { 'admin' : null } |
+  { 'user' : null } |
+  { 'guest' : null };
 export interface _SERVICE {
-  'addPoints' : ActorMethod<[string, bigint], RankingError>,
-  'getCurrentWeekRanking' : ActorMethod<[], Array<RankingEntry>>,
-  'registerDisplayName' : ActorMethod<[string], boolean>,
+  '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addPoints' : ActorMethod<[bigint], AddPointsResult>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
+  'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getGlobalRankingPaginated' : ActorMethod<
+    [bigint, bigint],
+    Array<RankingDetails>
+  >,
+  'getRankingByCollege' : ActorMethod<
+    [string, bigint, bigint],
+    Array<RankingDetails>
+  >,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'isCallerAdmin' : ActorMethod<[], boolean>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

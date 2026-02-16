@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 19,
-  "summary": "Build “BunkPro”, a fully functional Android smart attendance manager for college students with BunkWell-equivalent core features/logic, redesigned premium modern UI/UX, offline local storage, backup/restore, thorough testing, plus a simple login/name profile and streak-based points with weekly user rankings.",
+  "projectStateVersion": 37,
+  "summary": "Enhance BunkPro by upgrading and fixing the Global Weekly Ranking System to be fully cloud-based and truly global using Firebase Firestore as the only ranking source (no local-only/device-specific ranking). All users must be mutually visible and realtime-synced, ranks computed dynamically at runtime using deterministic tie-breakers, with weekly Sunday 12:00 AM rollover guarded by a last-update timestamp, and a premium leaderboard UI (Top-3 + dynamic rank badges, current-user highlight, pagination for 100+ users).",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
     "Offline-first app using local Room/SQLite database (secure local storage)",
@@ -11,12 +11,17 @@
     "Ensure no third-party/white-label branding (e.g., “Build with Caffeine AI”) appears anywhere in the app UI, splash screen, settings/about, or build artifacts.",
     "Notifications scope added: implement web push notifications, desktop notifications, and local notifications (clarify platform support/approach for Android vs web/desktop).",
     "Branding scope: create new BunkPro logo assets (icon-only + full wordmark) with dark/light variants; must be flat, minimal, and legible at small sizes (48x48).",
-    "New scope: introduce user identity/profile (name) persistence and a points/streak system, plus weekly ranking logic organized under a dedicated “rank” module/folder."
+    "New scope: introduce user identity/profile (name) persistence and a points/streak system, plus weekly ranking logic organized under a dedicated “rank” module/folder.",
+    "Weekly ranking must be computed deterministically with a stored weekly snapshot and last-run timestamp (Sunday 12:00 AM), using stable sort criteria (points, streak, join date) and preventing duplicate recalculation; support offline mode."
   ],
   "known_issues": [
-    "\"Send test notification\" does not show/appear (notification seems inactive/not visible) when pressed."
+    "\"Send test notification\" does not show/appear (notification seems inactive/not visible) when pressed.",
+    "Build/deployment failed with error: \"Unable to create your app\" when attempting the placeholder text update build.",
+    "Build attempt failed with error message: “AI was unable to complete your request. Try rephrasing it more clearly.” (deployment did not complete).",
+    "UI regression: “Mark Today’s Classes” and “View Rankings” buttons changed to black; should be purple per app theme.",
+    "Global Ranking visibility bug: users are not mutually visible (leaderboard appears device-specific/partially loaded/incorrectly filtered; may only show current user or be truncated)."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -353,6 +358,198 @@
         "REQ-45"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-name-input-example-placeholder-text-on-the-login-screen-to-remove-chittya-and-replace-it-with-name-clg-name-i-e-the-placeholder-should-read-exactly-e-g-name-clg-name",
+      "title": "Update the name input example/placeholder text on the Login screen to remove \"Chittya\" and replace it with \"name_clg name\" (i.e., the placeholder should read exactly: \"e.g., name_clg name\").",
+      "reqIds": [
+        "REQ-46"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-login-screen-name-input-placeholder-example-by-removing-the-word-chittya-and-setting-the-placeholder-text-to-exactly-e-g-name-clg-name",
+      "title": "Update the Login screen name input placeholder example by removing the word \"Chittya\" and setting the placeholder text to exactly: \"e.g., name_clg name\".",
+      "reqIds": [
+        "REQ-47"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-edit-option-in-settings-your-profile-to-allow-the-logged-in-user-to-change-their-saved-display-name-after-initial-login-the-flow-must-include-an-explicit-ui-control-e-g-edit-button-an-input-to-update-the-name-and-save-cancel-actions",
+      "title": "Add an edit option in Settings → Your Profile to allow the logged-in user to change their saved display name after initial login. The flow must include an explicit UI control (e.g., “Edit” button), an input to update the name, and Save/Cancel actions.",
+      "reqIds": [
+        "REQ-48"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-validate-the-edited-name-using-the-same-rules-as-the-login-screen-trimmed-non-empty-2-50-characters-and-only-letters-a-z-a-z-and-spaces-show-english-validation-errors-when-invalid-and-prevent-saving-until-valid",
+      "title": "Validate the edited name using the same rules as the Login screen: trimmed, non-empty, 2–50 characters, and only letters (A–Z/a–z) and spaces. Show English validation errors when invalid and prevent saving until valid.",
+      "reqIds": [
+        "REQ-49"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-persist-the-updated-display-name-through-the-existing-indexeddb-persistence-and-backup-restore-flows-and-sync-the-updated-display-name-to-the-leaderboard-backend-by-calling-the-existing-display-name-registration-flow-after-a-successful-save-when-a-backend-actor-is-available-provide-clear-english-feedback-if-syncing-fails-non-blocking",
+      "title": "Persist the updated display name through the existing IndexedDB persistence and backup/restore flows, and sync the updated display name to the leaderboard backend by calling the existing display-name registration flow after a successful save (when a backend actor is available). Provide clear English feedback if syncing fails (non-blocking).",
+      "reqIds": [
+        "REQ-50"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-rank-screen-frontend-src-rank-rankpage-tsx-leaderboard-list-ui-to-display-every-user-in-rank-order-with-visually-attractive-rank-number-badges-for-all-ranks-1-2-3-up-to-n-users-not-only-icons-for-the-top-3",
+      "title": "Update the Rank screen (frontend/src/rank/RankPage.tsx) leaderboard list UI to display every user in rank order with visually attractive rank-number badges for all ranks (1, 2, 3, … up to N users), not only icons for the top 3.",
+      "reqIds": [
+        "REQ-51"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-upgrade-the-frontend-bottom-navigation-to-include-a-dedicated-rank-tab-so-the-app-has-a-tab-bar-home-timetable-stats-rank-settings-and-update-app-routing-state-so-switching-tabs-works-smoothly-without-breaking-existing-navigation-including-deep-navigation-to-subject-details",
+      "title": "Upgrade the frontend bottom navigation to include a dedicated Rank tab so the app has a tab bar: Home | Timetable | Stats | Rank | Settings, and update app routing/state so switching tabs works smoothly without breaking existing navigation (including deep navigation to Subject Details).",
+      "reqIds": [
+        "REQ-55"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-implement-a-stats-screen-to-support-the-new-stats-tab-with-a-clean-responsive-layout-and-english-text-the-page-must-not-be-a-dead-end-and-must-render-meaningful-attendance-summary-data-using-existing-local-state-calculations-no-new-attendance-logic",
+      "title": "Create/implement a Stats screen to support the new Stats tab with a clean, responsive layout and English text; the page must not be a dead-end and must render meaningful attendance summary data using existing local state/calculations (no new attendance logic).",
+      "reqIds": [
+        "REQ-56"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enhance-the-rank-screen-ui-to-a-modern-premium-competitive-leaderboard-display-top-3-users-separately-at-the-top-with-distinct-gold-silver-bronze-elevated-cards-with-smooth-on-load-animation-below-top-3-render-all-remaining-users-in-a-vertical-list-with-dynamically-generated-rank-numbers-4-n-shown-as-large-bold-gradient-styled-numbers-inside-circular-badges-no-ranks-may-be-hardcoded",
+      "title": "Enhance the Rank screen UI to a modern, premium competitive leaderboard: display Top 3 users separately at the top with distinct gold/silver/bronze elevated cards (with smooth on-load animation); below Top 3, render all remaining users in a vertical list with dynamically generated rank numbers (4..N) shown as large, bold, gradient-styled numbers inside circular badges; no ranks may be hardcoded.",
+      "reqIds": [
+        "REQ-57"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-rank-screen-interaction-and-ux-enhancements-pull-to-refresh-or-an-explicit-refresh-control-to-reload-rankings-highlight-the-current-logged-in-user-row-with-a-glowing-border-and-a-you-badge-add-a-subtle-confetti-animation-when-the-current-user-is-in-the-top-3-and-ensure-a-scrollable-list-that-performs-well-with-100-users-no-jank-no-overflow",
+      "title": "Add Rank screen interaction and UX enhancements: pull-to-refresh (or an explicit refresh control) to reload rankings; highlight the current logged-in user row with a glowing border and a “You” badge; add a subtle confetti animation when the current user is in the Top 3; and ensure a scrollable list that performs well with 100+ users (no jank, no overflow).",
+      "reqIds": [
+        "REQ-58"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-frontend-displays-rankings-in-strict-rank-order-with-correct-english-empty-error-states-and-add-offline-friendly-behavior-by-caching-the-most-recent-successfully-loaded-weekly-ranking-locally-and-showing-it-when-the-backend-cannot-be-reached-with-clear-english-messaging-that-the-data-may-be-stale",
+      "title": "Ensure the frontend displays rankings in strict rank order with correct English empty/error states, and add offline-friendly behavior by caching the most recent successfully loaded weekly ranking locally and showing it when the backend cannot be reached (with clear English messaging that the data may be stale).",
+      "reqIds": [
+        "REQ-59"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-requested-firebase-firestore-global-ranking-backend-with-an-internet-computer-motoko-canister-backed-global-ranking-system-that-is-readable-by-all-users-and-writable-only-by-the-authenticated-caller-for-their-own-user-record-because-firebase-firestore-integration-is-not-supported-on-this-platform",
+      "title": "Replace the requested Firebase/Firestore global ranking backend with an Internet Computer (Motoko) canister-backed global ranking system that is readable by all users and writable only by the authenticated caller for their own user record, because Firebase/Firestore integration is not supported on this platform.",
+      "reqIds": [
+        "REQ-60"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-upgrade-the-rank-screen-data-contract-and-ui-rendering-to-display-the-required-columns-for-every-user-in-strict-rank-order-rank-number-large-bold-circular-gradient-badge-user-name-college-name-total-points-and-current-streak-keep-the-existing-premium-top-3-section-styling-gold-silver-bronze-with-crown-medal-award-and-ensure-the-layout-adapts-correctly-when-there-are-fewer-than-3-users",
+      "title": "Upgrade the Rank screen data contract and UI rendering to display the required columns for every user in strict rank order: Rank Number (large, bold, circular gradient badge), User Name, College Name, Total Points, and Current Streak; keep the existing premium Top-3 section styling (gold/silver/bronze with crown/medal/award) and ensure the layout adapts correctly when there are fewer than 3 users.",
+      "reqIds": [
+        "REQ-64"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-current-user-highlighting-and-auto-scroll-on-rank-screen-open-highlight-the-logged-in-user-s-row-card-with-a-glow-border-and-a-visible-you-badge-keep-them-at-the-correct-rank-position-and-auto-scroll-the-list-to-bring-the-user-into-view-when-the-rank-screen-opens-when-the-user-is-not-in-the-top-3",
+      "title": "Implement current-user highlighting and auto-scroll on Rank screen open: highlight the logged-in user’s row/card with a glow/border and a visible “You” badge, keep them at the correct rank position, and auto-scroll the list to bring the user into view when the Rank screen opens (when the user is not in the Top 3).",
+      "reqIds": [
+        "REQ-65"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-near-real-time-leaderboard-updates-without-websockets-by-implementing-safe-periodic-refetching-while-the-rank-screen-is-visible-plus-the-existing-explicit-refresh-control-as-a-secondary-option-ensure-cleanup-to-avoid-memory-leaks-and-preserve-the-offline-friendly-cached-fallback-behavior-with-clear-english-messaging-when-showing-stale-data",
+      "title": "Add near-real-time leaderboard updates without WebSockets by implementing safe periodic refetching while the Rank screen is visible, plus the existing explicit refresh control as a secondary option; ensure cleanup to avoid memory leaks and preserve the offline-friendly cached fallback behavior with clear English messaging when showing stale data.",
+      "reqIds": [
+        "REQ-66"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-scalable-loading-for-100-users-on-the-rank-screen-by-adding-pagination-or-incremental-loading-in-the-frontend-to-backend-ranking-fetch-flow-and-ensure-scrolling-performance-remains-smooth-with-large-lists-no-overflow-no-jank",
+      "title": "Implement scalable loading for 100+ users on the Rank screen by adding pagination or incremental loading in the frontend-to-backend ranking fetch flow, and ensure scrolling performance remains smooth with large lists (no overflow, no jank).",
+      "reqIds": [
+        "REQ-67"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-align-the-ranking-module-structure-under-frontend-src-rank-to-follow-a-clean-separation-of-concerns-requested-by-the-user-by-introducing-or-updating-files-that-clearly-map-to-rankingmodel-rankingrepository-rankingservice-and-rankingscreen-rankpage-while-preserving-existing-behavior-and-routes",
+      "title": "Create/align the ranking module structure under `frontend/src/rank` to follow a clean separation of concerns requested by the user by introducing (or updating) files that clearly map to: RankingModel, RankingRepository, RankingService, and RankingScreen (RankPage), while preserving existing behavior and routes.",
+      "reqIds": [
+        "REQ-68"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-login-screen-name-input-placeholder-example-text-to-use-name-clg-sem-instead-of-the-current-example",
+      "title": "Update the Login screen name input placeholder/example text to use \"name_clg_sem\" instead of the current example.",
+      "reqIds": [
+        "REQ-69"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-home-dashboard-quick-action-buttons-labeled-mark-today-s-classes-and-view-rankings-to-use-the-app-s-purple-primary-styling-not-black-ensuring-the-buttons-appear-purple-in-light-mode-dark-mode-and-midnight-theme",
+      "title": "Update the Home dashboard quick-action buttons labeled “Mark Today’s Classes” and “View Rankings” to use the app’s purple primary styling (not black), ensuring the buttons appear purple in light mode, dark mode, and midnight theme.",
+      "reqIds": [
+        "REQ-70"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-any-device-specific-or-caller-only-ranking-behavior-so-the-rank-screen-always-loads-a-truly-global-leaderboard-from-the-internet-computer-canister-not-from-local-cache-state-and-ensure-no-code-path-filters-rankings-down-to-the-current-user-only",
+      "title": "Remove any device-specific or caller-only ranking behavior so the Rank screen always loads a truly global leaderboard from the Internet Computer canister (not from local cache/state), and ensure no code path filters rankings down to the current user only.",
+      "reqIds": [
+        "REQ-71"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-pagination-incremental-loading-so-that-the-rank-screen-can-scale-to-100-users-without-truncation-while-still-ensuring-the-ui-can-load-and-render-the-complete-global-ranking-list-either-via-repeated-page-fetches-until-exhaustion-or-via-an-explicit-load-more-flow",
+      "title": "Fix pagination/incremental loading so that the Rank screen can scale to 100+ users without truncation, while still ensuring the UI can load and render the complete global ranking list (either via repeated page fetches until exhaustion or via an explicit 'load more' flow).",
+      "reqIds": [
+        "REQ-74"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-rank-ui-highlights-the-current-logged-in-user-reliably-even-if-other-users-share-the-same-display-name-and-auto-scrolls-them-into-view-when-they-are-not-in-the-top-3",
+      "title": "Ensure the Rank UI highlights the current logged-in user reliably (even if other users share the same display name) and auto-scrolls them into view when they are not in the Top 3.",
+      "reqIds": [
+        "REQ-75"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-preserve-near-real-time-leaderboard-updates-without-websockets-by-ensuring-polling-refetching-is-safe-no-memory-leaks-and-results-remain-consistent-across-devices-do-not-allow-cached-stale-data-to-override-fresh-global-results-when-the-backend-is-reachable",
+      "title": "Preserve near-real-time leaderboard updates without WebSockets by ensuring polling/refetching is safe (no memory leaks) and results remain consistent across devices; do not allow cached/stale data to override fresh global results when the backend is reachable.",
+      "reqIds": [
+        "REQ-77"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-all-user-facing-text-in-the-ranking-flow-to-be-clear-english-including-explicit-messaging-when-data-is-stale-cached-fallback-or-when-the-leaderboard-cannot-be-loaded",
+      "title": "Update all user-facing text in the ranking flow to be clear English, including explicit messaging when data is stale (cached fallback) or when the leaderboard cannot be loaded.",
+      "reqIds": [
+        "REQ-78"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -505,10 +702,98 @@
       "status": "pending"
     },
     {
-      "id": "AR-42",
-      "summary": "Implement backend support for multi-user weekly ranking in the single Motoko actor (backend/main.mo): store users keyed by a stable identifier (principal when available, otherwise reject unauthenticated writes), store weekly points totals, and expose query/update methods to (a) register/update a user’s display name, (b) record earned points increments for the current week, and (c) fetch the current week’s ordered ranking list. The backend must compute the “current week” deterministically (e.g., by week-start timestamp) and ensure the ranking list reflects the current week only.",
+      "id": "AR-43",
+      "summary": "Update the example/placeholder text (e.g., in login/name input) to remove \"chittya\" and replace it with \"name_clg name\".",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-44",
+      "summary": "Add a user profile edit option to allow changing the saved user name after initial login (e.g., via Settings/Profile), with validation and persistence.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-45",
+      "summary": "Improve Rank/Leaderboard UI to display all users ordered by rank with visually attractive rank numbers/badges (1, 2, 3, … up to N users).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-46",
+      "summary": "Add a dedicated bottom navigation tab for Rank (and Stats if applicable): Home | Timetable | Stats | Rank | Settings, ensuring navigation updates do not break existing flows.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-47",
+      "summary": "Implement Weekly Ranking system logic with deterministic Sunday 12:00 AM update, dynamic 1..N ranking, tie-breakers (points desc, streak desc, join date asc), and weekly snapshot/last-ranking-date tracking to prevent duplicate recalculation; must work offline and scale to 100+ users.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-48",
+      "summary": "Enhance Rank/Leaderboard UI: premium Top-3 section (gold/silver/bronze cards with crown/medals), remaining users list with dynamic gradient circular rank-number badges, highlight current user with “You” badge, pull-to-refresh, smooth load animations, dark-mode optimization, and edge-case handling for <3 users.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-52",
+      "summary": "Integrate Firebase Firestore as the centralized global ranking database: create a `users` collection with fields user_id, name, college, total_points, current_streak, longest_streak, last_activity_date, join_date, weekly_points; ensure every logged-in user can read all users for rankings and remove any local-only ranking storage/logic.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-53",
+      "summary": "Implement global weekly ranking computation with automatic Sunday 12:00 AM rollover, deterministic sorting (total_points desc, longest_streak desc, join_date asc), dynamic rank 1..N, and store last ranking calculation timestamp to prevent duplicate recalculation.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-54",
+      "summary": "Upgrade Ranking screen display: show all users globally sorted with rank number, user name, college name, total points, and current streak; render large bold gradient circular rank badges (auto-generated) for ranks 1..N; premium Top-3 (gold/silver/bronze) section; smooth scrollable list for remaining users; edge cases for <3 users.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-55",
+      "summary": "Enable Firestore real-time sync for leaderboard updates (points changes/new users) with pull-to-refresh as secondary; highlight current logged-in user with glow/border + “You” badge and auto-scroll to their rank on open; implement pagination for 100+ users and avoid memory leaks.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-60",
+      "summary": "Update the Login screen name input example/placeholder text to exactly: \"name_clg_sem\" (replace the current example text).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-61",
+      "summary": "Change the button colors for both “Mark Today’s Classes” and “View Rankings” from black back to purple (restore intended purple theme styling).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-63",
+      "summary": "Upgrade the backend ranking data contract to expose all public ranking fields required by the UI for every user: user_id, name, college, total_points, current_streak, longest_streak, and join_date, and ensure the backend returns global results for all users (no per-caller filtering).",
       "reqIds": [
-        "REQ-43"
+        "REQ-72"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-64",
+      "summary": "Correct rank calculation to be deterministic and computed at runtime from the full global dataset using the exact tie-breakers: total_points (descending), longest_streak (descending), join_date (ascending), and assign rank = index + 1 without persisting a static rank value as user data.",
+      "reqIds": [
+        "REQ-73"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-67",
+      "summary": "Implement and/or correct weekly ranking snapshot/rollover logic so weekly recalculation does not run multiple times unnecessarily: store a last_update_date (or equivalent timestamp) and only recalculate when the local time condition matches the chosen weekly boundary (Sunday 12:00 AM) and the last update is older than the current weekly boundary.",
+      "reqIds": [
+        "REQ-76"
       ],
       "status": "pending"
     }

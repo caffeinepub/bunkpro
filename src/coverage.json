@@ -1,143 +1,128 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T14:01:34.256Z",
+  "generatedAt": "2026-02-16T16:00:53.478Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 7,
-    "implemented": 6,
+    "total": 8,
+    "implemented": 5,
     "items": [
       {
-        "id": "REQ-39",
-        "summary": "Add an initial Login screen that is shown on app start when no user name has been set yet, with a single name input and a continue/login action. The login form must validate that the entered value is a “good name” (letters and spaces only, trimmed, non-empty, and within a reasonable length) and display an English validation error when invalid. After a successful login, persist the user name in app state so it remains available throughout the app and across refreshes via the existing IndexedDB persistence.",
+        "id": "REQ-71",
+        "summary": "Remove any device-specific or caller-only ranking behavior so the Rank screen always loads a truly global leaderboard from the Internet Computer canister (not from local cache/state), and ensure no code path filters rankings down to the current user only.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/domain/attendanceReducer.ts",
-          "frontend/src/domain/attendanceTypes.ts"
+          "frontend/src/rank/RankingRepository.ts",
+          "frontend/src/rank/RankingService.ts",
+          "frontend/src/rank/rankCache.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/domain/attendanceReducer.ts",
-          "frontend/src/domain/attendanceTypes.ts"
+          "frontend/src/rank/RankingRepository.ts",
+          "frontend/src/rank/RankingService.ts",
+          "frontend/src/rank/rankCache.ts"
         ]
       },
       {
-        "id": "REQ-40",
-        "summary": "Extend the frontend domain state and reducer to support a user profile and gamification fields needed for streak points, including at minimum: user name, total points, streak tracking metadata needed to compute a continuous day streak, and a record of which streak milestones have already been awarded so points are not repeatedly re-awarded for the same milestone.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/domain/attendanceTypes.ts",
-          "frontend/src/domain/attendanceReducer.ts",
-          "frontend/src/state/persistence.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/domain/attendanceTypes.ts",
-          "frontend/src/domain/attendanceReducer.ts",
-          "frontend/src/state/persistence.ts"
-        ]
-      },
-      {
-        "id": "REQ-41",
-        "summary": "Implement continuous day streak detection based on recorded ClassEvent activity: treat a day as “completed” if at least one ClassEvent exists for that calendar date; compute the current streak as the number of consecutive completed days ending at today (using local time date strings already stored in events). When the streak reaches 3 days for the first time, award +5 points and show an English congratulatory message: “Congrats on your hat-trick! +5 points.” When the streak reaches 6 days for the first time, award +10 points and show an English congratulatory message: “Congrats on your 6-day streak! +10 points.”",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/domain/streakMilestones.ts",
-          "frontend/src/pages/HomeDashboardPage.tsx",
-          "frontend/src/domain/attendanceReducer.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/domain/streakMilestones.ts",
-          "frontend/src/pages/HomeDashboardPage.tsx",
-          "frontend/src/domain/attendanceReducer.ts"
-        ]
-      },
-      {
-        "id": "REQ-42",
-        "summary": "Create a separate frontend folder named \"rank\" to contain all ranking-related UI and logic. Add a Rank screen that can be navigated to from the app (e.g., via a Settings link/button) without breaking existing navigation. The Rank screen must show an English weekly leaderboard list of users ordered by points for the current week, including each user’s rank number, display name, and points.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/rank/RankPage.tsx",
-          "frontend/src/rank/rankApi.ts",
-          "frontend/src/pages/SettingsPage.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/rank/RankPage.tsx",
-          "frontend/src/rank/rankApi.ts",
-          "frontend/src/pages/SettingsPage.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-43",
-        "summary": "Implement backend support for multi-user weekly ranking in the single Motoko actor (backend/main.mo): store users keyed by a stable identifier (principal when available, otherwise reject unauthenticated writes), store weekly points totals, and expose query/update methods to (a) register/update a user’s display name, (b) record earned points increments for the current week, and (c) fetch the current week’s ordered ranking list. The backend must compute the “current week” deterministically (e.g., by week-start timestamp) and ensure the ranking list reflects the current week only.",
+        "id": "REQ-72",
+        "summary": "Upgrade the backend ranking data contract to expose all public ranking fields required by the UI for every user: user_id, name, college, total_points, current_streak, longest_streak, and join_date, and ensure the backend returns global results for all users (no per-caller filtering).",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-44",
-        "summary": "Wire the frontend streak points awarding to the backend ranking system: when the app awards +5 or +10 points for a milestone, it must also submit the points increment to the backend for the logged-in user and ensure the user’s display name is registered/updated in the backend. The Rank screen must fetch the weekly ranking list from the backend and display it.",
+        "id": "REQ-73",
+        "summary": "Correct rank calculation to be deterministic and computed at runtime from the full global dataset using the exact tie-breakers: total_points (descending), longest_streak (descending), join_date (ascending), and assign rank = index + 1 without persisting a static rank value as user data.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-74",
+        "summary": "Fix pagination/incremental loading so that the Rank screen can scale to 100+ users without truncation, while still ensuring the UI can load and render the complete global ranking list (either via repeated page fetches until exhaustion or via an explicit 'load more' flow).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/rank/rankApi.ts",
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/pages/HomeDashboardPage.tsx",
-          "frontend/src/rank/RankPage.tsx"
+          "frontend/src/rank/RankingRepository.ts",
+          "frontend/src/rank/RankingService.ts",
+          "frontend/src/rank/RankingScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/rank/rankApi.ts",
-          "frontend/src/pages/LoginPage.tsx",
-          "frontend/src/pages/HomeDashboardPage.tsx",
-          "frontend/src/rank/RankPage.tsx"
+          "frontend/src/rank/RankingRepository.ts",
+          "frontend/src/rank/RankingService.ts",
+          "frontend/src/rank/RankingScreen.tsx"
         ]
       },
       {
-        "id": "REQ-45",
-        "summary": "Update local persistence and backup/restore to include the new user profile and gamification fields (user name, points, streak metadata, and milestone award state) while remaining backward compatible with existing stored data and older backups by merging missing fields with defaults.",
+        "id": "REQ-75",
+        "summary": "Ensure the Rank UI highlights the current logged-in user reliably (even if other users share the same display name) and auto-scrolls them into view when they are not in the Top 3.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/backup/backupSchema.ts",
-          "frontend/src/backup/backupIO.ts",
-          "frontend/src/state/persistence.ts"
+          "frontend/src/backend.d.ts",
+          "frontend/src/rank/RankingModel.ts",
+          "frontend/src/rank/RankPage.tsx",
+          "frontend/src/rank/RankingScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/backup/backupSchema.ts",
-          "frontend/src/backup/backupIO.ts",
-          "frontend/src/state/persistence.ts"
+          "frontend/src/backend.d.ts",
+          "frontend/src/rank/RankingModel.ts",
+          "frontend/src/rank/RankPage.tsx",
+          "frontend/src/rank/RankingScreen.tsx"
+        ]
+      },
+      {
+        "id": "REQ-76",
+        "summary": "Implement and/or correct weekly ranking snapshot/rollover logic so weekly recalculation does not run multiple times unnecessarily: store a last_update_date (or equivalent timestamp) and only recalculate when the local time condition matches the chosen weekly boundary (Sunday 12:00 AM) and the last update is older than the current weekly boundary.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-77",
+        "summary": "Preserve near-real-time leaderboard updates without WebSockets by ensuring polling/refetching is safe (no memory leaks) and results remain consistent across devices; do not allow cached/stale data to override fresh global results when the backend is reachable.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/rank/RankingScreen.tsx",
+          "frontend/src/rank/RankingService.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/rank/RankingScreen.tsx",
+          "frontend/src/rank/RankingService.ts"
+        ]
+      },
+      {
+        "id": "REQ-78",
+        "summary": "Update all user-facing text in the ranking flow to be clear English, including explicit messaging when data is stale (cached fallback) or when the leaderboard cannot be loaded.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/rank/RankingService.ts",
+          "frontend/src/rank/RankingScreen.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/rank/RankingService.ts",
+          "frontend/src/rank/RankingScreen.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/backup/backupIO.ts",
-    "frontend/src/backup/backupSchema.ts",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/domain/attendanceReducer.ts",
-    "frontend/src/domain/attendanceTypes.ts",
-    "frontend/src/domain/streakMilestones.ts",
-    "frontend/src/pages/HomeDashboardPage.tsx",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/SettingsPage.tsx",
     "frontend/src/rank/RankPage.tsx",
-    "frontend/src/rank/rankApi.ts",
-    "frontend/src/state/persistence.ts",
+    "frontend/src/rank/RankingModel.ts",
+    "frontend/src/rank/RankingRepository.ts",
+    "frontend/src/rank/RankingScreen.tsx",
+    "frontend/src/rank/RankingService.ts",
+    "frontend/src/rank/rankCache.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

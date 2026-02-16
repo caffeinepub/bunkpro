@@ -1,114 +1,112 @@
-// Home dashboard page with streak milestone detection and point awards
-
-import React, { useState, useEffect } from 'react';
-import { useAppStore } from '../state/appStore';
+// Home dashboard with streak milestone detection and proper backend points submission using RankingService
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SubjectAttendanceCard } from '../components/dashboard/SubjectAttendanceCard';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Plus, Calendar, TrendingUp, AlertCircle, Trophy } from 'lucide-react';
+import { useAppStore } from '../state/appStore';
 import { CircularProgress } from '../components/dashboard/CircularProgress';
-import { MarkTodaySheet } from '../components/markToday/MarkTodaySheet';
+import { SubjectAttendanceCard } from '../components/dashboard/SubjectAttendanceCard';
 import { SubjectFormDialog } from '../components/subjects/SubjectFormDialog';
-import { Plus, Calendar } from 'lucide-react';
-import { calculateSubjectStats, calculateOverallStats, getInsightMessage, calculateStreak } from '../domain/attendanceCalculations';
-import { getTrendDirection } from '../domain/premiumInsights';
-import { sendNotification, getNotificationPermission } from '../notifications/notificationsApi';
-import { getMultipleMarkingsNotification } from '../notifications/localNotificationMessages';
+import { MarkTodaySheet } from '../components/markToday/MarkTodaySheet';
+import { calculateSubjectStats, calculateOverallStats } from '../domain/attendanceCalculations';
 import { computeContinuousDayStreak, checkMilestoneEligibility } from '../domain/streakMilestones';
 import { useActor } from '../hooks/useActor';
-import { submitPoints } from '../rank/rankApi';
+import { RankingService } from '../rank/RankingService';
 import { toast } from 'sonner';
 import type { Subject, ClassEvent } from '../domain/attendanceTypes';
+import { generateId, getSubjectColor } from '../lib/utils';
 
 interface HomeDashboardPageProps {
-  onSubjectClick: (subjectId: string) => void;
+  onNavigate: (route: { type: 'subject-details'; subjectId: string }) => void;
 }
 
-export function HomeDashboardPage({ onSubjectClick }: HomeDashboardPageProps) {
+export function HomeDashboardPage({ onNavigate }: HomeDashboardPageProps) {
   const { state, dispatch } = useAppStore();
   const { actor } = useActor();
-  const [showMarkToday, setShowMarkToday] = useState(false);
-  const [showAddSubject, setShowAddSubject] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isMarkTodayOpen, setIsMarkTodayOpen] = useState(false);
 
-  const overallStats = calculateOverallStats(state.subjects, state.events);
-  const overallInsight = getInsightMessage(overallStats, state.settings.targetPercentage);
+  // Check for streak milestones and award points
+  useEffect(() => {
+    const checkAndAwardMilestones = async () => {
+      if (!actor) return;
+
+      const currentStreak = computeContinuousDayStreak(state.events);
+      const milestone = checkMilestoneEligibility(
+        currentStreak,
+        state.streakMilestones
+      );
+
+      if (milestone) {
+        // Submit points to backend
+        try {
+          const service = new RankingService(actor);
+          const result = await service.submitPoints(milestone.points);
+          
+          if (result.success) {
+            // Award milestone locally
+            dispatch({
+              type: 'AWARD_MILESTONE',
+              payload: {
+                points: milestone.points,
+                milestone: {
+                  streakId: milestone.streakId,
+                  milestoneType: milestone.type,
+                  awardedAt: Date.now(),
+                },
+              },
+            });
+
+            toast.success(
+              `🎉 ${milestone.type} streak milestone! +${milestone.points} points`,
+              { duration: 5000 }
+            );
+          } else {
+            console.error('Failed to submit points to backend');
+          }
+        } catch (error) {
+          console.error('Error submitting milestone points:', error);
+        }
+      }
+    };
+
+    checkAndAwardMilestones();
+  }, [state.events, state.streakMilestones, actor, dispatch]);
+
+  const overallStats = calculateOverallStats(
+    state.subjects,
+    state.events
+  );
+
+  const subjectStats = state.subjects.map((subject) =>
+    calculateSubjectStats(subject.id, state.events)
+  );
 
   const handleAddSubject = (subject: Subject) => {
     dispatch({ type: 'ADD_SUBJECT', payload: subject });
+    setIsAddDialogOpen(false);
   };
 
-  const handleSaveMarkToday = async (events: ClassEvent[]) => {
+  const handleSubjectClick = (subjectId: string) => {
+    onNavigate({ type: 'subject-details', subjectId });
+  };
+
+  const handleSaveAttendance = (events: ClassEvent[]) => {
     dispatch({ type: 'ADD_EVENTS', payload: events });
-
-    // Send notification if enabled and permission granted
-    if (state.settings.enableNotifications && getNotificationPermission() === 'granted') {
-      const attended = events.filter(e => e.status === 'attended').length;
-      const missed = events.filter(e => e.status === 'missed').length;
-      const cancelled = events.filter(e => e.status === 'cancelled').length;
-
-      if (attended > 0 || missed > 0 || cancelled > 0) {
-        const notification = getMultipleMarkingsNotification(attended, missed, cancelled);
-        sendNotification({
-          title: notification.title,
-          body: notification.body,
-          tag: 'mark-classes',
-        });
-      }
-    }
-
-    // Check for streak milestones after adding events
-    setTimeout(() => checkStreakMilestones(), 100);
   };
 
-  const checkStreakMilestones = async () => {
-    const allEvents = [...state.events];
-    const currentStreak = computeContinuousDayStreak(allEvents);
-    
-    const milestone = checkMilestoneEligibility(currentStreak, state.streakMilestones);
-    
-    if (milestone && state.userProfile) {
-      // Award milestone locally
-      dispatch({
-        type: 'AWARD_MILESTONE',
-        payload: {
-          points: milestone.points,
-          milestone: {
-            streakId: milestone.streakId,
-            milestoneType: milestone.type,
-            awardedAt: Date.now(),
-          },
-        },
-      });
-
-      // Show congratulatory message
-      const message = milestone.type === '3-day' 
-        ? '🎉 Congrats on your hat-trick! 3-day streak achieved! +5 points'
-        : '🔥 Amazing! 6-day streak achieved! +10 points';
-      
-      toast.success(message, {
-        duration: 5000,
-      });
-
-      // Submit points to backend
-      if (actor) {
-        const result = await submitPoints(actor, state.userProfile.displayName, milestone.points);
-        if (!result.success) {
-          toast.error(result.error || 'Failed to sync points to leaderboard', {
-            duration: 4000,
-          });
-        }
-      }
-    }
-  };
+  const currentStreak = computeContinuousDayStreak(state.events);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Track your attendance</p>
         </div>
-        <Button onClick={() => setShowAddSubject(true)} className="w-full sm:w-auto">
+        <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
           <Plus className="w-4 h-4 mr-2" />
           Add Subject
         </Button>
@@ -117,100 +115,109 @@ export function HomeDashboardPage({ onSubjectClick }: HomeDashboardPageProps) {
       {/* Overall Stats Card */}
       <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
         <CardHeader>
-          <CardTitle>Overall Attendance</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            Overall Attendance
+          </CardTitle>
+          <CardDescription>Your total attendance across all subjects</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="grid grid-cols-3 gap-6 sm:gap-8 w-full sm:w-auto">
-              <div className="space-y-1 text-center sm:text-left">
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{overallStats.total}</p>
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <CircularProgress
+              percentage={overallStats.percentage}
+              size={160}
+              strokeWidth={12}
+            />
+            <div className="flex-1 space-y-4 w-full">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 rounded-lg bg-background/50">
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {overallStats.attended}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Attended</p>
+                </div>
+                <div className="text-center p-4 rounded-lg bg-background/50">
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                    {overallStats.missed}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Missed</p>
+                </div>
               </div>
-              <div className="space-y-1 text-center sm:text-left">
-                <p className="text-sm text-muted-foreground">Attended</p>
-                <p className="text-xl font-semibold text-green-600">{overallStats.attended}</p>
-              </div>
-              <div className="space-y-1 text-center sm:text-left">
-                <p className="text-sm text-muted-foreground">Missed</p>
-                <p className="text-xl font-semibold text-red-600">{overallStats.missed}</p>
-              </div>
+              {state.settings.enableStreakCounter && (
+                <div className="text-center p-4 rounded-lg bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20">
+                  <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+                    🔥 {currentStreak}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Day Streak</p>
+                </div>
+              )}
             </div>
-            <CircularProgress percentage={overallStats.percentage} size={140} />
-          </div>
-          <div className="mt-4 p-3 rounded-lg bg-muted/50">
-            <p className="text-sm font-medium">{overallInsight}</p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Mark Today Button */}
-      <Button 
-        onClick={() => setShowMarkToday(true)} 
-        size="lg" 
-        className="w-full"
-      >
-        <Calendar className="w-5 h-5 mr-2" />
-        Mark Today's Classes
-      </Button>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Button
+          className="h-24 text-lg bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={() => setIsMarkTodayOpen(true)}
+        >
+          <Calendar className="w-6 h-6 mr-3" />
+          Mark Today's Classes
+        </Button>
+        <Button
+          className="h-24 text-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          onClick={() => onNavigate({ type: 'subject-details', subjectId: state.subjects[0]?.id })}
+          disabled={state.subjects.length === 0}
+        >
+          <Trophy className="w-6 h-6 mr-3" />
+          View Rankings
+        </Button>
+      </div>
 
       {/* Subjects List */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Subjects</h2>
-        {state.subjects.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground mb-4">No subjects yet</p>
-              <Button onClick={() => setShowAddSubject(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Your First Subject
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {state.subjects.map(subject => {
-              const stats = calculateSubjectStats(subject.id, state.events);
-              const recentEvents = state.events
-                .filter(e => e.subjectId === subject.id)
-                .slice(-5);
-              const streak = state.settings.enableStreakCounter 
-                ? calculateStreak(subject.id, state.events)
-                : undefined;
-              const trend = state.settings.enablePremiumInsights
-                ? getTrendDirection(stats, recentEvents)
-                : undefined;
-
+      {state.subjects.length === 0 ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            No subjects yet. Add your first subject to start tracking attendance!
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Your Subjects</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {state.subjects.map((subject, index) => {
+              const stats = subjectStats[index];
               return (
                 <SubjectAttendanceCard
                   key={subject.id}
                   subject={subject}
                   stats={stats}
                   targetPercentage={state.settings.targetPercentage}
-                  streak={streak}
-                  trend={trend}
                   showPremiumInsights={state.settings.enablePremiumInsights}
-                  onClick={() => onSubjectClick(subject.id)}
+                  onClick={() => handleSubjectClick(subject.id)}
                 />
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Dialogs */}
-      <MarkTodaySheet
-        open={showMarkToday}
-        onOpenChange={setShowMarkToday}
-        subjects={state.subjects}
-        timetable={state.timetable}
-        onSave={handleSaveMarkToday}
+      <SubjectFormDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSave={handleAddSubject}
+        existingNames={state.subjects.map((s) => s.name)}
       />
 
-      <SubjectFormDialog
-        open={showAddSubject}
-        onOpenChange={setShowAddSubject}
-        existingNames={state.subjects.map(s => s.name)}
-        onSave={handleAddSubject}
+      <MarkTodaySheet
+        open={isMarkTodayOpen}
+        onOpenChange={setIsMarkTodayOpen}
+        subjects={state.subjects}
+        timetable={state.timetable}
+        onSave={handleSaveAttendance}
       />
     </div>
   );

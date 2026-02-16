@@ -1,5 +1,4 @@
-// Main application component with login gate and ranking navigation
-
+// Main app component with 5-tab navigation, login gate, and proper profile sync to canister backend
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useAppStore } from './state/appStore';
 import { ErrorBoundary } from './components/system/ErrorBoundary';
@@ -10,100 +9,116 @@ import { LoginPage } from './pages/LoginPage';
 import { HomeDashboardPage } from './pages/HomeDashboardPage';
 import { SubjectDetailsPage } from './pages/SubjectDetailsPage';
 import { TimetablePage } from './pages/TimetablePage';
+import { StatsPage } from './pages/StatsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { RankPage } from './rank/RankPage';
 import { Toaster } from '@/components/ui/sonner';
 import { initializeTheme } from './theme/themeManager';
 import { useActor } from './hooks/useActor';
-import { registerUserDisplayName } from './rank/rankApi';
 import { toast } from 'sonner';
-import type { UserProfile } from './domain/attendanceTypes';
+import type { UserProfile as DomainUserProfile } from './domain/attendanceTypes';
+import type { UserProfile as BackendUserProfile } from './backend';
 
 type Route = 
   | { type: 'home' }
-  | { type: 'subject-details'; subjectId: string }
   | { type: 'timetable' }
+  | { type: 'stats' }
+  | { type: 'rank' }
   | { type: 'settings' }
-  | { type: 'rank' };
+  | { type: 'subject-details'; subjectId: string };
 
 function AppContent() {
-  const { state, dispatch, isLoading } = useAppStore();
+  const { state, dispatch } = useAppStore();
   const { actor } = useActor();
   const [route, setRoute] = useState<Route>({ type: 'home' });
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [isSyncingProfile, setIsSyncingProfile] = useState(false);
 
+  // Initialize theme on mount
   useEffect(() => {
     initializeTheme(state.settings);
-  }, [state.settings]);
+  }, []);
 
-  const handleLogin = async (profile: UserProfile) => {
-    dispatch({ type: 'SET_USER_PROFILE', payload: profile });
+  // Apply theme changes
+  useEffect(() => {
+    initializeTheme(state.settings);
+  }, [state.settings.theme, state.settings.themeVariant]);
 
-    // Register display name with backend
-    if (actor) {
-      const result = await registerUserDisplayName(actor, profile.displayName);
-      if (!result.success) {
-        toast.error(result.error || 'Failed to sync profile to server', {
-          duration: 4000,
-        });
+  // Sync profile to backend after login
+  useEffect(() => {
+    const syncProfileToBackend = async () => {
+      if (!actor || !state.userProfile || isSyncingProfile) return;
+
+      setIsSyncingProfile(true);
+
+      try {
+        const backendProfile: BackendUserProfile = {
+          displayName: state.userProfile.displayName,
+          college: 'Unknown', // Default value
+          email: 'unknown@example.com', // Default value
+        };
+
+        await actor.saveCallerUserProfile(backendProfile);
+        console.log('Profile synced to backend successfully');
+      } catch (error) {
+        console.error('Failed to sync profile to backend:', error);
+        // Don't show error toast - this is a background sync
+      } finally {
+        setIsSyncingProfile(false);
       }
-    }
+    };
+
+    syncProfileToBackend();
+  }, [actor, state.userProfile?.displayName]);
+
+  // Simulate initial load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleNavigate = (newRoute: Route) => {
+    setRoute(newRoute);
   };
 
-  if (isLoading) {
+  const handleTabChange = (tab: 'home' | 'timetable' | 'stats' | 'rank' | 'settings') => {
+    setRoute({ type: tab });
+  };
+
+  const handleLogin = (profile: DomainUserProfile) => {
+    dispatch({ type: 'SET_USER_PROFILE', payload: profile });
+  };
+
+  const handleBackToHome = () => {
+    setRoute({ type: 'home' });
+  };
+
+  if (isInitializing) {
     return <InitialLoadSplash />;
   }
 
-  // Show login page if no user profile
+  // Login gate
   if (!state.userProfile) {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  const getActiveTab = (): 'home' | 'timetable' | 'settings' => {
-    if (route.type === 'timetable') return 'timetable';
-    if (route.type === 'settings') return 'settings';
-    return 'home';
-  };
-
-  const handleTabChange = (tab: 'home' | 'timetable' | 'settings') => {
-    if (tab === 'home') setRoute({ type: 'home' });
-    else if (tab === 'timetable') setRoute({ type: 'timetable' });
-    else if (tab === 'settings') setRoute({ type: 'settings' });
-  };
-
-  const handleSubjectClick = (subjectId: string) => {
-    setRoute({ type: 'subject-details', subjectId });
-  };
-
-  const handleBack = () => {
-    setRoute({ type: 'home' });
-  };
-
-  const handleNavigateToRank = () => {
-    setRoute({ type: 'rank' });
-  };
-
-  const handleBackFromRank = () => {
-    setRoute({ type: 'settings' });
-  };
+  const currentTab = route.type === 'subject-details' ? 'home' : route.type;
 
   return (
     <AppShell>
-      {route.type === 'home' && (
-        <HomeDashboardPage onSubjectClick={handleSubjectClick} />
-      )}
-      {route.type === 'subject-details' && (
-        <SubjectDetailsPage subjectId={route.subjectId} onBack={handleBack} />
-      )}
-      {route.type === 'timetable' && <TimetablePage />}
-      {route.type === 'settings' && (
-        <SettingsPage onNavigateToRank={handleNavigateToRank} />
-      )}
-      {route.type === 'rank' && (
-        <RankPage onBack={handleBackFromRank} />
-      )}
-
-      <BottomNav activeTab={getActiveTab()} onTabChange={handleTabChange} />
-      <Toaster />
+      <div className="flex-1 overflow-y-auto">
+        {route.type === 'home' && <HomeDashboardPage onNavigate={handleNavigate} />}
+        {route.type === 'subject-details' && (
+          <SubjectDetailsPage subjectId={route.subjectId} onBack={handleBackToHome} />
+        )}
+        {route.type === 'timetable' && <TimetablePage />}
+        {route.type === 'stats' && <StatsPage />}
+        {route.type === 'rank' && <RankPage />}
+        {route.type === 'settings' && <SettingsPage />}
+      </div>
+      <BottomNav activeTab={currentTab} onTabChange={handleTabChange} />
     </AppShell>
   );
 }
@@ -113,6 +128,7 @@ export default function App() {
     <ErrorBoundary>
       <AppProvider>
         <AppContent />
+        <Toaster />
       </AppProvider>
     </ErrorBoundary>
   );

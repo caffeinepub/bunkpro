@@ -1,23 +1,24 @@
-// Bottom navigation bar with smooth animations, active state indication, and optimized tap targets for mobile
-
+// Bottom navigation bar with 5 tabs (Home, Timetable, Stats, Rank, Settings) and smooth transitions
 import React from 'react';
-import { Home, Calendar, Settings } from 'lucide-react';
+import { Home, Calendar, BarChart3, Trophy, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
-  activeTab: 'home' | 'timetable' | 'settings';
-  onTabChange: (tab: 'home' | 'timetable' | 'settings') => void;
+  activeTab: 'home' | 'timetable' | 'stats' | 'rank' | 'settings';
+  onTabChange: (tab: 'home' | 'timetable' | 'stats' | 'rank' | 'settings') => void;
 }
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
     { id: 'home' as const, label: 'Home', icon: Home },
     { id: 'timetable' as const, label: 'Timetable', icon: Calendar },
+    { id: 'stats' as const, label: 'Stats', icon: BarChart3 },
+    { id: 'rank' as const, label: 'Rank', icon: Trophy },
     { id: 'settings' as const, label: 'Settings', icon: Settings },
   ];
 
   return (
-    <nav className="flex items-center justify-around h-16 px-4 safe-area-inset-bottom">
+    <nav className="flex items-center justify-around h-16 px-2 safe-area-inset-bottom">
       {tabs.map(({ id, label, icon: Icon }) => {
         const isActive = activeTab === id;
         return (
@@ -25,7 +26,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             key={id}
             onClick={() => onTabChange(id)}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 px-6 py-2 rounded-xl transition-all duration-200 ease-out min-w-[72px]",
+              "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 ease-out min-w-[60px]",
               "hover:bg-accent/50 active:scale-95",
               isActive && "bg-primary/10"
             )}

@@ -89,77 +89,275 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface RankingEntry {
+export type Time = bigint;
+export interface RankingDetails {
+    streak: bigint;
     displayName: string;
+    joinDate: Time;
+    longestStreak: bigint;
+    college?: string;
     points: bigint;
 }
-export enum RankingError {
-    userNotAuthenticated = "userNotAuthenticated",
-    displayNameUpdateFailed = "displayNameUpdateFailed",
-    pointsUpdateFailed = "pointsUpdateFailed"
+export type AddPointsResult = {
+    __kind__: "success";
+    success: bigint;
+} | {
+    __kind__: "pointsUpdateFailed";
+    pointsUpdateFailed: null;
+};
+export interface UserProfile {
+    displayName: string;
+    email: string;
+    college: string;
+}
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
 }
 export interface backendInterface {
-    addPoints(displayName: string, points: bigint): Promise<RankingError>;
-    getCurrentWeekRanking(): Promise<Array<RankingEntry>>;
-    registerDisplayName(displayName: string): Promise<boolean>;
+    _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    addPoints(pointsToAdd: bigint): Promise<AddPointsResult>;
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
+    getGlobalRankingPaginated(start: bigint, count: bigint): Promise<Array<RankingDetails>>;
+    getRankingByCollege(college: string, start: bigint, count: bigint): Promise<Array<RankingDetails>>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isCallerAdmin(): Promise<boolean>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
 }
-import type { RankingError as _RankingError } from "./declarations/backend.did.d.ts";
+import type { AddPointsResult as _AddPointsResult, RankingDetails as _RankingDetails, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
-    async addPoints(arg0: string, arg1: bigint): Promise<RankingError> {
+    async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.addPoints(arg0, arg1);
-                return from_candid_RankingError_n1(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.addPoints(arg0, arg1);
-            return from_candid_RankingError_n1(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getCurrentWeekRanking(): Promise<Array<RankingEntry>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getCurrentWeekRanking();
+                const result = await this.actor._initializeAccessControlWithSecret(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getCurrentWeekRanking();
+            const result = await this.actor._initializeAccessControlWithSecret(arg0);
             return result;
         }
     }
-    async registerDisplayName(arg0: string): Promise<boolean> {
+    async addPoints(arg0: bigint): Promise<AddPointsResult> {
         if (this.processError) {
             try {
-                const result = await this.actor.registerDisplayName(arg0);
+                const result = await this.actor.addPoints(arg0);
+                return from_candid_AddPointsResult_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addPoints(arg0);
+            return from_candid_AddPointsResult_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n3(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.registerDisplayName(arg0);
+            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n3(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async getCallerUserProfile(): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserProfile();
+                return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserProfile();
+            return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCallerUserRole(): Promise<UserRole> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserRole();
+                return from_candid_UserRole_n6(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserRole();
+            return from_candid_UserRole_n6(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getGlobalRankingPaginated(arg0: bigint, arg1: bigint): Promise<Array<RankingDetails>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getGlobalRankingPaginated(arg0, arg1);
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getGlobalRankingPaginated(arg0, arg1);
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getRankingByCollege(arg0: string, arg1: bigint, arg2: bigint): Promise<Array<RankingDetails>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRankingByCollege(arg0, arg1, arg2);
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRankingByCollege(arg0, arg1, arg2);
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserProfile(arg0);
+                return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserProfile(arg0);
+            return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async isCallerAdmin(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isCallerAdmin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isCallerAdmin();
+            return result;
+        }
+    }
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(arg0);
             return result;
         }
     }
 }
-function from_candid_RankingError_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RankingError): RankingError {
+function from_candid_AddPointsResult_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AddPointsResult): AddPointsResult {
     return from_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
+function from_candid_RankingDetails_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RankingDetails): RankingDetails {
+    return from_candid_record_n10(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n7(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    streak: bigint;
+    displayName: string;
+    joinDate: _Time;
+    longestStreak: bigint;
+    college: [] | [string];
+    points: bigint;
+}): {
+    streak: bigint;
+    displayName: string;
+    joinDate: Time;
+    longestStreak: bigint;
+    college?: string;
+    points: bigint;
+} {
+    return {
+        streak: value.streak,
+        displayName: value.displayName,
+        joinDate: value.joinDate,
+        longestStreak: value.longestStreak,
+        college: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.college)),
+        points: value.points
+    };
+}
 function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    userNotAuthenticated: null;
-} | {
-    displayNameUpdateFailed: null;
+    success: bigint;
 } | {
     pointsUpdateFailed: null;
-}): RankingError {
-    return "userNotAuthenticated" in value ? RankingError.userNotAuthenticated : "displayNameUpdateFailed" in value ? RankingError.displayNameUpdateFailed : "pointsUpdateFailed" in value ? RankingError.pointsUpdateFailed : value;
+}): {
+    __kind__: "success";
+    success: bigint;
+} | {
+    __kind__: "pointsUpdateFailed";
+    pointsUpdateFailed: null;
+} {
+    return "success" in value ? {
+        __kind__: "success",
+        success: value.success
+    } : "pointsUpdateFailed" in value ? {
+        __kind__: "pointsUpdateFailed",
+        pointsUpdateFailed: value.pointsUpdateFailed
+    } : value;
+}
+function from_candid_variant_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+}): UserRole {
+    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+}
+function from_candid_vec_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_RankingDetails>): Array<RankingDetails> {
+    return value.map((x)=>from_candid_RankingDetails_n9(_uploadFile, _downloadFile, x));
+}
+function to_candid_UserRole_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
+    return to_candid_variant_n4(_uploadFile, _downloadFile, value);
+}
+function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+} {
+    return value == UserRole.admin ? {
+        admin: null
+    } : value == UserRole.user ? {
+        user: null
+    } : value == UserRole.guest ? {
+        guest: null
+    } : value;
 }
 export interface CreateActorOptions {
     agent?: Agent;

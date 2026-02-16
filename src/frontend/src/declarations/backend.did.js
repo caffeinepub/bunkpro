@@ -8,39 +8,105 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const RankingError = IDL.Variant({
-  'userNotAuthenticated' : IDL.Null,
-  'displayNameUpdateFailed' : IDL.Null,
+export const AddPointsResult = IDL.Variant({
+  'success' : IDL.Nat,
   'pointsUpdateFailed' : IDL.Null,
 });
-export const RankingEntry = IDL.Record({
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const UserProfile = IDL.Record({
   'displayName' : IDL.Text,
+  'email' : IDL.Text,
+  'college' : IDL.Text,
+});
+export const Time = IDL.Int;
+export const RankingDetails = IDL.Record({
+  'streak' : IDL.Nat,
+  'displayName' : IDL.Text,
+  'joinDate' : Time,
+  'longestStreak' : IDL.Nat,
+  'college' : IDL.Opt(IDL.Text),
   'points' : IDL.Nat,
 });
 
 export const idlService = IDL.Service({
-  'addPoints' : IDL.Func([IDL.Text, IDL.Nat], [RankingError], []),
-  'getCurrentWeekRanking' : IDL.Func([], [IDL.Vec(RankingEntry)], ['query']),
-  'registerDisplayName' : IDL.Func([IDL.Text], [IDL.Bool], []),
+  '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addPoints' : IDL.Func([IDL.Nat], [AddPointsResult], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getGlobalRankingPaginated' : IDL.Func(
+      [IDL.Nat, IDL.Nat],
+      [IDL.Vec(RankingDetails)],
+      ['query'],
+    ),
+  'getRankingByCollege' : IDL.Func(
+      [IDL.Text, IDL.Nat, IDL.Nat],
+      [IDL.Vec(RankingDetails)],
+      ['query'],
+    ),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const RankingError = IDL.Variant({
-    'userNotAuthenticated' : IDL.Null,
-    'displayNameUpdateFailed' : IDL.Null,
+  const AddPointsResult = IDL.Variant({
+    'success' : IDL.Nat,
     'pointsUpdateFailed' : IDL.Null,
   });
-  const RankingEntry = IDL.Record({
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const UserProfile = IDL.Record({
     'displayName' : IDL.Text,
+    'email' : IDL.Text,
+    'college' : IDL.Text,
+  });
+  const Time = IDL.Int;
+  const RankingDetails = IDL.Record({
+    'streak' : IDL.Nat,
+    'displayName' : IDL.Text,
+    'joinDate' : Time,
+    'longestStreak' : IDL.Nat,
+    'college' : IDL.Opt(IDL.Text),
     'points' : IDL.Nat,
   });
   
   return IDL.Service({
-    'addPoints' : IDL.Func([IDL.Text, IDL.Nat], [RankingError], []),
-    'getCurrentWeekRanking' : IDL.Func([], [IDL.Vec(RankingEntry)], ['query']),
-    'registerDisplayName' : IDL.Func([IDL.Text], [IDL.Bool], []),
+    '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addPoints' : IDL.Func([IDL.Nat], [AddPointsResult], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getGlobalRankingPaginated' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(RankingDetails)],
+        ['query'],
+      ),
+    'getRankingByCollege' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Nat],
+        [IDL.Vec(RankingDetails)],
+        ['query'],
+      ),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   });
 };
 

@@ -1,159 +1,232 @@
-// Settings page with navigation to weekly ranking
-
-import React from 'react';
-import { useAppStore } from '../state/appStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// Settings page with profile editor, theme controls, and backend profile sync with proper success/error toasts
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { ThemeSelector } from '../components/settings/ThemeSelector';
-import { TargetPercentageControl } from '../components/settings/TargetPercentageControl';
-import { NotificationsCard } from '../components/settings/NotificationsCard';
+import { Separator } from '@/components/ui/separator';
+import { useAppStore } from '../state/appStore';
 import { BackupRestoreCard } from '../components/settings/BackupRestoreCard';
+import { TargetPercentageControl } from '../components/settings/TargetPercentageControl';
+import { ThemeSelector } from '../components/settings/ThemeSelector';
 import { AboutCard } from '../components/settings/AboutCard';
-import { Sparkles, TrendingUp, Trophy, ChevronRight } from 'lucide-react';
+import { NotificationsCard } from '../components/settings/NotificationsCard';
+import { ProfileDisplayNameEditor } from '../components/settings/ProfileDisplayNameEditor';
+import { useActor } from '../hooks/useActor';
+import { toast } from 'sonner';
+import type { UserProfile as BackendUserProfile } from '../backend';
 import type { AppState } from '../domain/attendanceTypes';
 
-interface SettingsPageProps {
-  onNavigateToRank?: () => void;
-}
-
-export function SettingsPage({ onNavigateToRank }: SettingsPageProps) {
+export function SettingsPage() {
   const { state, dispatch } = useAppStore();
+  const { actor } = useActor();
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  const handleSaveDisplayName = async (newName: string) => {
+    if (!actor) {
+      toast.error('Not connected to backend');
+      return;
+    }
+
+    setIsSavingProfile(true);
+
+    try {
+      // Update local state
+      if (state.userProfile) {
+        dispatch({
+          type: 'SET_USER_PROFILE',
+          payload: {
+            ...state.userProfile,
+            displayName: newName,
+          },
+        });
+      }
+
+      // Sync to backend
+      const backendProfile: BackendUserProfile = {
+        displayName: newName,
+        college: 'Unknown',
+        email: 'unknown@example.com',
+      };
+
+      await actor.saveCallerUserProfile(backendProfile);
+      
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleTargetChange = (newTarget: number) => {
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { targetPercentage: newTarget },
+    });
+  };
 
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
-    dispatch({ type: 'UPDATE_SETTINGS', payload: { theme } });
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { theme },
+    });
   };
 
-  const handleVariantChange = (variant: 'purple-blue' | 'midnight') => {
-    dispatch({ type: 'UPDATE_SETTINGS', payload: { themeVariant: variant } });
+  const handleThemeVariantChange = (variant: 'purple-blue' | 'midnight') => {
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { themeVariant: variant },
+    });
   };
 
-  const handleTargetChange = (targetPercentage: number) => {
-    dispatch({ type: 'UPDATE_SETTINGS', payload: { targetPercentage } });
+  const handleTogglePremiumInsights = () => {
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { enablePremiumInsights: !state.settings.enablePremiumInsights },
+    });
   };
 
-  const handleTogglePremiumInsights = (enabled: boolean) => {
-    dispatch({ type: 'UPDATE_SETTINGS', payload: { enablePremiumInsights: enabled } });
+  const handleToggleStreakCounter = () => {
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { enableStreakCounter: !state.settings.enableStreakCounter },
+    });
   };
 
-  const handleToggleStreakCounter = (enabled: boolean) => {
-    dispatch({ type: 'UPDATE_SETTINGS', payload: { enableStreakCounter: enabled } });
+  const handleToggleDangerZone = () => {
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { enableDangerZone: !state.settings.enableDangerZone },
+    });
   };
 
-  const handleToggleNotifications = (enabled: boolean) => {
-    dispatch({ type: 'UPDATE_SETTINGS', payload: { enableNotifications: enabled } });
+  const handleToggleNotifications = () => {
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { enableNotifications: !state.settings.enableNotifications },
+    });
   };
 
-  const handleRestoreState = (restoredState: AppState) => {
+  const handleRestore = (restoredState: AppState) => {
     dispatch({ type: 'RESTORE_STATE', payload: restoredState });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Customize your experience</p>
+        <p className="text-muted-foreground">Manage your preferences and data</p>
       </div>
 
-      {/* User Profile Card */}
+      {/* Profile Section */}
       {state.userProfile && (
-        <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
-          <CardHeader>
-            <CardTitle>Your Profile</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Name</span>
-                <span className="font-semibold text-lg">{state.userProfile.displayName}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Total Points</span>
-                <span className="font-bold text-2xl text-primary">{state.userProfile.totalPoints}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <ProfileDisplayNameEditor
+          currentName={state.userProfile.displayName}
+          totalPoints={state.userProfile.totalPoints}
+          onSave={handleSaveDisplayName}
+          isSaving={isSavingProfile}
+        />
       )}
 
-      {/* Weekly Ranking Navigation */}
-      {onNavigateToRank && (
-        <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={onNavigateToRank}>
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Trophy className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold">Weekly Ranking</p>
-                <p className="text-sm text-muted-foreground">View leaderboard</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </CardContent>
-        </Card>
-      )}
+      <Separator />
 
-      <ThemeSelector
-        settings={state.settings}
-        onThemeChange={handleThemeChange}
-        onVariantChange={handleVariantChange}
-      />
-
+      {/* Target Percentage */}
       <TargetPercentageControl
         value={state.settings.targetPercentage}
         onChange={handleTargetChange}
       />
 
+      <Separator />
+
+      {/* Theme Settings */}
+      <ThemeSelector
+        settings={state.settings}
+        onThemeChange={handleThemeChange}
+        onVariantChange={handleThemeVariantChange}
+      />
+
+      <Separator />
+
+      {/* Notifications */}
       <NotificationsCard
         enabled={state.settings.enableNotifications}
         onToggle={handleToggleNotifications}
       />
 
+      <Separator />
+
+      {/* Feature Toggles */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            Premium Features
-          </CardTitle>
+          <CardTitle>Features</CardTitle>
+          <CardDescription>Enable or disable premium features</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="premium-insights">Premium Insights</Label>
+            <div>
+              <p className="font-medium">Premium Insights</p>
               <p className="text-sm text-muted-foreground">
-                Show trends and predictions
+                Show trend predictions and motivational messages
               </p>
             </div>
-            <Switch
-              id="premium-insights"
-              checked={state.settings.enablePremiumInsights}
-              onCheckedChange={handleTogglePremiumInsights}
-            />
+            <Button
+              variant={state.settings.enablePremiumInsights ? 'default' : 'outline'}
+              size="sm"
+              onClick={handleTogglePremiumInsights}
+            >
+              {state.settings.enablePremiumInsights ? 'On' : 'Off'}
+            </Button>
           </div>
 
+          <Separator />
+
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="streak-counter">Streak Counter</Label>
+            <div>
+              <p className="font-medium">Streak Counter</p>
               <p className="text-sm text-muted-foreground">
-                Track consecutive attendance
+                Display your current attendance streak
               </p>
             </div>
-            <Switch
-              id="streak-counter"
-              checked={state.settings.enableStreakCounter}
-              onCheckedChange={handleToggleStreakCounter}
-            />
+            <Button
+              variant={state.settings.enableStreakCounter ? 'default' : 'outline'}
+              size="sm"
+              onClick={handleToggleStreakCounter}
+            >
+              {state.settings.enableStreakCounter ? 'On' : 'Off'}
+            </Button>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Danger Zone Alerts</p>
+              <p className="text-sm text-muted-foreground">
+                Warn when attendance is critically low
+              </p>
+            </div>
+            <Button
+              variant={state.settings.enableDangerZone ? 'default' : 'outline'}
+              size="sm"
+              onClick={handleToggleDangerZone}
+            >
+              {state.settings.enableDangerZone ? 'On' : 'Off'}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
+      <Separator />
+
+      {/* Backup & Restore */}
       <BackupRestoreCard
         currentState={state}
-        onRestore={handleRestoreState}
+        onRestore={handleRestore}
       />
 
+      <Separator />
+
+      {/* About */}
       <AboutCard />
     </div>
   );

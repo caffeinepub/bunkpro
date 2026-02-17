@@ -1,10 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Add a clean, theme-aware centered subtitle directly under the "Dashboard" heading on the Home Dashboard page.
+**Goal:** Remove Light/System theme options and enforce permanent Dark mode throughout the BunkPro app.
 
 **Planned changes:**
-- Insert a single new centered subtitle line below the "Dashboard" heading in `frontend/src/pages/HomeDashboardPage.tsx` with the exact text: "Be honest & mark attendance".
-- Style the subtitle to be slightly smaller than the title, medium font weight, subtle opacity (~80–90%), with comfortable vertical spacing and theme-based text color that works in light/dark mode.
+- Update Settings Appearance/Theme UI to remove any selectable “Light” or “System” theme mode options, leaving only Dark mode available.
+- Update theme application logic to always apply Dark mode on load and at runtime, ignoring OS/system theme and any stored theme mode preferences.
+- Set Dark as the default theme mode for first-time users with no saved state.
+- Normalize any persisted/imported/restored theme mode values (“light”/“system”) to resolve to Dark mode to maintain backward compatibility without errors.
 
-**User-visible outcome:** Users see a centered subtitle “Be honest & mark attendance” immediately below the Dashboard heading, readable in both light and dark mode, with no other layout or behavior changes.
+**User-visible outcome:** Users can no longer switch to Light or System theme anywhere; the app always displays in Dark mode, including after refresh, restore/import, or OS theme changes.

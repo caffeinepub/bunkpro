@@ -12,6 +12,7 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export type AddPointsResult = { 'success' : bigint } |
   { 'pointsUpdateFailed' : null };
+export type DateString = string;
 export interface RankingDetails {
   'streak' : bigint,
   'displayName' : string,
@@ -35,6 +36,7 @@ export interface _SERVICE {
   'addPoints' : ActorMethod<[bigint], AddPointsResult>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'calculateMaxBunkableClasses' : ActorMethod<[bigint, bigint], bigint>,
+  'createDailyAttendanceRecord' : ActorMethod<[DateString], undefined>,
   'deleteCallerUser' : ActorMethod<[], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -48,9 +50,11 @@ export interface _SERVICE {
   >,
   'getRequiredAttendancePercentage' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'hasAttendedToday' : ActorMethod<[DateString], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setRequiredAttendancePercentage' : ActorMethod<[bigint], undefined>,
+  'updateDailyAttendanceRecord' : ActorMethod<[DateString, bigint], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

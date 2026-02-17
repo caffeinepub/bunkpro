@@ -18,6 +18,7 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const DateString = IDL.Text;
 export const UserProfile = IDL.Record({
   'displayName' : IDL.Text,
   'email' : IDL.Text,
@@ -42,6 +43,7 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       ['query'],
     ),
+  'createDailyAttendanceRecord' : IDL.Func([DateString], [], []),
   'deleteCallerUser' : IDL.Func([], [], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -61,9 +63,11 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'hasAttendedToday' : IDL.Func([DateString], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setRequiredAttendancePercentage' : IDL.Func([IDL.Nat], [], []),
+  'updateDailyAttendanceRecord' : IDL.Func([DateString, IDL.Nat], [], []),
 });
 
 export const idlInitArgs = [];
@@ -79,6 +83,7 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const DateString = IDL.Text;
   const UserProfile = IDL.Record({
     'displayName' : IDL.Text,
     'email' : IDL.Text,
@@ -103,6 +108,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         ['query'],
       ),
+    'createDailyAttendanceRecord' : IDL.Func([DateString], [], []),
     'deleteCallerUser' : IDL.Func([], [], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -122,9 +128,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'hasAttendedToday' : IDL.Func([DateString], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setRequiredAttendancePercentage' : IDL.Func([IDL.Nat], [], []),
+    'updateDailyAttendanceRecord' : IDL.Func([DateString, IDL.Nat], [], []),
   });
 };
 

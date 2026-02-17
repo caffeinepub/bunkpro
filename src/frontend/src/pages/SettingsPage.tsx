@@ -105,13 +105,6 @@ export function SettingsPage() {
     });
   };
 
-  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
-    dispatch({
-      type: 'UPDATE_SETTINGS',
-      payload: { theme },
-    });
-  };
-
   const handleThemeVariantChange = (variant: 'purple-blue' | 'midnight') => {
     dispatch({
       type: 'UPDATE_SETTINGS',
@@ -188,7 +181,6 @@ export function SettingsPage() {
       {/* Theme Settings */}
       <ThemeSelector
         settings={state.settings}
-        onThemeChange={handleThemeChange}
         onVariantChange={handleThemeVariantChange}
       />
 

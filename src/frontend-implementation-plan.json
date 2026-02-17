@@ -1,23 +1,88 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "BunkPro — Add centered subtitle under Dashboard heading",
+  "title": "BunkPro — Remove Light/System Theme Modes and Lock to Dark",
   "requirements": [
     {
-      "id": "REQ-136",
-      "summary": "Insert a theme-aware, centered subtitle line under the Dashboard heading on the Home Dashboard page without altering existing layout or behavior.",
+      "id": "REQ-150",
+      "summary": "Remove Light/System options from Settings appearance UI so users can only use Dark mode while keeping other appearance controls functional.",
       "acceptanceCriteria": [
-        "Home Dashboard renders the exact text \"Be honest & mark attendance\" immediately below the \"Dashboard\" heading.",
-        "The new text is center-aligned, uses a slightly smaller font than the \"Dashboard\" title, medium font weight, and reduced opacity (~80–90%).",
-        "Spacing between the \"Dashboard\" heading and the new text is present and looks uncluttered on both mobile and desktop widths.",
-        "Text uses theme-based colors and remains readable in light and dark modes without using harsh bright colors.",
-        "No other Home Dashboard behavior, existing layout sections, or responsiveness changes as a result of this update."
+        "Settings no longer shows any selectable option labeled \"Light\" or \"System\" for theme mode.",
+        "There is no UI path that allows switching the app into light mode.",
+        "Theme-related UI remains functional for any non-mode controls that are still intended to exist (e.g., theme variant), without introducing errors."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/HomeDashboardPage.tsx",
+          "path": "frontend/src/components/settings/ThemeSelector.tsx",
           "operation": "modify",
-          "description": "Add a single new centered subtitle text node directly below the existing \"Dashboard\" <h1> that displays exactly \"Be honest & mark attendance\". Style using existing theme-aware text utilities (e.g., muted/foreground-based color), medium font weight, slightly smaller typography than the title, and subtle opacity (~80–90%) with minimal vertical spacing so the header does not look crowded; do not change any existing dashboard logic, responsiveness, or layout structure beyond inserting this single line."
+          "description": "Update the Appearance card UI to remove the Theme Mode RadioGroup options for \"Light\" and \"System\" (and avoid any selectable mode control). Keep the color theme variant control intact. Continue using existing shadcn-ui primitives already imported (Card, Select, etc.); verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/SettingsPage.tsx",
+          "operation": "modify",
+          "description": "Remove the theme-mode change handler/wiring so SettingsPage no longer provides any interaction that could set settings.theme to \"light\" or \"system\". Keep theme variant changes working. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-151",
+      "summary": "Force the app to stay in Dark mode at runtime and remove/disable any system-theme listeners that could toggle theme mode.",
+      "acceptanceCriteria": [
+        "On every load, the app renders with dark styling even if the OS is set to light mode.",
+        "Changing the OS theme while the app is open does not affect the app’s theme mode.",
+        "No theme-mode-related event listeners remain active that can switch the mode away from dark (e.g., system theme change listeners)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/theme/themeManager.ts",
+          "operation": "modify",
+          "description": "Change theme application logic to always apply Dark mode (always ensure the document has the \"dark\" class), regardless of settings.theme or OS preference. Remove system-theme change listener registration, and add safe cleanup logic for any previously-registered listener within this module so theme mode cannot be toggled away from dark."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Adjust theme initialization usage to align with the new always-dark themeManager behavior (ensure theme is applied reliably on load and on theme variant changes, without reintroducing system-theme listeners). Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-152",
+      "summary": "Make Dark mode the default for first-time users by updating app defaults.",
+      "acceptanceCriteria": [
+        "With no IndexedDB state present (fresh browser/profile), the app starts in Dark mode by default.",
+        "The default settings object uses Dark as the theme mode default (no \"system\" default for theme mode)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/domain/attendanceTypes.ts",
+          "operation": "modify",
+          "description": "Update DEFAULT_SETTINGS so theme defaults to \"dark\" (not \"system\"), keeping other defaults unchanged."
+        }
+      ]
+    },
+    {
+      "id": "REQ-153",
+      "summary": "Normalize any loaded/restored theme mode values (including legacy \"light\"/\"system\") so they resolve to Dark and do not crash validation/migrations.",
+      "acceptanceCriteria": [
+        "If an existing user has previously saved settings.theme = \"light\" or \"system\" in IndexedDB, after load it is normalized/treated as Dark mode.",
+        "If a user imports an older backup containing theme = \"light\" or \"system\", after restore the app runs in Dark mode and the UI does not expose a way to return to Light/System.",
+        "No crashes or validation errors occur when loading older state/backup files that contain now-unsupported theme mode values."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/state/persistence.ts",
+          "operation": "modify",
+          "description": "When loading and merging persisted IndexedDB state, normalize the loaded settings.theme value so any \"light\" or \"system\" resolves to \"dark\" (and persist-safe merging still works for other fields)."
+        },
+        {
+          "path": "frontend/src/backup/backupSchema.ts",
+          "operation": "modify",
+          "description": "During backup migration/merge, normalize backup.data.settings.theme so legacy values (\"light\"/\"system\") resolve to \"dark\" while keeping the rest of the migration behavior unchanged."
+        },
+        {
+          "path": "frontend/src/backup/backupIO.ts",
+          "operation": "modify",
+          "description": "Ensure import path remains resilient if older backup files include legacy theme mode values by relying on migrated/normalized state (no validation crashes) and keeping user-facing error text in English."
         }
       ]
     }

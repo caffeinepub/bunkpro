@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 71,
+  "projectStateVersion": 77,
   "summary": "Upgrade BunkPro with (1) a new \"Mark Past Attendance\" flow that lets users mark attendance for any past date via a calendar, prevents future/duplicate marking, stores per-date attendance records, and safely recalculates streak/points; (2) disable any automatic \"auto-absent\" handling for missed days; (3) add a once-per-day reminder push notification if today’s attendance is not marked by a configured time, respecting notification settings and deep-linking into the attendance screen on both app and web; and (4) remove the web app splash/initial loading screen entirely so the app loads directly into Login/Dashboard with no intermediate splash UI or cached splash artifacts.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -979,6 +979,126 @@
         "REQ-136"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-extend-the-frontend-domain-model-and-local-persistence-to-store-dailyattendance-records-keyed-by-yyyy-mm-dd-so-the-ui-can-reliably-disable-re-marking-and-so-the-state-survives-refresh-backup-restore",
+      "title": "Extend the frontend domain model and local persistence to store DailyAttendance records (keyed by YYYY-MM-DD) so the UI can reliably disable re-marking and so the state survives refresh/backup/restore.",
+      "reqIds": [
+        "REQ-139"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-mark-today-s-classes-flow-so-it-cannot-create-duplicate-attendance-for-today-before-saving-check-whether-today-is-already-marked-using-dailyattendance-in-local-state-and-the-backend-check-when-an-actor-is-available-if-already-marked-do-not-write-anything-and-show-the-exact-message-attendance-already-marked-for-today",
+      "title": "Update the “Mark Today’s Classes” flow so it cannot create duplicate attendance for today: before saving, check whether today is already marked (using DailyAttendance in local state, and the backend check when an actor is available); if already marked, do not write anything and show the exact message: \"Attendance already marked for today.\"",
+      "reqIds": [
+        "REQ-140"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-robust-button-lock-anti-double-click-mechanism-for-saving-today-s-attendance-add-a-loading-state-disable-during-the-save-request-and-ignore-rapid-repeated-taps-debounce-guard",
+      "title": "Implement a robust button lock + anti-double-click mechanism for saving today’s attendance: add a loading state, disable during the save request, and ignore rapid repeated taps (debounce/guard).",
+      "reqIds": [
+        "REQ-141"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-after-successfully-marking-today-s-attendance-disable-the-primary-mark-today-s-classes-action-for-the-rest-of-the-day-and-change-its-label-to-exactly-attendance-marked",
+      "title": "After successfully marking today’s attendance, disable the primary “Mark Today’s Classes” action for the rest of the day and change its label to exactly: \"Attendance Marked\".",
+      "reqIds": [
+        "REQ-142"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-synchronize-dailyattendance-master-and-classevent-subject-breakdown-on-save-and-edit-so-they-remain-consistent-saving-a-day-must-create-update-the-dailyattendance-record-and-upsert-the-corresponding-subject-wise-classevent-entries-for-that-date-without-creating-duplicates",
+      "title": "Synchronize DailyAttendance (master) and ClassEvent (subject breakdown) on save and edit so they remain consistent: saving a day must create/update the DailyAttendance record and upsert the corresponding subject-wise ClassEvent entries for that date without creating duplicates.",
+      "reqIds": [
+        "REQ-143"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-mark-past-attendance-calendar-flow-to-support-editing-existing-attendance-only-from-the-calendar-selecting-a-date-that-already-has-attendance-should-open-the-marking-ui-in-edit-mode-and-saving-must-update-overwrite-both-the-dailyattendance-record-and-the-corresponding-classevents-for-that-date-no-inserts-that-create-duplicates",
+      "title": "Update the “Mark Past Attendance” calendar flow to support editing existing attendance only from the calendar: selecting a date that already has attendance should open the marking UI in edit mode and saving must update (overwrite) both the DailyAttendance record and the corresponding ClassEvents for that date (no inserts that create duplicates).",
+      "reqIds": [
+        "REQ-144"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-backend-server-side-validation-to-reject-duplicate-dailyattendance-creates-for-the-same-caller-date-even-if-the-frontend-misbehaves-and-ensure-the-frontend-handles-the-conflict-gracefully-without-showing-raw-trap-unauthorized-text-to-users",
+      "title": "Implement backend server-side validation to reject duplicate DailyAttendance creates for the same caller+date even if the frontend misbehaves, and ensure the frontend handles the conflict gracefully without showing raw trap/unauthorized text to users.",
+      "reqIds": [
+        "REQ-145"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-mark-past-attendance-monday-scheduling-bug-by-making-weekday-computation-and-timetable-slot-matching-use-a-single-consistent-local-date-not-utc-pathway-so-selecting-a-monday-date-reliably-displays-the-monday-schedule-and-never-incorrectly-shows-no-classes-scheduled-when-timetable-slots-exist-for-that-weekday",
+      "title": "Fix the “Mark Past Attendance” Monday scheduling bug by making weekday computation and timetable-slot matching use a single, consistent local-date (not UTC) pathway, so selecting a Monday date reliably displays the Monday schedule and never incorrectly shows “No classes scheduled” when timetable slots exist for that weekday.",
+      "reqIds": [
+        "REQ-146"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-eliminate-utc-based-date-shifting-across-the-app-by-updating-shared-date-utilities-so-that-generating-and-normalizing-yyyy-mm-dd-strings-and-performing-comparisons-today-string-formatting-future-date-checks-same-date-checks-are-based-on-local-calendar-dates-rather-than-toisostring-or-new-date-yyyy-mm-dd-parsing-that-can-shift-days-by-timezone",
+      "title": "Eliminate UTC-based date shifting across the app by updating shared date utilities so that generating and normalizing YYYY-MM-DD strings and performing comparisons (today string, formatting, future-date checks, same-date checks) are based on local calendar dates rather than `toISOString()` or `new Date('YYYY-MM-DD')` parsing that can shift days by timezone.",
+      "reqIds": [
+        "REQ-147"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-debug-safety-diagnostics-for-the-no-classes-scheduled-branch-in-the-mark-past-attendance-flow-before-showing-the-user-facing-message-log-to-console-the-selected-local-date-string-computed-weekday-index-and-the-set-of-timetable-slot-weekday-values-present-to-make-future-schedule-matching-regressions-easy-to-diagnose-without-changing-user-facing-behavior",
+      "title": "Add debug safety diagnostics for the “No classes scheduled” branch in the Mark Past Attendance flow: before showing the user-facing message, log (to console) the selected local date string, computed weekday index, and the set of timetable slot weekday values present, to make future schedule-matching regressions easy to diagnose without changing user-facing behavior.",
+      "reqIds": [
+        "REQ-148"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-past-attendance-save-edit-pipeline-continues-to-treat-dailyattendance-as-the-master-per-date-record-and-keeps-classevent-entries-synchronized-via-date-scoped-replacement-upsert-no-duplicate-inserts-and-ensure-the-single-user-assumption-is-preserved-by-using-the-locally-stored-profile-identifier-as-the-userid-reference-do-not-introduce-any-multi-user-local-model",
+      "title": "Ensure the Past Attendance save/edit pipeline continues to treat DailyAttendance as the master per-date record and keeps ClassEvent entries synchronized via date-scoped replacement/upsert (no duplicate inserts), and ensure the single-user assumption is preserved by using the locally stored profile identifier as the `userId` reference (do not introduce any multi-user local model).",
+      "reqIds": [
+        "REQ-149"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-light-mode-feature-from-settings-by-updating-the-appearance-theme-ui-so-the-user-can-no-longer-select-light-or-system-theme-mode-anywhere-in-the-app-the-only-available-theme-mode-must-be-dark",
+      "title": "Remove the Light mode feature from Settings by updating the Appearance/Theme UI so the user can no longer select \"Light\" or \"System\" theme mode anywhere in the app; the only available theme mode must be Dark.",
+      "reqIds": [
+        "REQ-150"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-lock-the-application-to-permanent-dark-mode-at-runtime-by-updating-theme-application-logic-so-the-document-always-stays-in-dark-mode-regardless-of-stored-settings-or-os-system-theme-and-remove-disable-any-system-theme-listeners-that-could-toggle-modes",
+      "title": "Lock the application to permanent Dark mode at runtime by updating theme application logic so the document always stays in dark mode regardless of stored settings or OS/system theme, and remove/disable any system-theme listeners that could toggle modes.",
+      "reqIds": [
+        "REQ-151"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-set-dark-mode-as-the-default-theme-mode-by-updating-the-app-s-default-settings-so-first-time-users-no-saved-state-always-start-in-dark-mode",
+      "title": "Set Dark mode as the default theme mode by updating the app’s default settings so first-time users (no saved state) always start in Dark mode.",
+      "reqIds": [
+        "REQ-152"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-backward-compatibility-for-existing-persisted-backup-restored-data-by-forcing-any-loaded-restored-theme-mode-values-including-light-or-system-to-resolve-to-dark-mode-so-users-cannot-end-up-in-light-mode-after-refresh-restore-or-import",
+      "title": "Ensure backward compatibility for existing persisted/backup/restored data by forcing any loaded/restored theme mode values (including \"light\" or \"system\") to resolve to Dark mode so users cannot end up in light mode after refresh, restore, or import.",
+      "reqIds": [
+        "REQ-153"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1359,6 +1479,34 @@
     {
       "id": "AR-96",
       "summary": "Add centered subtitle text \"Be honest & mark attendance\" directly below the Dashboard heading on the Home page with subtle styling (slightly smaller font, medium weight, 80–90% opacity), proper spacing, and theme-aware dark-mode color; no functional/layout/responsiveness changes.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-97",
+      "summary": "Prevent multiple attendance marking per user per date by introducing a DailyAttendance master record (unique by userId+date) that gates marking, synchronizes/updates subject-wise ClassEvent entries without duplicates, supports past-date editing via UPDATE (not INSERT) for both daily + subject records, adds button lock/loading/debounce, and enforces backend duplicate rejection (409) with friendly UI message.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-98",
+      "summary": "Introduce a DailyAttendance master record in the backend that is unique per (authenticated caller, local-date YYYY-MM-DD) and use it as the authoritative gate for whether a day’s attendance has been marked.",
+      "reqIds": [
+        "REQ-137"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-99",
+      "summary": "Add backend APIs for DailyAttendance that support: (a) create-if-absent for a date (reject duplicates), (b) update existing attendance for a date (overwrite), and (c) read/check whether a date is already marked for the caller.",
+      "reqIds": [
+        "REQ-138"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-100",
+      "summary": "Remove Light mode entirely and lock the app to permanent Dark mode (remove Light/Dark toggle and make Dark the only theme).",
       "reqIds": [],
       "status": "pending"
     }

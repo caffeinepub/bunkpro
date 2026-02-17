@@ -1,6 +1,6 @@
-// State management reducer for attendance operations with user profile and gamification support
+// State management reducer with DailyAttendance upsert and date-scoped ClassEvent replacement preventing duplicate records across repeated edits
 
-import type { AppState, Subject, ClassEvent, TimetableSlot, ClassExchange, AppSettings, UserProfile, StreakMilestone } from './attendanceTypes';
+import type { AppState, Subject, ClassEvent, TimetableSlot, ClassExchange, AppSettings, UserProfile, StreakMilestone, DailyAttendance } from './attendanceTypes';
 import { DEFAULT_STATE } from './attendanceTypes';
 
 export type AttendanceAction =
@@ -12,6 +12,8 @@ export type AttendanceAction =
   | { type: 'ADD_EVENTS'; payload: ClassEvent[] }
   | { type: 'UPDATE_EVENT'; payload: ClassEvent }
   | { type: 'DELETE_EVENT'; payload: string }
+  | { type: 'UPSERT_DAILY_ATTENDANCE'; payload: DailyAttendance }
+  | { type: 'REPLACE_EVENTS_FOR_DATE'; payload: { date: string; events: ClassEvent[] } }
   | { type: 'SET_TIMETABLE_SLOT'; payload: TimetableSlot }
   | { type: 'DELETE_TIMETABLE_SLOT'; payload: string }
   | { type: 'ADD_EXCHANGE'; payload: ClassExchange }
@@ -81,6 +83,26 @@ export function attendanceReducer(state: AppState, action: AttendanceAction): Ap
       return {
         ...state,
         events: state.events.filter(e => e.id !== action.payload),
+      };
+    
+    case 'UPSERT_DAILY_ATTENDANCE':
+      // Overwrites the per-date master record (no duplicate creation)
+      return {
+        ...state,
+        dailyAttendance: {
+          ...state.dailyAttendance,
+          [action.payload.date]: action.payload,
+        },
+      };
+    
+    case 'REPLACE_EVENTS_FOR_DATE':
+      // Remove all non-extra events for this date, then add new ones (prevents duplicates on repeated edits)
+      return {
+        ...state,
+        events: [
+          ...state.events.filter(e => e.date !== action.payload.date || e.isExtra),
+          ...action.payload.events,
+        ],
       };
     
     case 'SET_TIMETABLE_SLOT':

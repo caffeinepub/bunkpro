@@ -1,4 +1,4 @@
-// Backup file schema and validation with migration support for user profile, gamification, notification preferences, and reminder state
+// Backup schema with backward-compatible DailyAttendance field migration and theme normalization for safe restore
 
 import type { AppState } from '../domain/attendanceTypes';
 import { DEFAULT_SETTINGS, DEFAULT_NOTIFICATION_PREFERENCES } from '../domain/attendanceTypes';
@@ -41,14 +41,20 @@ export function validateBackup(data: unknown): data is BackupData {
 }
 
 export function migrateBackup(backup: BackupData): AppState {
+  // Normalize theme to 'dark' if it's 'light' or 'system'
+  const normalizedTheme = (backup.data.settings.theme === 'light' || backup.data.settings.theme === 'system') 
+    ? 'dark' 
+    : backup.data.settings.theme;
+  
   // Future-proof: handle version migrations
-  // Merge with DEFAULT_SETTINGS and default gamification/notification/reminder fields to ensure new fields are populated
+  // Merge with DEFAULT_SETTINGS and default gamification/notification/reminder/dailyAttendance fields
   if (backup.version === 1) {
     return {
       ...backup.data,
       settings: {
         ...DEFAULT_SETTINGS,
         ...backup.data.settings,
+        theme: normalizedTheme,
         notificationPreferences: {
           ...DEFAULT_NOTIFICATION_PREFERENCES,
           ...(backup.data.settings.notificationPreferences || {}),
@@ -57,6 +63,7 @@ export function migrateBackup(backup: BackupData): AppState {
       },
       userProfile: backup.data.userProfile || null,
       streakMilestones: backup.data.streakMilestones || [],
+      dailyAttendance: backup.data.dailyAttendance || {},
     };
   }
   

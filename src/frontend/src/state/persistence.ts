@@ -1,4 +1,4 @@
-// Persistence layer connecting app store to IndexedDB with validation and fallback to defaults for new fields including reminder state
+// Persistence layer with backward-compatible DailyAttendance field merging and theme normalization for safe IndexedDB loading
 
 import type { AppState } from '../domain/attendanceTypes';
 import { DEFAULT_STATE, DEFAULT_SETTINGS, DEFAULT_NOTIFICATION_PREFERENCES } from '../domain/attendanceTypes';
@@ -27,6 +27,11 @@ export async function loadState(): Promise<AppState | null> {
       return DEFAULT_STATE;
     }
     
+    // Normalize theme to 'dark' if it's 'light' or 'system'
+    const normalizedTheme = (state.settings.theme === 'light' || state.settings.theme === 'system') 
+      ? 'dark' 
+      : state.settings.theme;
+    
     // Merge settings with defaults to ensure new fields are populated
     // Merge notification preferences with defaults
     return {
@@ -34,6 +39,7 @@ export async function loadState(): Promise<AppState | null> {
       settings: {
         ...DEFAULT_SETTINGS,
         ...state.settings,
+        theme: normalizedTheme,
         notificationPreferences: {
           ...DEFAULT_NOTIFICATION_PREFERENCES,
           ...(state.settings.notificationPreferences || {}),
@@ -42,6 +48,7 @@ export async function loadState(): Promise<AppState | null> {
       },
       userProfile: state.userProfile || null,
       streakMilestones: state.streakMilestones || [],
+      dailyAttendance: state.dailyAttendance || {},
     };
   } catch (error) {
     console.error('Failed to load state:', error);

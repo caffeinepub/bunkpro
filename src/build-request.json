@@ -1,45 +1,102 @@
 {
   "kind": "build_request",
-  "title": "Add centered subtitle under Dashboard heading on Home page",
+  "title": "Remove Light Mode and Lock App to Dark Theme",
   "projectName": "BunkPro",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-136",
-      "text": "On the main Home Dashboard page (`frontend/src/pages/HomeDashboardPage.tsx`), add a new centered subtitle text directly below the \"Dashboard\" heading that displays exactly: \"Be honest & mark attendance\". Style it to be clean and minimal: slightly smaller than the Dashboard title, medium font weight, subtle opacity (~80–90%), with proper vertical spacing so it does not look crowded. The text color must be theme-aware and adapt correctly to dark mode using existing theme-based text colors (no harsh bright colors). Do not change any dashboard functionality, do not modify the existing layout structure beyond inserting this single line of text, and do not affect responsiveness or mobile spacing.",
+      "id": "REQ-150",
+      "text": "Remove the Light mode feature from Settings by updating the Appearance/Theme UI so the user can no longer select \"Light\" or \"System\" theme mode anywhere in the app; the only available theme mode must be Dark.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "Below the Dashboard section/title, add the following text: \"Be honest & mark attendance\"",
-          "Center align the text",
-          "Use slightly smaller font than the Dashboard title",
-          "Slight opacity (like 80–90%)",
-          "Text color should adapt properly to dark mode",
-          "Do NOT Change any dashboard functionality / Modify layout structure / Affect responsiveness / Break mobile view spacing"
+          "remove the feauture light and set defualt feature as dark",
+          "yes"
         ]
       },
       "acceptanceCriteria": [
-        "Home Dashboard renders the exact text \"Be honest & mark attendance\" immediately below the \"Dashboard\" heading.",
-        "The new text is center-aligned, uses a slightly smaller font than the \"Dashboard\" title, medium font weight, and reduced opacity (~80–90%).",
-        "Spacing between the \"Dashboard\" heading and the new text is present and looks uncluttered on both mobile and desktop widths.",
-        "Text uses theme-based colors and remains readable in light and dark modes without using harsh bright colors.",
-        "No other Home Dashboard behavior, existing layout sections, or responsiveness changes as a result of this update."
+        "Settings no longer shows any selectable option labeled \"Light\" or \"System\" for theme mode.",
+        "There is no UI path that allows switching the app into light mode.",
+        "Theme-related UI remains functional for any non-mode controls that are still intended to exist (e.g., theme variant), without introducing errors."
+      ]
+    },
+    {
+      "id": "REQ-151",
+      "text": "Lock the application to permanent Dark mode at runtime by updating theme application logic so the document always stays in dark mode regardless of stored settings or OS/system theme, and remove/disable any system-theme listeners that could toggle modes.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-6",
+          "msg-8"
+        ],
+        "quotes": [
+          "remove the feauture light and set defualt feature as dark",
+          "yes",
+          "Building the update now — removing Light mode entirely and locking the app to permanent Dark mode."
+        ]
+      },
+      "acceptanceCriteria": [
+        "On every load, the app renders with dark styling even if the OS is set to light mode.",
+        "Changing the OS theme while the app is open does not affect the app’s theme mode.",
+        "No theme-mode-related event listeners remain active that can switch the mode away from dark (e.g., system theme change listeners)."
+      ]
+    },
+    {
+      "id": "REQ-152",
+      "text": "Set Dark mode as the default theme mode by updating the app’s default settings so first-time users (no saved state) always start in Dark mode.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-6"
+        ],
+        "quotes": [
+          "remove the feauture light and set defualt feature as dark",
+          "yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "With no IndexedDB state present (fresh browser/profile), the app starts in Dark mode by default.",
+        "The default settings object uses Dark as the theme mode default (no \"system\" default for theme mode)."
+      ]
+    },
+    {
+      "id": "REQ-153",
+      "text": "Ensure backward compatibility for existing persisted/backup/restored data by forcing any loaded/restored theme mode values (including \"light\" or \"system\") to resolve to Dark mode so users cannot end up in light mode after refresh, restore, or import.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-6",
+          "msg-8"
+        ],
+        "quotes": [
+          "remove the feauture light and set defualt feature as dark",
+          "yes",
+          "Building the update now — removing Light mode entirely and locking the app to permanent Dark mode."
+        ]
+      },
+      "acceptanceCriteria": [
+        "If an existing user has previously saved settings.theme = \"light\" or \"system\" in IndexedDB, after load it is normalized/treated as Dark mode.",
+        "If a user imports an older backup containing theme = \"light\" or \"system\", after restore the app runs in Dark mode and the UI does not expose a way to return to Light/System.",
+        "No crashes or validation errors occur when loading older state/backup files that contain now-unsupported theme mode values."
       ]
     }
   ],
   "constraints": [
-    "Frontend changes must not edit any immutable paths listed in SYSTEM_CONTEXT.",
-    "Do not change any dashboard functionality or business logic.",
-    "Do not modify the overall Home Dashboard layout structure other than inserting the single subtitle line.",
-    "Must remain responsive and not break mobile spacing."
+    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Do not introduce new backend services or external integrations; implement using the existing React + TypeScript + Tailwind stack.",
+    "All user-facing text introduced/changed for this update must be in English."
   ],
   "nonGoals": [
-    "Changing any attendance calculations, state, or backend behavior.",
-    "Redesigning the Home Dashboard header area beyond adding the requested single line of text.",
-    "Adding new settings, toggles, animations, or navigation changes related to this subtitle."
+    "Do not change any attendance tracking logic, calculations, streak logic, ranking logic, or notification behavior.",
+    "Do not redesign the app’s theme colors/variants beyond removing Light/System mode support and enforcing Dark mode.",
+    "Do not add new authentication mechanisms beyond the existing Internet Identity integration."
   ],
   "imageRequirements": {
     "required": [],

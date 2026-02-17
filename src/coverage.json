@@ -1,24 +1,65 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T13:02:16.048Z",
+  "generatedAt": "2026-02-17T14:59:25.579Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 4,
+    "implemented": 4,
     "items": [
       {
-        "id": "REQ-136",
-        "summary": "On the main Home Dashboard page (`frontend/src/pages/HomeDashboardPage.tsx`), add a new centered subtitle text directly below the \"Dashboard\" heading that displays exactly: \"Be honest & mark attendance\". Style it to be clean and minimal: slightly smaller than the Dashboard title, medium font weight, subtle opacity (~80–90%), with proper vertical spacing so it does not look crowded. The text color must be theme-aware and adapt correctly to dark mode using existing theme-based text colors (no harsh bright colors). Do not change any dashboard functionality, do not modify the existing layout structure beyond inserting this single line of text, and do not affect responsiveness or mobile spacing.",
+        "id": "REQ-150",
+        "summary": "Remove the Light mode feature from Settings by updating the Appearance/Theme UI so the user can no longer select \"Light\" or \"System\" theme mode anywhere in the app; the only available theme mode must be Dark.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/HomeDashboardPage.tsx"
+          "frontend/src/components/settings/ThemeSelector.tsx",
+          "frontend/src/pages/SettingsPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/HomeDashboardPage.tsx"
+          "frontend/src/components/settings/ThemeSelector.tsx",
+          "frontend/src/pages/SettingsPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-151",
+        "summary": "Lock the application to permanent Dark mode at runtime by updating theme application logic so the document always stays in dark mode regardless of stored settings or OS/system theme, and remove/disable any system-theme listeners that could toggle modes.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/theme/themeManager.ts",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/theme/themeManager.ts",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-152",
+        "summary": "Set Dark mode as the default theme mode by updating the app’s default settings so first-time users (no saved state) always start in Dark mode.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/domain/attendanceTypes.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/domain/attendanceTypes.ts"
+        ]
+      },
+      {
+        "id": "REQ-153",
+        "summary": "Ensure backward compatibility for existing persisted/backup/restored data by forcing any loaded/restored theme mode values (including \"light\" or \"system\") to resolve to Dark mode so users cannot end up in light mode after refresh, restore, or import.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/state/persistence.ts",
+          "frontend/src/backup/backupSchema.ts",
+          "frontend/src/backup/backupIO.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/state/persistence.ts",
+          "frontend/src/backup/backupSchema.ts",
+          "frontend/src/backup/backupIO.ts"
         ]
       }
     ]
@@ -28,7 +69,14 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/pages/HomeDashboardPage.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/backup/backupIO.ts",
+    "frontend/src/backup/backupSchema.ts",
+    "frontend/src/components/settings/ThemeSelector.tsx",
+    "frontend/src/domain/attendanceTypes.ts",
+    "frontend/src/pages/SettingsPage.tsx",
+    "frontend/src/state/persistence.ts",
+    "frontend/src/theme/themeManager.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

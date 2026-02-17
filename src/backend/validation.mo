@@ -4,7 +4,6 @@ import Text "mo:core/Text";
 module {
   let maxLength = 63;
   let reservedSystemWords = ["ic", "2vxsx", "aaaaaaaa"];
-  let regexPattern = "^[A-Za-z0-9_ ]+$";
 
   func isNotEmpty(name : Text) : Bool {
     name.trim(#char ' ') != "";
@@ -45,4 +44,3 @@ module {
     };
   };
 };
-

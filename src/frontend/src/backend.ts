@@ -89,6 +89,7 @@ export class ExternalBlob {
         return this;
     }
 }
+export type DateString = string;
 export type Time = bigint;
 export interface RankingDetails {
     streak: bigint;
@@ -121,6 +122,7 @@ export interface backendInterface {
     addPoints(pointsToAdd: bigint): Promise<AddPointsResult>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     calculateMaxBunkableClasses(attendedClasses: bigint, totalClasses: bigint): Promise<bigint>;
+    createDailyAttendanceRecord(localDate: DateString): Promise<void>;
     deleteCallerUser(): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -128,9 +130,11 @@ export interface backendInterface {
     getRankingByCollege(college: string, start: bigint, count: bigint): Promise<Array<RankingDetails>>;
     getRequiredAttendancePercentage(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    hasAttendedToday(localDate: DateString): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setRequiredAttendancePercentage(newPercentage: bigint): Promise<void>;
+    updateDailyAttendanceRecord(localDate: DateString, courseCount: bigint): Promise<void>;
 }
 import type { AddPointsResult as _AddPointsResult, RankingDetails as _RankingDetails, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -202,6 +206,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.calculateMaxBunkableClasses(arg0, arg1);
+            return result;
+        }
+    }
+    async createDailyAttendanceRecord(arg0: DateString): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createDailyAttendanceRecord(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createDailyAttendanceRecord(arg0);
             return result;
         }
     }
@@ -303,6 +321,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
         }
     }
+    async hasAttendedToday(arg0: DateString): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.hasAttendedToday(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.hasAttendedToday(arg0);
+            return result;
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -342,6 +374,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.setRequiredAttendancePercentage(arg0);
+            return result;
+        }
+    }
+    async updateDailyAttendanceRecord(arg0: DateString, arg1: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateDailyAttendanceRecord(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateDailyAttendanceRecord(arg0, arg1);
             return result;
         }
     }

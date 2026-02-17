@@ -7,6 +7,7 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export type DateString = string;
 export type Time = bigint;
 export interface RankingDetails {
     streak: bigint;
@@ -38,6 +39,7 @@ export interface backendInterface {
     addPoints(pointsToAdd: bigint): Promise<AddPointsResult>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     calculateMaxBunkableClasses(attendedClasses: bigint, totalClasses: bigint): Promise<bigint>;
+    createDailyAttendanceRecord(localDate: DateString): Promise<void>;
     deleteCallerUser(): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -45,7 +47,9 @@ export interface backendInterface {
     getRankingByCollege(college: string, start: bigint, count: bigint): Promise<Array<RankingDetails>>;
     getRequiredAttendancePercentage(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    hasAttendedToday(localDate: DateString): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setRequiredAttendancePercentage(newPercentage: bigint): Promise<void>;
+    updateDailyAttendanceRecord(localDate: DateString, courseCount: bigint): Promise<void>;
 }

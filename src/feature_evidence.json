@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-on-the-main-home-dashboard-page-frontend-src-pages-homedashboardpage-tsx-add-a-new-centered-subtitle-text-directly-below-the-dashboard-heading-that-displays-exactly-be-honest-mark-attendance-style-it-to-be-clean-and-minimal-slightly-smaller-than-the-dashboard-title-medium-font-weight-subtle-opacity-80-90-with-proper-vertical-spacing-so-it-does-not-look-crowded-the-text-color-must-be-theme-aware-and-adapt-correctly-to-dark-mode-using-existing-theme-based-text-colors-no-harsh-bright-colors-do-not-change-any-dashboard-functionality-do-not-modify-the-existing-layout-structure-beyond-inserting-this-single-line-of-text-and-do-not-affect-responsiveness-or-mobile-spacing",
-      "featureTitle": "On the main Home Dashboard page (`frontend/src/pages/HomeDashboardPage.tsx`), add a new centered subtitle text directly below the \"Dashboard\" heading that displays exactly: \"Be honest & mark attendance\". Style it to be clean and minimal: slightly smaller than the Dashboard title, medium font weight, subtle opacity (~80–90%), with proper vertical spacing so it does not look crowded. The text color must be theme-aware and adapt correctly to dark mode using existing theme-based text colors (no harsh bright colors). Do not change any dashboard functionality, do not modify the existing layout structure beyond inserting this single line of text, and do not affect responsiveness or mobile spacing.",
+      "featureId": "feature-remove-the-light-mode-feature-from-settings-by-updating-the-appearance-theme-ui-so-the-user-can-no-longer-select-light-or-system-theme-mode-anywhere-in-the-app-the-only-available-theme-mode-must-be-dark",
+      "featureTitle": "Remove the Light mode feature from Settings by updating the Appearance/Theme UI so the user can no longer select \"Light\" or \"System\" theme mode anywhere in the app; the only available theme mode must be Dark.",
       "files": [
-        "frontend/src/pages/HomeDashboardPage.tsx"
+        "frontend/src/components/settings/ThemeSelector.tsx",
+        "frontend/src/pages/SettingsPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -16,7 +17,67 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-136"
+        "REQ-150"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-lock-the-application-to-permanent-dark-mode-at-runtime-by-updating-theme-application-logic-so-the-document-always-stays-in-dark-mode-regardless-of-stored-settings-or-os-system-theme-and-remove-disable-any-system-theme-listeners-that-could-toggle-modes",
+      "featureTitle": "Lock the application to permanent Dark mode at runtime by updating theme application logic so the document always stays in dark mode regardless of stored settings or OS/system theme, and remove/disable any system-theme listeners that could toggle modes.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/theme/themeManager.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-151"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-set-dark-mode-as-the-default-theme-mode-by-updating-the-app-s-default-settings-so-first-time-users-no-saved-state-always-start-in-dark-mode",
+      "featureTitle": "Set Dark mode as the default theme mode by updating the app’s default settings so first-time users (no saved state) always start in Dark mode.",
+      "files": [
+        "frontend/src/domain/attendanceTypes.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-152"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-backward-compatibility-for-existing-persisted-backup-restored-data-by-forcing-any-loaded-restored-theme-mode-values-including-light-or-system-to-resolve-to-dark-mode-so-users-cannot-end-up-in-light-mode-after-refresh-restore-or-import",
+      "featureTitle": "Ensure backward compatibility for existing persisted/backup/restored data by forcing any loaded/restored theme mode values (including \"light\" or \"system\") to resolve to Dark mode so users cannot end up in light mode after refresh, restore, or import.",
+      "files": [
+        "frontend/src/backup/backupIO.ts",
+        "frontend/src/backup/backupSchema.ts",
+        "frontend/src/state/persistence.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-153"
       ],
       "confidence": "high"
     }

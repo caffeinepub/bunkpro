@@ -3,8 +3,8 @@ import Array "mo:core/Array";
 import Time "mo:core/Time";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
-import Text "mo:core/Text";
 import Iter "mo:core/Iter";
+import Text "mo:core/Text";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
@@ -14,9 +14,7 @@ import AccessControl "authorization/access-control";
 
 import Validation "validation";
 
-
-// Apply data migration
-
+// No migration is needed - new fields only, compatible with previous deployment
 actor {
   // Mix in the authorization logic
   let accessControlState = AccessControl.initState();
@@ -24,10 +22,20 @@ actor {
 
   var requiredMinAttendancePercentage = 75;
 
+  type DateString = Text; // YYYY-MM-DD format
+
   type AttendanceDay = {
     date : Time.Time;
     courses : [Text];
     timestamp : Time.Time;
+  };
+
+  type DailyAttendance = {
+    caller : Principal;
+    localDate : DateString;
+    timestamp : Time.Time;
+    isSynced : Bool;
+    courseCount : Nat;
   };
 
   type RankingDetails = {
@@ -50,42 +58,66 @@ actor {
     rankingDetails : RankingDetails;
   };
 
-  type AddPointsResult = {
-    #success : Nat;
-    #pointsUpdateFailed;
-  };
-
   type UserProfile = {
     displayName : Text;
     college : Text;
     email : Text;
   };
 
+  type AddPointsResult = {
+    #success : Nat;
+    #pointsUpdateFailed;
+  };
+
   let users = Map.empty<Principal, UserData>();
   let attendanceDays = Map.empty<Principal, Map.Map<Time.Time, AttendanceDay>>();
+  let dailyAttendance = Map.empty<Principal, Map.Map<DateString, DailyAttendance>>();
   var lastRecalculated : ?Time.Time = null;
 
-  func compareEntriesForRanking(a : RankingDetails, b : RankingDetails) : Order.Order {
-    switch (Nat.compare(b.points, a.points)) {
-      case (#less) { #less };
-      case (#greater) { #greater };
-      case (#equal) {
-        switch (Nat.compare(b.streak, a.streak)) {
-          case (#less) { #less };
-          case (#greater) { #greater };
-          case (#equal) { Int.compare(a.joinDate, b.joinDate) };
-        };
-      };
+  //------------------------
+  // Utility Functions
+  //------------------------
+
+  func isValidDateString(dateString : DateString) : Bool {
+    let isCorrectLength = dateString.size() == 10;
+    if (not isCorrectLength) { return false };
+
+    let charsArray = dateString.toArray();
+
+    if (charsArray.size() < 8) {
+      return false;
     };
+
+    let hasDelimiters =
+      (charsArray[4] == '-' and charsArray[7] == '-');
+    hasDelimiters;
   };
 
-  func sortRankings(entries : [RankingDetails]) : [RankingDetails] {
-    entries.sort(
-      func(a, b) {
-        compareEntriesForRanking(a, b);
-      }
-    );
+  // Returns the maximum number of classes that can be bunked (missed)
+  // without dropping below the required percentage.
+  public query ({ caller }) func calculateMaxBunkableClasses(attendedClasses : Nat, totalClasses : Nat) : async Nat {
+    if (totalClasses == 0 or attendedClasses == 0) {
+      return 0;
+    };
+
+    let leftSide = 100 * attendedClasses;
+    let rightSideBase = totalClasses * requiredMinAttendancePercentage;
+
+    if (leftSide < rightSideBase) {
+      return 0;
+    };
+
+    if (requiredMinAttendancePercentage == 0) {
+      return 0;
+    };
+
+    let numerator = leftSide - rightSideBase;
+    numerator / requiredMinAttendancePercentage;
   };
+
+  //------------------------
+  // Authorization Helper
+  //------------------------
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
@@ -106,11 +138,176 @@ actor {
     };
   };
 
+  //-----------------------
+  // Attendance Calculator
+  //-----------------------
+
+  public query ({ caller }) func getRequiredAttendancePercentage() : async Nat {
+    requiredMinAttendancePercentage;
+  };
+
+  public shared ({ caller }) func setRequiredAttendancePercentage(newPercentage : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admin can update required attendance percentage");
+    };
+    if (newPercentage > 100 or newPercentage < 1) {
+      Runtime.trap("InvalidSet: newPercentage must be in range 1..=100");
+    };
+    requiredMinAttendancePercentage := newPercentage;
+  };
+
+  //-----------------------
+  // Daily Attendance Master Record
+  //-----------------------
+
+  public shared ({ caller }) func createDailyAttendanceRecord(localDate : DateString) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can mark attendance");
+    };
+
+    if (not isValidDateString(localDate)) {
+      Runtime.trap("Invalid date format. Expected YYYY-MM-DD");
+    };
+
+    let now = Time.now();
+    let newRecord : DailyAttendance = {
+      caller;
+      localDate;
+      timestamp = now;
+      isSynced = false;
+      courseCount = 0;
+    };
+
+    switch (dailyAttendance.get(caller)) {
+      case (null) {
+        let newMap = Map.empty<DateString, DailyAttendance>();
+        newMap.add(localDate, newRecord);
+        dailyAttendance.add(caller, newMap);
+      };
+      case (?existingMap) {
+        switch (existingMap.get(localDate)) {
+          case (null) {
+            existingMap.add(localDate, newRecord);
+          };
+          case (?_) {
+            Runtime.trap("Daily attendance for this date already exists");
+          };
+        };
+      };
+    };
+  };
+
+  public shared ({ caller }) func updateDailyAttendanceRecord(localDate : DateString, courseCount : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can modify attendance");
+    };
+
+    if (not isValidDateString(localDate)) {
+      Runtime.trap("Invalid date format. Expected YYYY-MM-DD");
+    };
+    let now = Time.now();
+
+    switch (dailyAttendance.get(caller)) {
+      case (null) {
+        Runtime.trap("No existing daily attendance record found. Please create one first.");
+      };
+      case (?existingMap) {
+        switch (existingMap.get(localDate)) {
+          case (null) {
+            Runtime.trap("No existing daily attendance record found. Please create one first.");
+          };
+          case (?existing) {
+            if (existing.caller != caller) {
+              Runtime.trap("Unauthorized: Cannot modify another user's attendance record");
+            };
+
+            let updatedRecord : DailyAttendance = {
+              existing with
+              timestamp = now;
+              courseCount;
+              isSynced = true;
+            };
+            existingMap.add(localDate, updatedRecord);
+          };
+        };
+      };
+    };
+  };
+
+  public query ({ caller }) func hasAttendedToday(localDate : DateString) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can check attendance");
+    };
+    if (not isValidDateString(localDate)) {
+      Runtime.trap("Invalid date format. Expected YYYY-MM-DD");
+    };
+
+    switch (dailyAttendance.get(caller)) {
+      case (null) { false };
+      case (?records) {
+        switch (records.get(localDate)) {
+          case (null) { false };
+          case (?record) { record.caller == caller };
+        };
+      };
+    };
+  };
+
+  //------------------------------
+  // Existing Attendance Logic
+  //------------------------------
+
+  func compareEntriesForRanking(a : RankingDetails, b : RankingDetails) : Order.Order {
+    switch (Nat.compare(b.points, a.points)) {
+      case (#less) { #less };
+      case (#greater) { #greater };
+      case (#equal) {
+        switch (Nat.compare(b.streak, a.streak)) {
+          case (#less) { #less };
+          case (#greater) { #greater };
+          case (#equal) {
+            switch (Nat.compare(Int.abs(a.joinDate), Int.abs(b.joinDate))) {
+              case (#less) { #less };
+              case (#greater) { #greater };
+              case (#equal) { #equal };
+            };
+          };
+        };
+      };
+    };
+  };
+
+  func sortRankings(entries : [RankingDetails]) : [RankingDetails] {
+    entries.sort(
+      func(a, b) {
+        compareEntriesForRanking(a, b);
+      }
+    );
+  };
+
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access profiles");
+    };
+    switch (users.get(caller)) {
+      case (null) { null };
+      case (?userData) {
+        ?{
+          displayName = userData.displayName;
+          college = switch (userData.college) {
+            case (null) { "unknown" };
+            case (?college) { college };
+          };
+          email = "not-implemented";
+        };
+      };
+    };
+  };
+
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
-
     let trimmedDisplayName = profile.displayName.trim(#char ' ');
 
     Validation.isValidName(trimmedDisplayName);
@@ -144,8 +341,7 @@ actor {
           displayName = trimmedDisplayName;
           college = ?trimmedCollege;
           rankingDetails = {
-            existingUser.rankingDetails with
-            displayName = trimmedDisplayName;
+            existingUser.rankingDetails with displayName = trimmedDisplayName;
             college = ?trimmedCollege;
           };
         };
@@ -154,30 +350,10 @@ actor {
     };
   };
 
-  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access profiles");
-    };
-    switch (users.get(caller)) {
-      case (null) { null };
-      case (?userData) {
-        ?{
-          displayName = userData.displayName;
-          college = switch (userData.college) {
-            case (null) { "unknown" };
-            case (?college) { college };
-          };
-          email = "not-implemented";
-        };
-      };
-    };
-  };
-
   public shared ({ caller }) func addDailyAttendance(date : Time.Time, courses : [Text]) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can mark attendance");
     };
-
     let now = Time.now();
 
     // Prevent marking future dates
@@ -185,7 +361,7 @@ actor {
       Runtime.trap("Cannot mark attendance for a future date");
     };
 
-    // Check for duplicate dates
+    // Check for duplicate dates - only check caller's own attendance
     let callerAttendance = attendanceDays.get(caller);
     switch (callerAttendance) {
       case (null) {
@@ -222,8 +398,7 @@ actor {
           existingUser with
           points = newPoints;
           rankingDetails = {
-            existingUser.rankingDetails with
-            points = newPoints;
+            existingUser.rankingDetails with points = newPoints;
           };
         };
         users.add(caller, updatedUser);
@@ -236,7 +411,6 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can delete their profiles");
     };
-
     let existingUser = users.get(caller);
     switch (existingUser) {
       case (null) {
@@ -257,7 +431,7 @@ actor {
     };
 
     let end = Nat.min(start + count, sortedEntries.size());
-    let sliceSize = if (end >= start) { 0 : Nat } else { end - start };
+    let sliceSize = if (end <= start) { 0 : Nat } else { end - start };
 
     Array.tabulate<RankingDetails>(
       sliceSize,
@@ -268,10 +442,8 @@ actor {
   };
 
   public query func getRankingByCollege(college : Text, start : Nat, count : Nat) : async [RankingDetails] {
-    let filteredEntries = users.values()
-      .map(func(userData) { userData.rankingDetails })
-      .filter(func(entry) { entry.displayName.contains(#text college) })
-      .toArray();
+    let filteredEntries = users.values().map(func(userData) { userData.rankingDetails })
+      .filter(func(entry) { entry.displayName.contains(#text college) }).toArray();
 
     let sortedEntries = filteredEntries.sort(compareEntriesForRanking);
 
@@ -280,7 +452,7 @@ actor {
     };
 
     let end = Nat.min(start + count, sortedEntries.size());
-    let sliceSize = if (end >= start) { 0 : Nat } else { end - start };
+    let sliceSize = if (end <= start) { 0 : Nat } else { end - start };
 
     Array.tabulate<RankingDetails>(
       sliceSize,
@@ -289,52 +461,4 @@ actor {
       },
     );
   };
-
-  //-----------------------
-  // Attendance Calculator
-  //-----------------------
-
-  public query ({ caller }) func getRequiredAttendancePercentage() : async Nat {
-    requiredMinAttendancePercentage;
-  };
-
-  public shared ({ caller }) func setRequiredAttendancePercentage(newPercentage : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admin can update required attendance percentage");
-    };
-
-    if (newPercentage > 100 or newPercentage < 1) {
-      Runtime.trap("InvalidSet: newPercentage must be in range 1..=100");
-    };
-    requiredMinAttendancePercentage := newPercentage;
-  };
-
-  // Returns the maximum number of classes that can be bunked (missed)
-  // without dropping below the required percentage.
-  public query ({ caller }) func calculateMaxBunkableClasses(attendedClasses : Nat, totalClasses : Nat) : async Nat {
-    if (totalClasses == 0 or attendedClasses == 0) {
-      return 0;
-    };
-
-    // Calculate C as whole number (requiredMinPercentage in percent)
-    // existingAttendedOverTotal * 100 >= requiredMinPercentage * newTotal
-    // C_attend >= C_old * (attend + bunk) / (attend + bunk)
-    // 100 * attended / (total + x) >= requiredMinPercentage
-    // Cross-multiply (avoid float division)
-    // 100 * attended >= required * (total + x)
-    // 100 * attended >= total * required + x * required
-    // 100 * attended - total * required >= x * required
-    // (100 * attended - total * required) / required >= x
-    let requiredNat = requiredMinAttendancePercentage;
-    let leftSide = 100 * attendedClasses;
-    let rightSideBase = totalClasses * requiredNat;
-
-    if (leftSide < rightSideBase) {
-      return 0;
-    };
-
-    let numerator = leftSide - rightSideBase;
-    numerator / requiredNat;
-  };
 };
-

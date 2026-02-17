@@ -1,19 +1,20 @@
-// Settings card for managing browser notification preferences with category toggles, clear limitation messaging explicitly stating FCM/background push is not supported, and test notification functionality
+// Settings card for managing browser notification preferences with category toggles, clear limitation messaging using shared copy that explicitly states FCM/background push is not supported, and test notification functionality.
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Bell, BellOff, Info, CheckCircle2, XCircle } from 'lucide-react';
+import { Bell, BellOff, Info, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import {
   isNotificationSupported,
   getNotificationPermission,
   requestNotificationPermission,
   sendTestNotification,
 } from '../../notifications/notificationsApi';
+import { NOTIFICATION_LIMITATIONS, NOTIFICATION_PERMISSION_MESSAGES } from '../../notifications/notificationLimitationsCopy';
 import type { NotificationPreferences } from '../../domain/attendanceTypes';
 
 interface NotificationsCardProps {
@@ -43,12 +44,12 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
       if (newPermission === 'granted') {
         setTestResult({
           success: true,
-          message: 'Permission granted! You can now enable notifications.',
+          message: NOTIFICATION_PERMISSION_MESSAGES.granted,
         });
       } else if (newPermission === 'denied') {
         setTestResult({
           success: false,
-          message: 'Permission denied. Please enable notifications in your browser settings.',
+          message: NOTIFICATION_PERMISSION_MESSAGES.denied,
         });
       }
     } catch (error) {
@@ -112,13 +113,13 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
       <CardContent className="space-y-4">
         {/* Platform Limitations Notice */}
         <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription className="text-sm space-y-2">
-            <p>
-              <strong>Browser notifications only:</strong> This build supports browser-based notifications that work while the app is running.
-            </p>
-            <p>
-              <strong>Not supported:</strong> Firebase Cloud Messaging (FCM) push notifications for background delivery on Web or Android are not available in this platform build. Notifications are not guaranteed when the browser or app is closed.
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{NOTIFICATION_LIMITATIONS.title}</AlertTitle>
+          <AlertDescription className="text-sm space-y-2 mt-2">
+            <p>{NOTIFICATION_LIMITATIONS.description}</p>
+            <p className="font-medium">{NOTIFICATION_LIMITATIONS.requirement}</p>
+            <p className="text-xs text-muted-foreground">
+              <strong>Not supported:</strong> {NOTIFICATION_LIMITATIONS.notSupported}
             </p>
           </AlertDescription>
         </Alert>
@@ -140,8 +141,8 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
               <Info className="h-4 w-4" />
               <AlertDescription>
                 {permission === 'denied'
-                  ? 'Notification permission was denied. Please enable it in your browser settings to receive notifications.'
-                  : 'Notification permission is required to receive alerts.'}
+                  ? NOTIFICATION_PERMISSION_MESSAGES.denied
+                  : NOTIFICATION_PERMISSION_MESSAGES.required}
               </AlertDescription>
             </Alert>
 
@@ -183,6 +184,9 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
               <div className="space-y-4">
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium">Notification Categories</h4>
+                  <p className="text-xs text-muted-foreground italic">
+                    {NOTIFICATION_LIMITATIONS.shortDisclaimer}
+                  </p>
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
@@ -190,7 +194,7 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
                         Daily Reminders
                       </Label>
                       <p className="text-xs text-muted-foreground">
-                        Remind me at 7 PM if I haven't marked attendance
+                        Remind me at 7 PM if I haven't marked attendance ({NOTIFICATION_LIMITATIONS.dailyReminderNote})
                       </p>
                     </div>
                     <Switch

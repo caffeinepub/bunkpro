@@ -1,9 +1,8 @@
-// Main app component with daily reminder integration, mark-today sheet control at app level, and notification click handling
+// Main app component with daily reminder integration, mark-today sheet control at app level, notification click handling, and service worker cleanup to prevent stale cached content
 
 import React, { useState, useEffect, useRef } from 'react';
 import { AppProvider, useAppStore } from './state/appStore';
 import { ErrorBoundary } from './components/system/ErrorBoundary';
-import { InitialLoadSplash } from './components/system/InitialLoadSplash';
 import { AppShell } from './components/layout/AppShell';
 import { BottomNav } from './components/navigation/BottomNav';
 import { LoginPage } from './pages/LoginPage';
@@ -33,12 +32,40 @@ function AppContent() {
   const { state, dispatch } = useAppStore();
   const { actor } = useActor();
   const [route, setRoute] = useState<Route>({ type: 'home' });
-  const [isInitializing, setIsInitializing] = useState(true);
   const [isSyncingProfile, setIsSyncingProfile] = useState(false);
   const [isMarkTodayOpen, setIsMarkTodayOpen] = useState(false);
   
   // Cancellation flag to prevent post-logout sync
   const syncCancelledRef = useRef(false);
+
+  // Clean up service worker and cache on mount to prevent stale splash artifacts
+  useEffect(() => {
+    const cleanupServiceWorker = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+          }
+        } catch (error) {
+          console.warn('Failed to unregister service workers:', error);
+        }
+      }
+
+      if ('caches' in window) {
+        try {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+          );
+        } catch (error) {
+          console.warn('Failed to clear caches:', error);
+        }
+      }
+    };
+
+    cleanupServiceWorker();
+  }, []);
 
   // Initialize theme on mount
   useEffect(() => {
@@ -131,14 +158,6 @@ function AppContent() {
     onNotificationClick: handleReminderNotificationClick,
   });
 
-  // Simulate initial load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitializing(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleNavigate = (newRoute: Route) => {
     setRoute(newRoute);
   };
@@ -160,11 +179,7 @@ function AppContent() {
     setIsMarkTodayOpen(false);
   };
 
-  if (isInitializing) {
-    return <InitialLoadSplash />;
-  }
-
-  // Login gate
+  // Login gate - render immediately without splash
   if (!state.userProfile) {
     return <LoginPage onLogin={handleLogin} />;
   }

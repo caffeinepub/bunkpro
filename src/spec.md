@@ -1,13 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Remove any purple/pink flash on initial load by forcing a solid dark splash/background color, and update the splash logo to the finalized uploaded BunkPro dark-mode logo.
+**Goal:** Remove all splash-screen behavior so the app loads immediately into Login (logged out) or Dashboard (logged in), with no startup delay or splash UI.
 
 **Planned changes:**
-- Force the splash overlay background to a single solid dark color (e.g., `#0D0D0D`) that does not depend on theme variables (avoid `bg-background`/CSS variable-driven backgrounds) to prevent any purple/pink tint.
-- Set the initial document (`html, body`) background to the same solid dark color before React mounts, and add/update `meta name="theme-color"` to match to prevent browser UI tinting.
-- Add the uploaded logo `Bunkpro.logo_dark_mode.png` to `frontend/public/assets/generated/` and update branding so `BRANDING.getAppIcon(...)` resolves to this asset for both dark and light.
-- Update the splash layout to a minimal, full-screen flex-centered logo (centered horizontally/vertically; responsive sizing; `object-contain` to avoid distortion).
-- Remove/replace any remaining references to old splash icon assets in the splash rendering path so refreshes consistently show the new logo/background (and ensure existing caching does not keep stale splash assets).
+- Delete `frontend/src/components/system/InitialLoadSplash.tsx` and remove all imports/usages/references to any splash/splash-screen component across the app.
+- Remove splash-related initialization gating in `frontend/src/App.tsx`, including the `isInitializing` state and any startup `setTimeout` delay, so the first real screen renders immediately.
+- Strip any splash/loading placeholder markup from `frontend/index.html` and any public/static HTML assets so only the React root container remains.
+- Remove splash-specific CSS/animations and ensure a solid dark pre-mount document background to prevent any startup background flash.
+- If a Service Worker/PWA cache is present, update it to avoid caching/serving any splash-related assets or HTML, and avoid stale cached splash artifacts after deployment (or remove registration references if none should exist).
 
-**User-visible outcome:** On cold load and hard refresh, users see a full-screen splash with a crisp, centered BunkPro logo on a solid dark background with no purple/pink flash at any point.
+**User-visible outcome:** On refresh, the app renders directly to Login when logged out or the Dashboard/Home when logged in, with no splash screen, no artificial delay, and no pre-render flashing.

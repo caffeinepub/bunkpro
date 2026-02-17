@@ -1,59 +1,60 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T11:58:25.537Z",
-  "summary": "Splash overlay now uses a forced solid #0D0D0D background and centered flex layout; index.html adds theme-color and pre-React dark background styling. However, the requested new logo asset/file name and single-source branding path do not match the BuildRequest, and there are extra/unrequested branding + metadata changes.",
+  "generatedAt": "2026-02-17T12:16:39.241Z",
+  "summary": "The diff does not remove the splash screen; instead it keeps/updates `InitialLoadSplash.tsx` and adds startup logic to unregister service workers and clear all browser caches. `index.html` appears to have no splash placeholder markup and sets a solid dark background.",
   "missing_requirements": [
     {
-      "id": "REQ-126",
-      "requirement": "Add the finalized logo asset as `frontend/public/assets/generated/Bunkpro.logo_dark_mode.png` and update branding so `BRANDING.getAppIcon(...)` resolves to that asset (same for dark/light).",
-      "reason": "Diff updates `BRANDING.getAppIcon` but points to `Bunkpro.logo_dark_mode.dim_1024x1024.png` (different filename than required). The required `Bunkpro.logo_dark_mode.png` file is not shown as added in the diff (no added files).",
+      "id": "REQ-130",
+      "requirement": "Completely remove the splash screen from the codebase by deleting `frontend/src/components/system/InitialLoadSplash.tsx` and removing all imports/usages/references to it across the app.",
+      "reason": "The splash component file still exists (and is referenced in the file summaries as an implemented animated splash), so it was not deleted/removed from the codebase.",
       "evidence": [
-        "frontend/src/lib/branding.ts",
-        "<file-diff>: Added: 0"
+        "frontend/src/components/system/InitialLoadSplash.tsx",
+        "frontend-file-summaries.txt"
       ]
     },
     {
-      "id": "REQ-128",
-      "requirement": "Eliminate old splash icon references and make the updated asset path the single source of truth so hard refresh reliably shows the new logo/background (no stale asset fallback).",
-      "reason": "Diff does not demonstrate removal of old splash icon asset references across the codebase, nor does it show that `Bunkpro.logo_dark_mode.png` is the single source of truth (branding points to a different asset name).",
+      "id": "REQ-131",
+      "requirement": "Remove splash-related conditional render logic and artificial initialization delays (remove `isInitializing` state and startup `setTimeout` gating UI in `frontend/src/App.tsx`).",
+      "reason": "The provided `App.tsx` diff excerpt shows added service worker/cache cleanup and other logic, but does not provide evidence that `isInitializing` and the startup `setTimeout` gate were removed; due to truncation, this cannot be verified from the diff summary.",
       "evidence": [
-        "frontend/src/lib/branding.ts",
-        "<file-diff>: Added: 0"
+        "frontend/src/App.tsx (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-133",
+      "requirement": "Remove any splash-specific styling/animations so no leftover splash styles affect the app.",
+      "reason": "Because the splash component itself still exists (REQ-130 not satisfied) and is described as an animated splash, splash-specific styling/animation is still present in the codebase.",
+      "evidence": [
+        "frontend/src/components/system/InitialLoadSplash.tsx",
+        "frontend-file-summaries.txt"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added animated loading indicator dots (purple) and multiple entrance animations on the splash screen (fade/zoom/bounce).",
-      "reason": "BuildRequest only asked for a clean, minimal centered logo splash with solid dark background and no purple/pink flash; it did not request adding loading indicators or new animations.",
+      "description": "Startup cleanup that unregisters all service workers and deletes all Cache Storage caches on mount.",
+      "reason": "REQ-134 asks to ensure splash-related cached assets/HTML are not served (or no SW registration if none exists). Unregistering *all* service workers and deleting *all* caches is broader behavior than specified and is not explicitly requested.",
       "evidence": [
-        "frontend/src/components/system/InitialLoadSplash.tsx"
+        "frontend/src/App.tsx (truncated)"
       ]
     },
     {
-      "description": "Updated horizontal logo branding to a different asset (`bunkpro-logo-horizontal.dim_4096x1536.png`).",
-      "reason": "BuildRequest only requested replacing the splash screen logo/app icon via `BRANDING.getAppIcon(...)`; it did not request changing other branding assets.",
+      "description": "Retained/implemented an animated splash screen component describing logo/loading indicators and forced dark background.",
+      "reason": "The BuildRequest requires removing the splash screen entirely; keeping/updating an animated splash component is the opposite of the requested change.",
       "evidence": [
-        "frontend/src/lib/branding.ts"
-      ]
-    },
-    {
-      "description": "Modified `project_state.json` and `frontend-file-summaries.txt` describing unrelated feature work (attendance flows, notifications, navigation, etc.).",
-      "reason": "Non-goals explicitly disallow adding new features beyond splash visuals/initial-load flash behavior; these files are modified and describe unrelated changes not requested in this BuildRequest.",
-      "evidence": [
-        "project_state.json",
+        "frontend/src/components/system/InitialLoadSplash.tsx",
         "frontend-file-summaries.txt"
       ]
     }
   ],
-  "confidence": 0.72,
+  "confidence": 0.74,
   "changed_files": [
     "frontend-file-summaries.txt",
     "frontend/index.html",
+    "frontend/src/App.tsx",
     "frontend/src/components/system/InitialLoadSplash.tsx",
     "frontend/src/index.css",
-    "frontend/src/lib/branding.ts",
     "project_state.json"
   ]
 }

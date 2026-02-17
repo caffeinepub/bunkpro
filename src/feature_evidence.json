@@ -2,9 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-eliminate-any-purple-pink-background-or-gradient-on-the-initial-loading-splash-overlay-by-forcing-a-solid-dark-background-color-that-matches-the-app-s-dark-theme-use-a-single-solid-color-such-as-0d0d0d-and-ensure-this-background-is-applied-regardless-of-current-theme-variables-or-tailwind-bg-background-css-variable-values",
-      "featureTitle": "Eliminate any purple/pink background or gradient on the initial loading splash overlay by forcing a solid dark background color that matches the app’s dark theme (use a single solid color such as #0D0D0D), and ensure this background is applied regardless of current theme variables or Tailwind `bg-background` CSS variable values.",
+      "featureId": "feature-completely-remove-the-splash-screen-from-the-codebase-by-deleting-frontend-src-components-system-initialloadsplash-tsx-and-removing-all-imports-usages-references-to-it-across-the-app",
+      "featureTitle": "Completely remove the splash screen from the codebase by deleting `frontend/src/components/system/InitialLoadSplash.tsx` and removing all imports/usages/references to it across the app.",
       "files": [
+        "frontend/src/App.tsx",
         "frontend/src/components/system/InitialLoadSplash.tsx"
       ],
       "components": [
@@ -16,13 +17,51 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-124"
+        "REQ-130"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-prevent-any-pre-react-render-flash-of-purple-pink-by-setting-the-initial-document-background-to-the-same-solid-dark-color-used-for-the-splash-e-g-via-frontend-index-html-and-or-global-base-css-for-html-body-and-add-update-the-browser-theme-color-metadata-so-the-browser-ui-does-not-show-a-purple-theme-tint-during-initial-load",
-      "featureTitle": "Prevent any pre-React-render “flash” of purple/pink by setting the initial document background to the same solid dark color used for the splash (e.g., via `frontend/index.html` and/or global base CSS for `html, body`), and add/update the browser theme color metadata so the browser UI does not show a purple theme tint during initial load.",
+      "featureId": "feature-remove-any-splash-related-conditional-render-logic-and-any-artificial-initialization-delays-so-the-app-renders-the-real-first-screen-immediately-login-when-logged-out-dashboard-when-logged-in-specifically-remove-the-isinitializing-state-and-the-startup-settimeout-delay-currently-gating-the-app-ui-in-frontend-src-app-tsx",
+      "featureTitle": "Remove any splash-related conditional render logic and any artificial initialization delays so the app renders the real first screen immediately (Login when logged out; Dashboard when logged in). Specifically remove the `isInitializing` state and the startup `setTimeout` delay currently gating the app UI in `frontend/src/App.tsx`.",
+      "files": [
+        "frontend/src/App.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-131"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-remove-any-initial-loading-splash-markup-from-the-html-entrypoint-and-public-assets-e-g-any-splash-screen-div-hardcoded-loading-spinner-markup-or-similar-placeholders-so-the-only-startup-container-is-the-react-root",
+      "featureTitle": "Remove any initial loading/splash markup from the HTML entrypoint and public assets (e.g., any `#splash-screen` div, hardcoded loading spinner markup, or similar placeholders) so the only startup container is the React root.",
+      "files": [
+        "frontend/index.html"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-132"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-remove-any-splash-specific-styling-css-classes-inline-styles-animations-so-no-leftover-splash-styles-affect-the-app-keep-a-clean-solid-dark-initial-background-to-avoid-any-pre-render-background-flash",
+      "featureTitle": "Remove any splash-specific styling (CSS classes, inline styles, animations) so no leftover splash styles affect the app; keep a clean, solid dark initial background to avoid any pre-render background flash.",
       "files": [
         "frontend/index.html",
         "frontend/src/index.css"
@@ -36,16 +75,16 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-125"
+        "REQ-133"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-replace-the-splash-screen-logo-with-the-user-uploaded-finalized-logo-image-bunkpro-logo-dark-mode-png-by-adding-it-to-frontend-public-assets-generated-and-updating-branding-so-branding-getappicon-resolves-to-this-uploaded-asset-use-the-same-asset-for-both-dark-and-light-to-avoid-mismatches",
-      "featureTitle": "Replace the splash screen logo with the user-uploaded finalized logo image `Bunkpro.logo_dark_mode.png` by adding it to `frontend/public/assets/generated/` and updating branding so `BRANDING.getAppIcon(...)` resolves to this uploaded asset (use the same asset for both dark and light to avoid mismatches).",
+      "featureId": "feature-if-the-project-includes-any-service-worker-pwa-precache-behavior-update-it-so-splash-related-cached-assets-and-any-cached-html-that-could-reintroduce-splash-ui-are-not-served-ensure-the-newest-version-loads-immediately-after-deployment",
+      "featureTitle": "If the project includes any Service Worker / PWA precache behavior, update it so splash-related cached assets and any cached HTML that could reintroduce splash UI are not served; ensure the newest version loads immediately after deployment.",
       "files": [
-        "frontend/src/components/system/InitialLoadSplash.tsx",
-        "frontend/src/lib/branding.ts"
+        "frontend/index.html",
+        "frontend/src/App.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -56,46 +95,7 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-126"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-the-splash-screen-layout-is-a-clean-minimal-fully-centered-logo-presentation-using-a-flex-layout-equivalent-to-display-flex-justify-content-center-align-items-center-height-100vh-with-no-extra-padding-margins-and-ensure-the-logo-scales-responsively",
-      "featureTitle": "Ensure the splash screen layout is a clean, minimal, fully centered logo presentation using a flex layout equivalent to `display:flex; justify-content:center; align-items:center; height:100vh`, with no extra padding/margins, and ensure the logo scales responsively.",
-      "files": [
-        "frontend/src/components/system/InitialLoadSplash.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-127"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-address-caching-stale-asset-root-causes-so-the-updated-splash-background-and-logo-reliably-appear-after-refresh-by-ensuring-no-old-assets-are-referenced-anywhere-and-by-making-the-updated-asset-path-the-single-source-of-truth-for-splash-branding",
-      "featureTitle": "Address caching/stale-asset root causes so the updated splash background and logo reliably appear after refresh by ensuring no old assets are referenced anywhere and by making the updated asset path the single source of truth for splash branding.",
-      "files": [
-        "frontend/src/components/system/InitialLoadSplash.tsx",
-        "frontend/src/lib/branding.ts"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-128"
+        "REQ-134"
       ],
       "confidence": "high"
     }

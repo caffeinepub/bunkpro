@@ -299,15 +299,6 @@
 
         .premium-calendar :where(.rdp-day) {
             @apply min-w-[40px] min-h-[40px];
-            @apply text-sm;
-        }
-
-        .premium-calendar :where(.rdp-month_grid) {
-            @apply gap-0.5;
-        }
-
-        .premium-calendar :where(.rdp-weekdays) {
-            @apply mt-2 mb-1;
         }
     }
 }

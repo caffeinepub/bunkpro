@@ -37,12 +37,15 @@ export interface backendInterface {
     addDailyAttendance(date: Time, courses: Array<string>): Promise<void>;
     addPoints(pointsToAdd: bigint): Promise<AddPointsResult>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    calculateMaxBunkableClasses(attendedClasses: bigint, totalClasses: bigint): Promise<bigint>;
     deleteCallerUser(): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getGlobalRankingPaginated(start: bigint, count: bigint): Promise<Array<RankingDetails>>;
     getRankingByCollege(college: string, start: bigint, count: bigint): Promise<Array<RankingDetails>>;
+    getRequiredAttendancePercentage(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setRequiredAttendancePercentage(newPercentage: bigint): Promise<void>;
 }

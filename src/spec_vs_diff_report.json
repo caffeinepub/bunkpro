@@ -1,53 +1,59 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T11:06:12.574Z",
-  "summary": "The diff does not show any targeted implementation of REQ-115 in the Mark Past Attendance calendar header (no changes are shown to the specified component), and the visible CSS changes include multiple unrelated global/theme/animation additions beyond a layout/spacing-only fix.",
+  "generatedAt": "2026-02-17T11:58:25.537Z",
+  "summary": "Splash overlay now uses a forced solid #0D0D0D background and centered flex layout; index.html adds theme-color and pre-React dark background styling. However, the requested new logo asset/file name and single-source branding path do not match the BuildRequest, and there are extra/unrequested branding + metadata changes.",
   "missing_requirements": [
     {
-      "id": "REQ-115",
-      "requirement": "Fix the calendar header layout in the \"Mark Past Attendance\" modal so it has three clearly separated sections (header navigation row, weekday row, date grid) with no overlap/collision, and keep the month title perfectly centered between left/right navigation arrows on all screen sizes (including required padding/margins and stable positioning while navigating months).",
-      "reason": "The diff summary does not show any changes to the required target file/component (MarkPastAttendanceSheet.tsx) or any explicit CSS/structure adjustments that demonstrably implement the header/weekday/date-grid separation, centering, and spacing acceptance criteria for that calendar instance.",
+      "id": "REQ-126",
+      "requirement": "Add the finalized logo asset as `frontend/public/assets/generated/Bunkpro.logo_dark_mode.png` and update branding so `BRANDING.getAppIcon(...)` resolves to that asset (same for dark/light).",
+      "reason": "Diff updates `BRANDING.getAppIcon` but points to `Bunkpro.logo_dark_mode.dim_1024x1024.png` (different filename than required). The required `Bunkpro.logo_dark_mode.png` file is not shown as added in the diff (no added files).",
       "evidence": [
-        "File diff summary lists modifications only for: frontend/src/index.css, frontend-file-summaries.txt, project_state.json (no frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx shown)"
+        "frontend/src/lib/branding.ts",
+        "<file-diff>: Added: 0"
+      ]
+    },
+    {
+      "id": "REQ-128",
+      "requirement": "Eliminate old splash icon references and make the updated asset path the single source of truth so hard refresh reliably shows the new logo/background (no stale asset fallback).",
+      "reason": "Diff does not demonstrate removal of old splash icon asset references across the codebase, nor does it show that `Bunkpro.logo_dark_mode.png` is the single source of truth (branding points to a different asset name).",
+      "evidence": [
+        "frontend/src/lib/branding.ts",
+        "<file-diff>: Added: 0"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Global UI/UX changes unrelated to the requested calendar header spacing fix (e.g., smooth scrolling behavior).",
-      "reason": "BuildRequest scope is limited to a layout/spacing fix in the Mark Past Attendance calendar header; global scrolling UX changes were not requested.",
+      "description": "Added animated loading indicator dots (purple) and multiple entrance animations on the splash screen (fade/zoom/bounce).",
+      "reason": "BuildRequest only asked for a clean, minimal centered logo splash with solid dark background and no purple/pink flash; it did not request adding loading indicators or new animations.",
       "evidence": [
-        "frontend/src/index.css (adds `html { scroll-behavior: smooth; }` and reduced-motion override)"
+        "frontend/src/components/system/InitialLoadSplash.tsx"
       ]
     },
     {
-      "description": "Confetti animation styling and keyframes.",
-      "reason": "BuildRequest explicitly constrains changes to a calendar header layout/spacing fix only; confetti animation is unrelated and introduces new visual behavior.",
+      "description": "Updated horizontal logo branding to a different asset (`bunkpro-logo-horizontal.dim_4096x1536.png`).",
+      "reason": "BuildRequest only requested replacing the splash screen logo/app icon via `BRANDING.getAppIcon(...)`; it did not request changing other branding assets.",
       "evidence": [
-        "frontend/src/index.css (adds `.confetti-particle` styles and `@keyframes confetti-fall`)"
+        "frontend/src/lib/branding.ts"
       ]
     },
     {
-      "description": "Theme token/variable changes for a \"Purple-Blue Theme\" and additional theme variants.",
-      "reason": "Not requested by REQ-115 and outside the specified scope (calendar header layout/spacing only).",
+      "description": "Modified `project_state.json` and `frontend-file-summaries.txt` describing unrelated feature work (attendance flows, notifications, navigation, etc.).",
+      "reason": "Non-goals explicitly disallow adding new features beyond splash visuals/initial-load flash behavior; these files are modified and describe unrelated changes not requested in this BuildRequest.",
       "evidence": [
-        "frontend/src/index.css (adds/changes many CSS variables under `:root`, `.dark`, and `[data-theme=\"midnight\"]` blocks)"
-      ]
-    },
-    {
-      "description": "Updates to project tracking/summary files describing unrelated features (e.g., reminders, persistence, backup, premium insights).",
-      "reason": "These changes are not requested by REQ-115 and appear unrelated to the calendar header layout fix.",
-      "evidence": [
-        "frontend-file-summaries.txt (mentions many domain/state/feature updates unrelated to calendar header spacing)",
-        "project_state.json (summary references reminders, persistence, past attendance flow, etc.)"
+        "project_state.json",
+        "frontend-file-summaries.txt"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.72,
   "changed_files": [
     "frontend-file-summaries.txt",
+    "frontend/index.html",
+    "frontend/src/components/system/InitialLoadSplash.tsx",
     "frontend/src/index.css",
+    "frontend/src/lib/branding.ts",
     "project_state.json"
   ]
 }

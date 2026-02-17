@@ -1,24 +1,76 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T11:06:12.580Z",
+  "generatedAt": "2026-02-17T11:58:25.546Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 5,
+    "implemented": 5,
     "items": [
       {
-        "id": "REQ-115",
-        "summary": "Fix the calendar header layout in the \"Mark Past Attendance\" modal so it has three clearly separated sections (Header navigation row, Weekday row, Date grid) with no overlap/collision, and the month title remains perfectly centered between left/right navigation arrows on all screen sizes.",
+        "id": "REQ-124",
+        "summary": "Eliminate any purple/pink background or gradient on the initial loading splash overlay by forcing a solid dark background color that matches the app’s dark theme (use a single solid color such as #0D0D0D), and ensure this background is applied regardless of current theme variables or Tailwind `bg-background` CSS variable values.",
         "status": "implemented",
         "plannedFiles": [
+          "frontend/src/components/system/InitialLoadSplash.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/system/InitialLoadSplash.tsx"
+        ]
+      },
+      {
+        "id": "REQ-125",
+        "summary": "Prevent any pre-React-render “flash” of purple/pink by setting the initial document background to the same solid dark color used for the splash (e.g., via `frontend/index.html` and/or global base CSS for `html, body`), and add/update the browser theme color metadata so the browser UI does not show a purple theme tint during initial load.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/index.html",
           "frontend/src/index.css"
         ],
         "matchedFiles": [
+          "frontend/index.html",
           "frontend/src/index.css"
+        ]
+      },
+      {
+        "id": "REQ-126",
+        "summary": "Replace the splash screen logo with the user-uploaded finalized logo image `Bunkpro.logo_dark_mode.png` by adding it to `frontend/public/assets/generated/` and updating branding so `BRANDING.getAppIcon(...)` resolves to this uploaded asset (use the same asset for both dark and light to avoid mismatches).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/public/assets/generated/Bunkpro.logo_dark_mode.dim_1024x1024.png",
+          "frontend/src/lib/branding.ts",
+          "frontend/src/components/system/InitialLoadSplash.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/public/assets/generated/Bunkpro.logo_dark_mode.dim_1024x1024.png",
+          "frontend/src/lib/branding.ts",
+          "frontend/src/components/system/InitialLoadSplash.tsx"
+        ]
+      },
+      {
+        "id": "REQ-127",
+        "summary": "Ensure the splash screen layout is a clean, minimal, fully centered logo presentation using a flex layout equivalent to `display:flex; justify-content:center; align-items:center; height:100vh`, with no extra padding/margins, and ensure the logo scales responsively.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/system/InitialLoadSplash.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/system/InitialLoadSplash.tsx"
+        ]
+      },
+      {
+        "id": "REQ-128",
+        "summary": "Address caching/stale-asset root causes so the updated splash background and logo reliably appear after refresh by ensuring no old assets are referenced anywhere and by making the updated asset path the single source of truth for splash branding.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/branding.ts",
+          "frontend/src/components/system/InitialLoadSplash.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/branding.ts",
+          "frontend/src/components/system/InitialLoadSplash.tsx"
         ]
       }
     ]
@@ -28,7 +80,11 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/index.html",
+    "frontend/public/assets/generated/Bunkpro.logo_dark_mode.dim_1024x1024.png",
+    "frontend/src/components/system/InitialLoadSplash.tsx",
     "frontend/src/index.css",
+    "frontend/src/lib/branding.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

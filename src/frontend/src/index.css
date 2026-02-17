@@ -77,8 +77,13 @@
         @apply border-border;
     }
     
+    html, body {
+        /* Force solid dark background independent of theme variables */
+        background-color: #0D0D0D;
+    }
+    
     body {
-        @apply bg-background text-foreground;
+        @apply text-foreground;
         font-feature-settings: "rlig" 1, "calt" 1;
     }
 

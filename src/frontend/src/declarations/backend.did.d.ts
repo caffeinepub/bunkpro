@@ -34,6 +34,7 @@ export interface _SERVICE {
   'addDailyAttendance' : ActorMethod<[Time, Array<string>], undefined>,
   'addPoints' : ActorMethod<[bigint], AddPointsResult>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'calculateMaxBunkableClasses' : ActorMethod<[bigint, bigint], bigint>,
   'deleteCallerUser' : ActorMethod<[], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -45,9 +46,11 @@ export interface _SERVICE {
     [string, bigint, bigint],
     Array<RankingDetails>
   >,
+  'getRequiredAttendancePercentage' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setRequiredAttendancePercentage' : ActorMethod<[bigint], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

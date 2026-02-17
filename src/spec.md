@@ -1,11 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the calendar header layout/spacing in the “Mark Past Attendance” modal so the navigation header, weekday row, and date grid are clearly separated with no overlap, and the month title stays perfectly centered between the left/right arrows on all screen sizes.
+**Goal:** Remove any purple/pink flash on initial load by forcing a solid dark splash/background color, and update the splash logo to the finalized uploaded BunkPro dark-mode logo.
 
 **Planned changes:**
-- Update the “Mark Past Attendance” calendar header layout to a 3-section structure: navigation header row, weekday row, and date grid with consistent vertical spacing.
-- Implement a flexbox-based navigation header (left arrow | centered month+year | right arrow) with adequate horizontal padding and bottom margin, ensuring the month title remains visually centered and does not shift when navigating months.
-- Adjust spacing/padding to prevent any collisions between header elements, weekday row, and date grid across viewport sizes, while preserving existing calendar behavior.
+- Force the splash overlay background to a single solid dark color (e.g., `#0D0D0D`) that does not depend on theme variables (avoid `bg-background`/CSS variable-driven backgrounds) to prevent any purple/pink tint.
+- Set the initial document (`html, body`) background to the same solid dark color before React mounts, and add/update `meta name="theme-color"` to match to prevent browser UI tinting.
+- Add the uploaded logo `Bunkpro.logo_dark_mode.png` to `frontend/public/assets/generated/` and update branding so `BRANDING.getAppIcon(...)` resolves to this asset for both dark and light.
+- Update the splash layout to a minimal, full-screen flex-centered logo (centered horizontally/vertically; responsive sizing; `object-contain` to avoid distortion).
+- Remove/replace any remaining references to old splash icon assets in the splash rendering path so refreshes consistently show the new logo/background (and ensure existing caching does not keep stale splash assets).
 
-**User-visible outcome:** The past attendance date picker displays a clean, non-overlapping calendar layout with a stable centered month title and comfortable navigation arrows, without changing how date selection or month navigation works.
+**User-visible outcome:** On cold load and hard refresh, users see a full-screen splash with a crisp, centered BunkPro logo on a solid dark background with no purple/pink flash at any point.

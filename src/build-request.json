@@ -1,47 +1,118 @@
 {
   "kind": "build_request",
-  "title": "Fix Mark Past Attendance calendar header layout/spacing",
+  "title": "Fix splash screen dark background + updated logo with no purple flash",
   "projectName": "BunkPro",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-115",
-      "text": "Fix the calendar header layout in the \"Mark Past Attendance\" modal so it has three clearly separated sections (Header navigation row, Weekday row, Date grid) with no overlap/collision, and the month title remains perfectly centered between left/right navigation arrows on all screen sizes.",
+      "id": "REQ-124",
+      "text": "Eliminate any purple/pink background or gradient on the initial loading splash overlay by forcing a solid dark background color that matches the app’s dark theme (use a single solid color such as #0D0D0D), and ensure this background is applied regardless of current theme variables or Tailwind `bg-background` CSS variable values.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-6"
         ],
         "quotes": [
-          "Fix the UI bug in the calendar component inside the \"Mark Past Attendance\" modal.",
-          "The calendar must have 3 clearly separated sections: Header Section (Navigation Row), Weekday Row (Below Header), Date Grid Section",
-          "Month title must be perfectly centered",
-          "Use Flexbox Layout for Header: display: flex; justify-content: space-between; align-items: center; padding-left: 16px; padding-right: 16px; margin-bottom: 12px"
+          "The splash screen background shows a purple/pinkish color. This color does NOT match the app dark theme.",
+          "Set splash screen background to the app’s official dark mode background. Use a solid dark background (example: #0D0D0D ...)",
+          "Ensure: No flash of purple during initial load. No theme flicker. No CSS override conflicts."
         ]
       },
       "acceptanceCriteria": [
-        "In the past attendance date picker (frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx, Calendar with className=\"premium-calendar\"), the header renders as: left arrow | centered month+year | right arrow, with the month text visually centered between arrows.",
-        "Header has horizontal padding of at least 16px on both sides and a bottom margin of at least 12px before the weekday row.",
-        "Weekday row (SU MO TU WE TH FR SA) is visually separated below the header and never overlaps with the arrows or month label.",
-        "Date grid is visually separated below the weekday row with clean padding/spacing; no elements overlap at any viewport width.",
-        "Month title does not shift position when navigating months; arrows stay pinned to left/right extremes.",
-        "Navigation arrow buttons have comfortable clickable/tappable area (8–12px padding equivalent) and do not collide with the weekday row.",
-        "No calendar functionality changes: date selection, disabled future dates, and month navigation behavior remain unchanged."
+        "On cold load and hard refresh, the splash overlay background is a solid dark color (no gradient) and never appears purple/pink at any moment.",
+        "The splash overlay does not use `bg-background` (or any CSS variable-driven background) in a way that can tint the background purple/pink in dark mode.",
+        "The splash remains full-screen and does not alter app initialization or loading timing/logic."
+      ]
+    },
+    {
+      "id": "REQ-125",
+      "text": "Prevent any pre-React-render “flash” of purple/pink by setting the initial document background to the same solid dark color used for the splash (e.g., via `frontend/index.html` and/or global base CSS for `html, body`), and add/update the browser theme color metadata so the browser UI does not show a purple theme tint during initial load.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "No flash of purple during initial load.",
+          "Check for: index.html inline background color / CSS default body background / PWA manifest theme_color"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Before React mounts (and before any theme classes are applied), the page background is already solid dark and does not flash purple/pink.",
+        "`frontend/index.html` includes an explicit `meta name=\"theme-color\"` set to the same solid dark color used for the splash.",
+        "No changes are made that affect app bootstrapping logic; only initial/background styling and metadata are adjusted."
+      ]
+    },
+    {
+      "id": "REQ-126",
+      "text": "Replace the splash screen logo with the user-uploaded finalized logo image `Bunkpro.logo_dark_mode.png` by adding it to `frontend/public/assets/generated/` and updating branding so `BRANDING.getAppIcon(...)` resolves to this uploaded asset (use the same asset for both dark and light to avoid mismatches).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "The old logo is still being displayed. Replace with the updated finalized Bunkpro logo. Use high-resolution version."
+        ]
+      },
+      "acceptanceCriteria": [
+        "`frontend/public/assets/generated/Bunkpro.logo_dark_mode.png` exists and is served by the app.",
+        "The splash screen image source resolves to `Bunkpro.logo_dark_mode.png` (not the previous `bunkpro-app-icon-*.png` assets).",
+        "The splash logo renders with `object-contain` (no stretching/distortion) and remains crisp on mobile and desktop."
+      ]
+    },
+    {
+      "id": "REQ-127",
+      "text": "Ensure the splash screen layout is a clean, minimal, fully centered logo presentation using a flex layout equivalent to `display:flex; justify-content:center; align-items:center; height:100vh`, with no extra padding/margins, and ensure the logo scales responsively.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Center logo using: display: flex justify-content: center align-items: center height: 100vh",
+          "Logo must be: Perfectly centered Responsive Properly scaled on mobile and desktop"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The splash overlay centers the logo both horizontally and vertically and occupies the full viewport height (100vh / fixed inset equivalent).",
+        "The logo remains centered and appropriately sized across common breakpoints (small phones to desktop) with no cropping or distortion.",
+        "Only visual/layout changes are applied to the splash; loading/initialization behavior remains unchanged."
+      ]
+    },
+    {
+      "id": "REQ-128",
+      "text": "Address caching/stale-asset root causes so the updated splash background and logo reliably appear after refresh by ensuring no old assets are referenced anywhere and by making the updated asset path the single source of truth for splash branding.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Cached service worker files / Old cached assets / Ensure new splash screen loads correctly after refresh."
+        ]
+      },
+      "acceptanceCriteria": [
+        "There are no remaining references in the codebase to the old splash icon assets for the splash screen rendering path.",
+        "A hard refresh shows the new logo and dark splash background consistently (no intermittent fallback to old logo).",
+        "No new service worker is added; if a service worker exists in the project, its caching behavior does not cause the old splash assets/colors to persist."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/components/ui (immutable UI component sources must be composed, not edited).",
-    "Do not change calendar functionality (date selection, disabled dates, navigation behavior); this is a layout/spacing fix only.",
-    "Use English for any user-facing text."
+    "Do not change splash/loading logic or app initialization timing/flow; only visual splash changes and initial document background/theme metadata updates are allowed.",
+    "Do not edit immutable frontend paths (frontend/src/main.tsx, frontend/src/hooks/useInternetIdentity.ts/tsx, frontend/src/hooks/useActor.ts, frontend/src/components/ui/*).",
+    "Keep all user-facing text in English."
   ],
   "nonGoals": [
-    "Do not add new calendar features (e.g., range selection, week numbers, custom tooltips).",
-    "Do not change the past attendance flow logic, validation rules, or save behavior.",
-    "Do not introduce new timers/intervals or polling related to the calendar UI."
+    "Redesigning the overall app theme or changing attendance/ranking logic.",
+    "Changing any backend (Motoko) canister logic.",
+    "Adding new features beyond fixing splash visuals and initial-load flash/caching behavior."
   ],
   "imageRequirements": {
-    "required": [],
+    "required": [
+      "Use the uploaded dark-mode logo artwork as-is (Bunkpro.logo_dark_mode.dim_1024x1024.png)"
+    ],
     "edits": []
   },
   "userProfileUpdate": {

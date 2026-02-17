@@ -14,10 +14,15 @@ import AccessControl "authorization/access-control";
 
 import Validation "validation";
 
+
+// Apply data migration
+
 actor {
   // Mix in the authorization logic
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
+  var requiredMinAttendancePercentage = 75;
 
   type AttendanceDay = {
     date : Time.Time;
@@ -283,5 +288,52 @@ actor {
         sortedEntries[start + i];
       },
     );
+  };
+
+  //-----------------------
+  // Attendance Calculator
+  //-----------------------
+
+  public query ({ caller }) func getRequiredAttendancePercentage() : async Nat {
+    requiredMinAttendancePercentage;
+  };
+
+  public shared ({ caller }) func setRequiredAttendancePercentage(newPercentage : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admin can update required attendance percentage");
+    };
+
+    if (newPercentage > 100 or newPercentage < 1) {
+      Runtime.trap("InvalidSet: newPercentage must be in range 1..=100");
+    };
+    requiredMinAttendancePercentage := newPercentage;
+  };
+
+  // Returns the maximum number of classes that can be bunked (missed)
+  // without dropping below the required percentage.
+  public query ({ caller }) func calculateMaxBunkableClasses(attendedClasses : Nat, totalClasses : Nat) : async Nat {
+    if (totalClasses == 0 or attendedClasses == 0) {
+      return 0;
+    };
+
+    // Calculate C as whole number (requiredMinPercentage in percent)
+    // existingAttendedOverTotal * 100 >= requiredMinPercentage * newTotal
+    // C_attend >= C_old * (attend + bunk) / (attend + bunk)
+    // 100 * attended / (total + x) >= requiredMinPercentage
+    // Cross-multiply (avoid float division)
+    // 100 * attended >= required * (total + x)
+    // 100 * attended >= total * required + x * required
+    // 100 * attended - total * required >= x * required
+    // (100 * attended - total * required) / required >= x
+    let requiredNat = requiredMinAttendancePercentage;
+    let leftSide = 100 * attendedClasses;
+    let rightSideBase = totalClasses * requiredNat;
+
+    if (leftSide < rightSideBase) {
+      return 0;
+    };
+
+    let numerator = leftSide - rightSideBase;
+    numerator / requiredNat;
   };
 };

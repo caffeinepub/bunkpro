@@ -2,9 +2,29 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-calendar-header-layout-in-the-mark-past-attendance-modal-so-it-has-three-clearly-separated-sections-header-navigation-row-weekday-row-date-grid-with-no-overlap-collision-and-the-month-title-remains-perfectly-centered-between-left-right-navigation-arrows-on-all-screen-sizes",
-      "featureTitle": "Fix the calendar header layout in the \"Mark Past Attendance\" modal so it has three clearly separated sections (Header navigation row, Weekday row, Date grid) with no overlap/collision, and the month title remains perfectly centered between left/right navigation arrows on all screen sizes.",
+      "featureId": "feature-eliminate-any-purple-pink-background-or-gradient-on-the-initial-loading-splash-overlay-by-forcing-a-solid-dark-background-color-that-matches-the-app-s-dark-theme-use-a-single-solid-color-such-as-0d0d0d-and-ensure-this-background-is-applied-regardless-of-current-theme-variables-or-tailwind-bg-background-css-variable-values",
+      "featureTitle": "Eliminate any purple/pink background or gradient on the initial loading splash overlay by forcing a solid dark background color that matches the app’s dark theme (use a single solid color such as #0D0D0D), and ensure this background is applied regardless of current theme variables or Tailwind `bg-background` CSS variable values.",
       "files": [
+        "frontend/src/components/system/InitialLoadSplash.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-124"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-prevent-any-pre-react-render-flash-of-purple-pink-by-setting-the-initial-document-background-to-the-same-solid-dark-color-used-for-the-splash-e-g-via-frontend-index-html-and-or-global-base-css-for-html-body-and-add-update-the-browser-theme-color-metadata-so-the-browser-ui-does-not-show-a-purple-theme-tint-during-initial-load",
+      "featureTitle": "Prevent any pre-React-render “flash” of purple/pink by setting the initial document background to the same solid dark color used for the splash (e.g., via `frontend/index.html` and/or global base CSS for `html, body`), and add/update the browser theme color metadata so the browser UI does not show a purple theme tint during initial load.",
+      "files": [
+        "frontend/index.html",
         "frontend/src/index.css"
       ],
       "components": [
@@ -16,7 +36,66 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-115"
+        "REQ-125"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-replace-the-splash-screen-logo-with-the-user-uploaded-finalized-logo-image-bunkpro-logo-dark-mode-png-by-adding-it-to-frontend-public-assets-generated-and-updating-branding-so-branding-getappicon-resolves-to-this-uploaded-asset-use-the-same-asset-for-both-dark-and-light-to-avoid-mismatches",
+      "featureTitle": "Replace the splash screen logo with the user-uploaded finalized logo image `Bunkpro.logo_dark_mode.png` by adding it to `frontend/public/assets/generated/` and updating branding so `BRANDING.getAppIcon(...)` resolves to this uploaded asset (use the same asset for both dark and light to avoid mismatches).",
+      "files": [
+        "frontend/src/components/system/InitialLoadSplash.tsx",
+        "frontend/src/lib/branding.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-126"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-splash-screen-layout-is-a-clean-minimal-fully-centered-logo-presentation-using-a-flex-layout-equivalent-to-display-flex-justify-content-center-align-items-center-height-100vh-with-no-extra-padding-margins-and-ensure-the-logo-scales-responsively",
+      "featureTitle": "Ensure the splash screen layout is a clean, minimal, fully centered logo presentation using a flex layout equivalent to `display:flex; justify-content:center; align-items:center; height:100vh`, with no extra padding/margins, and ensure the logo scales responsively.",
+      "files": [
+        "frontend/src/components/system/InitialLoadSplash.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-127"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-address-caching-stale-asset-root-causes-so-the-updated-splash-background-and-logo-reliably-appear-after-refresh-by-ensuring-no-old-assets-are-referenced-anywhere-and-by-making-the-updated-asset-path-the-single-source-of-truth-for-splash-branding",
+      "featureTitle": "Address caching/stale-asset root causes so the updated splash background and logo reliably appear after refresh by ensuring no old assets are referenced anywhere and by making the updated asset path the single source of truth for splash branding.",
+      "files": [
+        "frontend/src/components/system/InitialLoadSplash.tsx",
+        "frontend/src/lib/branding.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-128"
       ],
       "confidence": "high"
     }

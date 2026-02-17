@@ -1,25 +1,105 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Mark Past Attendance calendar header layout/spacing",
+  "title": "BunkPro — Dark splash background + updated logo with no purple flash",
   "requirements": [
     {
-      "id": "REQ-115",
-      "summary": "Adjust premium calendar CSS so the calendar header, weekday row, and date grid are clearly separated with a perfectly centered month title and no overlap at any viewport size.",
+      "id": "REQ-124",
+      "summary": "Force the splash overlay to use a solid dark background (#0D0D0D) independent of Tailwind theme variables to eliminate any purple/pink tint.",
       "acceptanceCriteria": [
-        "In the past attendance date picker (frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx, Calendar with className=\"premium-calendar\"), the header renders as: left arrow | centered month+year | right arrow, with the month text visually centered between arrows.",
-        "Header has horizontal padding of at least 16px on both sides and a bottom margin of at least 12px before the weekday row.",
-        "Weekday row (SU MO TU WE TH FR SA) is visually separated below the header and never overlaps with the arrows or month label.",
-        "Date grid is visually separated below the weekday row with clean padding/spacing; no elements overlap at any viewport width.",
-        "Month title does not shift position when navigating months; arrows stay pinned to left/right extremes.",
-        "Navigation arrow buttons have comfortable clickable/tappable area (8–12px padding equivalent) and do not collide with the weekday row.",
-        "No calendar functionality changes: date selection, disabled future dates, and month navigation behavior remain unchanged."
+        "On cold load and hard refresh, the splash overlay background is a solid dark color (no gradient) and never appears purple/pink at any moment.",
+        "The splash overlay does not use `bg-background` (or any CSS variable-driven background) in a way that can tint the background purple/pink in dark mode.",
+        "The splash remains full-screen and does not alter app initialization or loading timing/logic."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/components/system/InitialLoadSplash.tsx",
+          "operation": "modify",
+          "description": "Replace the splash overlay background styling so it is a fixed, solid #0D0D0D (avoid bg-background / CSS variables), ensuring full-screen coverage via fixed inset layout while keeping existing initialization behavior unchanged."
+        }
+      ]
+    },
+    {
+      "id": "REQ-125",
+      "summary": "Prevent pre-React purple/pink flash by setting initial document background to #0D0D0D and adding matching browser theme-color metadata.",
+      "acceptanceCriteria": [
+        "Before React mounts (and before any theme classes are applied), the page background is already solid dark and does not flash purple/pink.",
+        "`frontend/index.html` includes an explicit `meta name=\"theme-color\"` set to the same solid dark color used for the splash.",
+        "No changes are made that affect app bootstrapping logic; only initial/background styling and metadata are adjusted."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/index.html",
+          "operation": "modify",
+          "description": "Add `meta name=\"theme-color\"` with content #0D0D0D and set an explicit initial background for the document (e.g., inline style for html/body) so the page is dark before React/Tailwind/theme classes apply."
+        },
+        {
           "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Update the .premium-calendar DayPicker layout styles to enforce three non-overlapping vertical sections (caption/navigation row, weekday row, date grid). Implement a robust header layout (e.g., grid-based caption row with fixed left/right nav areas and a centered label that doesn’t affect flow or collide), ensure >=16px horizontal padding and >=12px spacing below the header, add explicit spacing between weekday row and date grid, and increase nav button hit area without changing behavior. Use the shadcn/ui Calendar composition as-is (do not modify files under frontend/src/components/ui); Verify the component's usage instructions before implementing."
+          "description": "Add/adjust global base styles for `html, body` to ensure a solid #0D0D0D fallback background that does not rely on theme CSS variables, while allowing the app theme styling to take over after mount as intended."
+        }
+      ]
+    },
+    {
+      "id": "REQ-126",
+      "summary": "Swap the splash logo to the uploaded finalized logo asset and make BRANDING.getAppIcon resolve to it for both dark and light modes.",
+      "acceptanceCriteria": [
+        "`frontend/public/assets/generated/Bunkpro.logo_dark_mode.png` exists and is served by the app.",
+        "The splash screen image source resolves to `Bunkpro.logo_dark_mode.png` (not the previous `bunkpro-app-icon-*.png` assets).",
+        "The splash logo renders with `object-contain` (no stretching/distortion) and remains crisp on mobile and desktop."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/Bunkpro.logo_dark_mode.dim_1024x1024.png",
+          "operation": "create",
+          "description": "Add the uploaded finalized logo artwork as a static asset at this exact path so it can be used as the single splash/logo source of truth."
+        },
+        {
+          "path": "frontend/src/lib/branding.ts",
+          "operation": "modify",
+          "description": "Update `BRANDING.getAppIcon(...)` to always return `/assets/generated/Bunkpro.logo_dark_mode.dim_1024x1024.png` for both dark and light modes to avoid mismatches and ensure the splash uses the new logo."
+        },
+        {
+          "path": "frontend/src/components/system/InitialLoadSplash.tsx",
+          "operation": "modify",
+          "description": "Ensure the splash logo `img` uses `BRANDING.getAppIcon(...)` (now pointing at the uploaded asset) and keeps `object-contain` with responsive sizing for crisp rendering across mobile/desktop."
+        }
+      ]
+    },
+    {
+      "id": "REQ-127",
+      "summary": "Make the splash layout minimal and perfectly centered with a flex full-viewport container and responsive logo scaling.",
+      "acceptanceCriteria": [
+        "The splash overlay centers the logo both horizontally and vertically and occupies the full viewport height (100vh / fixed inset equivalent).",
+        "The logo remains centered and appropriately sized across common breakpoints (small phones to desktop) with no cropping or distortion.",
+        "Only visual/layout changes are applied to the splash; loading/initialization behavior remains unchanged."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/system/InitialLoadSplash.tsx",
+          "operation": "modify",
+          "description": "Refine the splash container and inner layout to be a clean, minimal centered presentation (flex center, full-viewport, no unintended padding/margins) and adjust logo sizing rules to scale responsively without distortion."
+        }
+      ]
+    },
+    {
+      "id": "REQ-128",
+      "summary": "Eliminate stale references to old splash assets and ensure the updated logo/background are the single source of truth for splash branding to reduce caching issues after refresh.",
+      "acceptanceCriteria": [
+        "There are no remaining references in the codebase to the old splash icon assets for the splash screen rendering path.",
+        "A hard refresh shows the new logo and dark splash background consistently (no intermittent fallback to old logo).",
+        "No new service worker is added; if a service worker exists in the project, its caching behavior does not cause the old splash assets/colors to persist."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/branding.ts",
+          "operation": "modify",
+          "description": "Remove/replace any remaining references in splash branding selection to the old `bunkpro-app-icon-*.png` assets so the splash logo path is a single stable value pointing to `/assets/generated/Bunkpro.logo_dark_mode.dim_1024x1024.png`."
+        },
+        {
+          "path": "frontend/src/components/system/InitialLoadSplash.tsx",
+          "operation": "modify",
+          "description": "Verify the splash rendering path cannot fall back to any old app-icon assets and continues to use the forced dark background; keep all loading/initialization timing and logic unchanged."
         }
       ]
     }

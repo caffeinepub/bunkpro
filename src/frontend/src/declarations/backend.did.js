@@ -37,6 +37,11 @@ export const idlService = IDL.Service({
   'addDailyAttendance' : IDL.Func([Time, IDL.Vec(IDL.Text)], [], []),
   'addPoints' : IDL.Func([IDL.Nat], [AddPointsResult], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'calculateMaxBunkableClasses' : IDL.Func(
+      [IDL.Nat, IDL.Nat],
+      [IDL.Nat],
+      ['query'],
+    ),
   'deleteCallerUser' : IDL.Func([], [], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -50,6 +55,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(RankingDetails)],
       ['query'],
     ),
+  'getRequiredAttendancePercentage' : IDL.Func([], [IDL.Nat], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -57,6 +63,7 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setRequiredAttendancePercentage' : IDL.Func([IDL.Nat], [], []),
 });
 
 export const idlInitArgs = [];
@@ -91,6 +98,11 @@ export const idlFactory = ({ IDL }) => {
     'addDailyAttendance' : IDL.Func([Time, IDL.Vec(IDL.Text)], [], []),
     'addPoints' : IDL.Func([IDL.Nat], [AddPointsResult], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'calculateMaxBunkableClasses' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Nat],
+        ['query'],
+      ),
     'deleteCallerUser' : IDL.Func([], [], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -104,6 +116,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(RankingDetails)],
         ['query'],
       ),
+    'getRequiredAttendancePercentage' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -111,6 +124,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setRequiredAttendancePercentage' : IDL.Func([IDL.Nat], [], []),
   });
 };
 

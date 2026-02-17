@@ -1,4 +1,4 @@
-// Home dashboard with notification category checks for reward alerts and past attendance marking
+// Home dashboard with notification category checks for reward alerts, past attendance marking, and wiring to parent-provided mark-today handler for notification click flow.
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Plus, Calendar, TrendingUp, AlertCircle, History } from 'lucide-react';
 import { useAppStore } from '../state/appStore';
 import { CircularProgress } from '../components/dashboard/CircularProgress';
 import { SubjectAttendanceCard } from '../components/dashboard/SubjectAttendanceCard';
+import { BunkableClassesCard } from '../components/dashboard/BunkableClassesCard';
 import { SubjectFormDialog } from '../components/subjects/SubjectFormDialog';
 import { MarkPastAttendanceSheet } from '../components/pastAttendance/MarkPastAttendanceSheet';
 import { calculateSubjectStats, calculateOverallStats } from '../domain/attendanceCalculations';
@@ -173,6 +174,14 @@ export function HomeDashboardPage({ onNavigate, onOpenMarkToday }: HomeDashboard
           </div>
         </CardContent>
       </Card>
+
+      {/* Bunkable Classes Card */}
+      {overallStats.total > 0 && (
+        <BunkableClassesCard
+          attendedClasses={overallStats.attended}
+          totalClasses={overallStats.total}
+        />
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

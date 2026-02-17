@@ -120,14 +120,17 @@ export interface backendInterface {
     addDailyAttendance(date: Time, courses: Array<string>): Promise<void>;
     addPoints(pointsToAdd: bigint): Promise<AddPointsResult>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    calculateMaxBunkableClasses(attendedClasses: bigint, totalClasses: bigint): Promise<bigint>;
     deleteCallerUser(): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getGlobalRankingPaginated(start: bigint, count: bigint): Promise<Array<RankingDetails>>;
     getRankingByCollege(college: string, start: bigint, count: bigint): Promise<Array<RankingDetails>>;
+    getRequiredAttendancePercentage(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setRequiredAttendancePercentage(newPercentage: bigint): Promise<void>;
 }
 import type { AddPointsResult as _AddPointsResult, RankingDetails as _RankingDetails, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -185,6 +188,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n3(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async calculateMaxBunkableClasses(arg0: bigint, arg1: bigint): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.calculateMaxBunkableClasses(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.calculateMaxBunkableClasses(arg0, arg1);
             return result;
         }
     }
@@ -258,6 +275,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getRequiredAttendancePercentage(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRequiredAttendancePercentage();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRequiredAttendancePercentage();
+            return result;
+        }
+    }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -297,6 +328,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
+    async setRequiredAttendancePercentage(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setRequiredAttendancePercentage(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setRequiredAttendancePercentage(arg0);
             return result;
         }
     }

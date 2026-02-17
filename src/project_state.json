@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 53,
+  "projectStateVersion": 59,
   "summary": "Upgrade BunkPro with (1) a new \"Mark Past Attendance\" flow that lets users mark attendance for any past date via a calendar, prevents future/duplicate marking, stores per-date attendance records, and safely recalculates streak/points; (2) disable any automatic \"auto-absent\" handling for missed days; and (3) add a once-per-day reminder push notification if today’s attendance is not marked by a configured time, respecting notification settings and deep-linking into the attendance screen on both app and web.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -23,9 +23,11 @@
     "Critical: After logout, the app shows an “Unauthorized User” error (logout flow is not clearing auth/session state and/or API calls continue after logout).",
     "Push notifications not working after APK installation (no notifications received).",
     "Calendar header UI issue: month name and navigation arrows are overlapping/too close; needs centered month text with left/right arrows at extremes and proper padding.",
-    "Bug: In 'Mark Past Attendance' flow, calendar date selection updates visually but subjects do not display after selecting a date (selectedDate not persisted / subject filtering by weekday not triggered; UI not re-rendering)."
+    "Bug: In 'Mark Past Attendance' flow, calendar date selection updates visually but subjects do not display after selecting a date (selectedDate not persisted / subject filtering by weekday not triggered; UI not re-rendering).",
+    "Splash screen still shows purple/pink background and old logo on initial load (branding not updated; possible index.html/body/theme_color/service-worker cache causing a purple flash and stale assets)."
   ],
   "isFixRequest": true,
+  "imageRequirements": "## Required Images\n- Use the uploaded dark-mode logo artwork as-is (Bunkpro.logo_dark_mode.dim_1024x1024.png)",
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -826,6 +828,94 @@
         "REQ-115"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-initial-loading-splash-screen-ui-frontend-src-components-system-initialloadsplash-tsx-to-remove-the-purple-pink-gradient-background-and-instead-use-the-app-s-standard-dark-theme-background-color-same-background-styling-used-by-the-main-app-ui-while-keeping-the-splash-overlay-behavior-unchanged",
+      "title": "Update the initial loading splash screen UI (frontend/src/components/system/InitialLoadSplash.tsx) to remove the purple/pink gradient background and instead use the app’s standard dark theme background color (same background styling used by the main app UI), while keeping the splash overlay behavior unchanged.",
+      "reqIds": [
+        "REQ-116"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-adjust-the-splash-screen-layout-to-be-a-clean-minimal-fully-centered-logo-presentation-center-the-logo-both-horizontally-and-vertically-using-a-flex-layout-equivalent-to-display-flex-justify-content-center-align-items-center-height-100vh-with-no-extra-padding-margins-and-ensure-the-logo-scales-responsively-without-stretching-or-pixelation",
+      "title": "Adjust the splash screen layout to be a clean, minimal, fully centered logo presentation: center the logo both horizontally and vertically using a flex layout equivalent to `display:flex; justify-content:center; align-items:center; height:100vh`, with no extra padding/margins, and ensure the logo scales responsively without stretching or pixelation.",
+      "reqIds": [
+        "REQ-117"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-splash-screen-s-displayed-logo-asset-with-the-newly-finalized-bunkpro-logo-by-ensuring-the-splash-uses-the-current-branding-provided-app-icon-path-branding-getappicon-that-points-at-the-finalized-asset-under-frontend-public-assets-generated-and-remove-the-logo-image-from-settings-about-frontend-src-components-settings-aboutcard-tsx-so-the-about-section-shows-only-text-details-app-name-info-version-founder-copyright-without-rendering-any-logo-image",
+      "title": "Replace the splash screen’s displayed logo asset with the newly finalized BunkPro logo by ensuring the splash uses the current branding-provided app icon path (BRANDING.getAppIcon) that points at the finalized asset under frontend/public/assets/generated, and remove the logo image from Settings → About (frontend/src/components/settings/AboutCard.tsx) so the About section shows only text details (app name/info/version/founder/copyright) without rendering any logo image.",
+      "reqIds": [
+        "REQ-118"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-dashboard-ui-frontend-src-pages-homedashboardpage-tsx-to-render-a-new-card-section-placed-below-the-existing-overall-attendance-attendance-percentage-card-titled-exactly-bunkable-classes-that-displays-the-backend-calculated-bunkable-count-for-the-current-overall-attendance-totalclasses-overall-attended-missed-attendedclasses-overall-attended",
+      "title": "Update the Dashboard UI (frontend/src/pages/HomeDashboardPage.tsx) to render a new card section placed below the existing Overall Attendance/Attendance Percentage card, titled exactly \"Bunkable Classes\", that displays the backend-calculated bunkable count for the current overall attendance (TotalClasses = overall attended + missed; AttendedClasses = overall attended).",
+      "reqIds": [
+        "REQ-121"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-clean-modern-risk-styling-on-the-bunkable-classes-card-using-color-indicators-green-safe-orange-risk-red-critical-apply-red-highlight-when-x-0-or-when-attendance-is-below-the-required-limit-apply-green-highlight-when-attendance-is-very-safe-otherwise-apply-orange-highlight",
+      "title": "Implement clean modern risk styling on the \"Bunkable Classes\" card using color indicators: Green = Safe, Orange = Risk, Red = Critical. Apply Red highlight when X = 0 or when attendance is below the required limit; apply Green highlight when attendance is very safe; otherwise apply Orange highlight.",
+      "reqIds": [
+        "REQ-122"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-wire-the-dashboard-bunkable-classes-display-to-the-backend-for-calculation-and-required-percentage-retrieval-do-not-rely-only-on-frontend-calculations-if-the-backend-is-unavailable-or-the-call-fails-fall-back-to-a-clear-english-non-blocking-error-state-on-the-card-while-keeping-the-rest-of-the-dashboard-functional",
+      "title": "Wire the dashboard bunkable-classes display to the backend for calculation and required percentage retrieval (do not rely only on frontend calculations). If the backend is unavailable or the call fails, fall back to a clear English non-blocking error state on the card while keeping the rest of the dashboard functional.",
+      "reqIds": [
+        "REQ-123"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-eliminate-any-purple-pink-background-or-gradient-on-the-initial-loading-splash-overlay-by-forcing-a-solid-dark-background-color-that-matches-the-app-s-dark-theme-use-a-single-solid-color-such-as-0d0d0d-and-ensure-this-background-is-applied-regardless-of-current-theme-variables-or-tailwind-bg-background-css-variable-values",
+      "title": "Eliminate any purple/pink background or gradient on the initial loading splash overlay by forcing a solid dark background color that matches the app’s dark theme (use a single solid color such as #0D0D0D), and ensure this background is applied regardless of current theme variables or Tailwind `bg-background` CSS variable values.",
+      "reqIds": [
+        "REQ-124"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-prevent-any-pre-react-render-flash-of-purple-pink-by-setting-the-initial-document-background-to-the-same-solid-dark-color-used-for-the-splash-e-g-via-frontend-index-html-and-or-global-base-css-for-html-body-and-add-update-the-browser-theme-color-metadata-so-the-browser-ui-does-not-show-a-purple-theme-tint-during-initial-load",
+      "title": "Prevent any pre-React-render “flash” of purple/pink by setting the initial document background to the same solid dark color used for the splash (e.g., via `frontend/index.html` and/or global base CSS for `html, body`), and add/update the browser theme color metadata so the browser UI does not show a purple theme tint during initial load.",
+      "reqIds": [
+        "REQ-125"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-splash-screen-logo-with-the-user-uploaded-finalized-logo-image-bunkpro-logo-dark-mode-png-by-adding-it-to-frontend-public-assets-generated-and-updating-branding-so-branding-getappicon-resolves-to-this-uploaded-asset-use-the-same-asset-for-both-dark-and-light-to-avoid-mismatches",
+      "title": "Replace the splash screen logo with the user-uploaded finalized logo image `Bunkpro.logo_dark_mode.png` by adding it to `frontend/public/assets/generated/` and updating branding so `BRANDING.getAppIcon(...)` resolves to this uploaded asset (use the same asset for both dark and light to avoid mismatches).",
+      "reqIds": [
+        "REQ-126"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-splash-screen-layout-is-a-clean-minimal-fully-centered-logo-presentation-using-a-flex-layout-equivalent-to-display-flex-justify-content-center-align-items-center-height-100vh-with-no-extra-padding-margins-and-ensure-the-logo-scales-responsively",
+      "title": "Ensure the splash screen layout is a clean, minimal, fully centered logo presentation using a flex layout equivalent to `display:flex; justify-content:center; align-items:center; height:100vh`, with no extra padding/margins, and ensure the logo scales responsively.",
+      "reqIds": [
+        "REQ-127"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-address-caching-stale-asset-root-causes-so-the-updated-splash-background-and-logo-reliably-appear-after-refresh-by-ensuring-no-old-assets-are-referenced-anywhere-and-by-making-the-updated-asset-path-the-single-source-of-truth-for-splash-branding",
+      "title": "Address caching/stale-asset root causes so the updated splash background and logo reliably appear after refresh by ensuring no old assets are referenced anywhere and by making the updated asset path the single source of truth for splash branding.",
+      "reqIds": [
+        "REQ-128"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1143,6 +1233,34 @@
       "id": "AR-84",
       "summary": "Upgrade existing calendar UI design/layout only (no functionality changes): fix month/header arrow alignment with flex + padding; premium dark theme container styling; improved date states (default/today/selected/disabled) with smooth animations; touch-friendly circular nav buttons; mobile-responsive spacing.",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-87",
+      "summary": "Fix web app splash screen UI: remove purple/pink background, use app dark theme background, center the updated finalized BunkPro logo with responsive high-res scaling, keep existing loading behavior intact, and remove the logo currently shown in Settings → About section.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-88",
+      "summary": "Add a Dashboard \"Bunkable Classes\" card that shows the maximum number of future classes a student can miss while staying above the required attendance %, with green/orange/red risk styling and a below-limit warning; compute/recalculate on backend using an admin-configurable required % and update in real time after attendance changes; must work on Web and Android.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-89",
+      "summary": "Add backend support for calculating the maximum number of future classes that can be missed (“bunked”) while still meeting a required minimum attendance percentage, using the formula constraint: AttendedClasses / (TotalClasses + X) ≥ RequiredPercentage, and return the maximum integer X (>= 0). If TotalClasses is 0, return X = 0.",
+      "reqIds": [
+        "REQ-119"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-90",
+      "summary": "Store the required minimum attendance percentage in the backend as a configurable value with a default of 75, and provide backend methods to (a) read the current required percentage and (b) update it only for admin callers.",
+      "reqIds": [
+        "REQ-120"
+      ],
       "status": "pending"
     }
   ],

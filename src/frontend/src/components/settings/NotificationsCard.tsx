@@ -1,4 +1,4 @@
-// Settings card for managing browser notification preferences with category toggles, clear limitation messaging using shared copy that explicitly states FCM/background push is not supported, and test notification functionality.
+// Settings card for managing browser notification preferences with category toggles, clear limitation messaging using shared copy that explicitly states FCM/background push is not supported, test notification functionality, and Android-only disabled toggle with "Coming Soon" label.
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import {
   sendTestNotification,
 } from '../../notifications/notificationsApi';
 import { NOTIFICATION_LIMITATIONS, NOTIFICATION_PERMISSION_MESSAGES } from '../../notifications/notificationLimitationsCopy';
+import { isAndroid } from '../../lib/platform';
 import type { NotificationPreferences } from '../../domain/attendanceTypes';
 
 interface NotificationsCardProps {
@@ -32,6 +33,7 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
 
   const supported = isNotificationSupported();
   const canEnable = supported && permission === 'granted';
+  const isAndroidDevice = isAndroid();
 
   const handleRequestPermission = async () => {
     setIsRequesting(true);
@@ -235,6 +237,33 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
                       onCheckedChange={() => handleTogglePreference('rewardAlerts')}
                     />
                   </div>
+
+                  {/* Android Notifications - Coming Soon (Android only) */}
+                  {isAndroidDevice && (
+                    <>
+                      <Separator className="my-2" />
+                      <div className="flex items-center justify-between opacity-60">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <Label htmlFor="android-notifications" className="text-sm font-normal">
+                              Android Push Notifications
+                            </Label>
+                            <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                              Coming Soon
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Native Android push notifications are not available in this build
+                          </p>
+                        </div>
+                        <Switch
+                          id="android-notifications"
+                          checked={false}
+                          disabled={true}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <Separator />

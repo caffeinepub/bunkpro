@@ -1,109 +1,45 @@
 {
   "kind": "build_request",
-  "title": "Remove splash screen and load app directly into Login/Dashboard",
+  "title": "Add centered subtitle under Dashboard heading on Home page",
   "projectName": "BunkPro",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-130",
-      "text": "Completely remove the splash screen from the codebase by deleting `frontend/src/components/system/InitialLoadSplash.tsx` and removing all imports/usages/references to it across the app.",
+      "id": "REQ-136",
+      "text": "On the main Home Dashboard page (`frontend/src/pages/HomeDashboardPage.tsx`), add a new centered subtitle text directly below the \"Dashboard\" heading that displays exactly: \"Be honest & mark attendance\". Style it to be clean and minimal: slightly smaller than the Dashboard title, medium font weight, subtle opacity (~80–90%), with proper vertical spacing so it does not look crowded. The text color must be theme-aware and adapt correctly to dark mode using existing theme-based text colors (no harsh bright colors). Do not change any dashboard functionality, do not modify the existing layout structure beyond inserting this single line of text, and do not affect responsiveness or mobile spacing.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-4"
         ],
         "quotes": [
-          "Completely delete the splash screen from the web app.\nThe app should load directly into the main screen without any splash screen.",
-          "There must be no SplashScreen component in the project."
+          "Below the Dashboard section/title, add the following text: \"Be honest & mark attendance\"",
+          "Center align the text",
+          "Use slightly smaller font than the Dashboard title",
+          "Slight opacity (like 80–90%)",
+          "Text color should adapt properly to dark mode",
+          "Do NOT Change any dashboard functionality / Modify layout structure / Affect responsiveness / Break mobile view spacing"
         ]
       },
       "acceptanceCriteria": [
-        "`frontend/src/components/system/InitialLoadSplash.tsx` no longer exists in the repository.",
-        "The project compiles with no references/imports of `InitialLoadSplash` (or any splash/splash-screen component) remaining.",
-        "No splash UI (logo/dots/overlay) is rendered at any point during app startup."
-      ]
-    },
-    {
-      "id": "REQ-131",
-      "text": "Remove any splash-related conditional render logic and any artificial initialization delays so the app renders the real first screen immediately (Login when logged out; Dashboard when logged in). Specifically remove the `isInitializing` state and the startup `setTimeout` delay currently gating the app UI in `frontend/src/App.tsx`.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "App should load directly into:\nDashboard (if logged in)\nLogin screen (if not logged in)\nNo intermediate splash screen should appear."
-        ]
-      },
-      "acceptanceCriteria": [
-        "On refresh, the app does not wait on any fixed timer before rendering Login/Dashboard.",
-        "When `state.userProfile` is absent, the first rendered screen is the Login page without an intermediate splash.",
-        "When `state.userProfile` is present, the first rendered screen is the Home/Dashboard without an intermediate splash."
-      ]
-    },
-    {
-      "id": "REQ-132",
-      "text": "Remove any initial loading/splash markup from the HTML entrypoint and public assets (e.g., any `#splash-screen` div, hardcoded loading spinner markup, or similar placeholders) so the only startup container is the React root.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Check and remove from:\nindex.html\npublic folder\nroot div loading markup\nAny hardcoded loading spinner or splash div"
-        ]
-      },
-      "acceptanceCriteria": [
-        "`frontend/index.html` contains only the React root container and no splash/loading placeholder elements (e.g., no `id=\"splash-screen\"`).",
-        "No public/static HTML assets include splash/loading markup that is displayed before React renders."
-      ]
-    },
-    {
-      "id": "REQ-133",
-      "text": "Remove any splash-specific styling (CSS classes, inline styles, animations) so no leftover splash styles affect the app; keep a clean, solid dark initial background to avoid any pre-render background flash.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Delete:\nSplash screen CSS\nSplash-related background colors\nInline loading styles\nPurple/pink background styles\nAny animation tied to splash\nEnsure no leftover CSS affects body background.",
-          "✔ No background flash\n✔ Clean dark theme background"
-        ]
-      },
-      "acceptanceCriteria": [
-        "No CSS/animation is retained solely for splash rendering (e.g., bounce-dot loading indicators) after the splash component is removed.",
-        "On hard refresh, the document background remains a solid dark color before React mounts (no purple/pink flash).",
-        "Removing the splash does not change the normal in-app theming behavior after the app mounts."
-      ]
-    },
-    {
-      "id": "REQ-134",
-      "text": "If the project includes any Service Worker / PWA precache behavior, update it so splash-related cached assets and any cached HTML that could reintroduce splash UI are not served; ensure the newest version loads immediately after deployment.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Remove Service Worker Cache (If Exists)\n\nIf splash screen is cached:\nClear service worker cache\nRemove cached splash assets\nEnsure new version loads immediately"
-        ]
-      },
-      "acceptanceCriteria": [
-        "If a Service Worker exists in the project, it does not cache or serve any splash-screen-related assets or HTML that would recreate a splash UI.",
-        "After a deployment, a normal reload shows the updated app (no stale splash artifacts).",
-        "If no Service Worker exists, there are no code references attempting to register one."
+        "Home Dashboard renders the exact text \"Be honest & mark attendance\" immediately below the \"Dashboard\" heading.",
+        "The new text is center-aligned, uses a slightly smaller font than the \"Dashboard\" title, medium font weight, and reduced opacity (~80–90%).",
+        "Spacing between the \"Dashboard\" heading and the new text is present and looks uncluttered on both mobile and desktop widths.",
+        "Text uses theme-based colors and remains readable in light and dark modes without using harsh bright colors.",
+        "No other Home Dashboard behavior, existing layout sections, or responsiveness changes as a result of this update."
       ]
     }
   ],
   "constraints": [
-    "Do not hide the splash screen via CSS (e.g., `display:none`)—the splash component, logic, and assets must be removed from the project.",
-    "Do not edit files under `frontend/src/components/ui`, `frontend/src/main.tsx`, `frontend/src/hooks/useInternetIdentity.ts(x)`, or `frontend/src/hooks/useActor.ts` (immutable paths).",
-    "Use English for any user-facing text."
+    "Frontend changes must not edit any immutable paths listed in SYSTEM_CONTEXT.",
+    "Do not change any dashboard functionality or business logic.",
+    "Do not modify the overall Home Dashboard layout structure other than inserting the single subtitle line.",
+    "Must remain responsive and not break mobile spacing."
   ],
   "nonGoals": [
-    "Do not change core attendance logic, ranking logic, persistence/backup formats, or notification behavior beyond removing splash-related UI and caching artifacts.",
-    "Do not redesign the app UI theme; only remove splash-related UI/logic and prevent pre-render flashing."
+    "Changing any attendance calculations, state, or backend behavior.",
+    "Redesigning the Home Dashboard header area beyond adding the requested single line of text.",
+    "Adding new settings, toggles, animations, or navigation changes related to this subtitle."
   ],
   "imageRequirements": {
     "required": [],

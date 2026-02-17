@@ -1,4 +1,4 @@
-// Home dashboard with notification category checks for reward alerts, past attendance marking, and wiring to parent-provided mark-today handler for notification click flow.
+// Home dashboard with notification category checks for reward alerts, past attendance marking, mark-today handler wiring, and centered subtitle under Dashboard heading.
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -121,8 +121,11 @@ export function HomeDashboardPage({ onNavigate, onOpenMarkToday }: HomeDashboard
     <div className="space-y-6 pb-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-center text-base font-medium text-foreground/85 mt-2 mb-1">
+            Be honest & mark attendance
+          </p>
           <p className="text-muted-foreground">Track your attendance</p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)} size="sm">

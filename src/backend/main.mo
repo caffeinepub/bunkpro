@@ -337,3 +337,4 @@ actor {
     numerator / requiredNat;
   };
 };
+

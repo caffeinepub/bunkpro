@@ -1,13 +1,10 @@
 # Specification
 
 ## Summary
-**Goal:** Remove all splash-screen behavior so the app loads immediately into Login (logged out) or Dashboard (logged in), with no startup delay or splash UI.
+**Goal:** Add a clean, theme-aware centered subtitle directly under the "Dashboard" heading on the Home Dashboard page.
 
 **Planned changes:**
-- Delete `frontend/src/components/system/InitialLoadSplash.tsx` and remove all imports/usages/references to any splash/splash-screen component across the app.
-- Remove splash-related initialization gating in `frontend/src/App.tsx`, including the `isInitializing` state and any startup `setTimeout` delay, so the first real screen renders immediately.
-- Strip any splash/loading placeholder markup from `frontend/index.html` and any public/static HTML assets so only the React root container remains.
-- Remove splash-specific CSS/animations and ensure a solid dark pre-mount document background to prevent any startup background flash.
-- If a Service Worker/PWA cache is present, update it to avoid caching/serving any splash-related assets or HTML, and avoid stale cached splash artifacts after deployment (or remove registration references if none should exist).
+- Insert a single new centered subtitle line below the "Dashboard" heading in `frontend/src/pages/HomeDashboardPage.tsx` with the exact text: "Be honest & mark attendance".
+- Style the subtitle to be slightly smaller than the title, medium font weight, subtle opacity (~80–90%), with comfortable vertical spacing and theme-based text color that works in light/dark mode.
 
-**User-visible outcome:** On refresh, the app renders directly to Login when logged out or the Dashboard/Home when logged in, with no splash screen, no artificial delay, and no pre-render flashing.
+**User-visible outcome:** Users see a centered subtitle “Be honest & mark attendance” immediately below the Dashboard heading, readable in both light and dark mode, with no other layout or behavior changes.

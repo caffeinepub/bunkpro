@@ -1,104 +1,23 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "BunkPro — Remove splash screen and render Login/Dashboard immediately",
+  "title": "BunkPro — Add centered subtitle under Dashboard heading",
   "requirements": [
     {
-      "id": "REQ-130",
-      "summary": "Delete the InitialLoadSplash component and remove all imports/usages so no splash component remains in the project.",
+      "id": "REQ-136",
+      "summary": "Insert a theme-aware, centered subtitle line under the Dashboard heading on the Home Dashboard page without altering existing layout or behavior.",
       "acceptanceCriteria": [
-        "`frontend/src/components/system/InitialLoadSplash.tsx` no longer exists in the repository.",
-        "The project compiles with no references/imports of `InitialLoadSplash` (or any splash/splash-screen component) remaining.",
-        "No splash UI (logo/dots/overlay) is rendered at any point during app startup."
+        "Home Dashboard renders the exact text \"Be honest & mark attendance\" immediately below the \"Dashboard\" heading.",
+        "The new text is center-aligned, uses a slightly smaller font than the \"Dashboard\" title, medium font weight, and reduced opacity (~80–90%).",
+        "Spacing between the \"Dashboard\" heading and the new text is present and looks uncluttered on both mobile and desktop widths.",
+        "Text uses theme-based colors and remains readable in light and dark modes without using harsh bright colors.",
+        "No other Home Dashboard behavior, existing layout sections, or responsiveness changes as a result of this update."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/system/InitialLoadSplash.tsx",
-          "operation": "delete",
-          "description": "Delete the splash screen component file entirely (do not hide via CSS)."
-        },
-        {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
           "operation": "modify",
-          "description": "Remove the import and any remaining references/usages of `InitialLoadSplash` so the app no longer renders or depends on a splash component."
-        }
-      ]
-    },
-    {
-      "id": "REQ-131",
-      "summary": "Remove splash-related initialization gating (isInitializing + setTimeout delay) so the app renders Login (logged out) or Dashboard (logged in) immediately.",
-      "acceptanceCriteria": [
-        "On refresh, the app does not wait on any fixed timer before rendering Login/Dashboard.",
-        "When `state.userProfile` is absent, the first rendered screen is the Login page without an intermediate splash.",
-        "When `state.userProfile` is present, the first rendered screen is the Home/Dashboard without an intermediate splash."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Remove `isInitializing` state, remove the startup `setTimeout` delay effect, and remove the conditional render branch that gated the UI behind initialization so the first render is the real Login/Dashboard immediately."
-        }
-      ]
-    },
-    {
-      "id": "REQ-132",
-      "summary": "Remove any splash/loading placeholder markup from the HTML entrypoint and public assets so only the React root container exists at startup.",
-      "acceptanceCriteria": [
-        "`frontend/index.html` contains only the React root container and no splash/loading placeholder elements (e.g., no `id=\"splash-screen\"`).",
-        "No public/static HTML assets include splash/loading markup that is displayed before React renders."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/index.html",
-          "operation": "modify",
-          "description": "Ensure the body contains only the React root container and no splash/loading placeholder elements or spinner markup prior to React mounting."
-        },
-        {
-          "path": "frontend/public/assets/generated/bunkpro-splash.dim_1920x1080.png",
-          "operation": "delete",
-          "description": "Remove the generated splash image asset if present so no unused splash-specific public asset remains available to be referenced or cached."
-        }
-      ]
-    },
-    {
-      "id": "REQ-133",
-      "summary": "Remove splash-specific styling/animations and ensure a solid dark initial background to prevent any pre-render flash while preserving normal in-app theming.",
-      "acceptanceCriteria": [
-        "No CSS/animation is retained solely for splash rendering (e.g., bounce-dot loading indicators) after the splash component is removed.",
-        "On hard refresh, the document background remains a solid dark color before React mounts (no purple/pink flash).",
-        "Removing the splash does not change the normal in-app theming behavior after the app mounts."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Audit and remove any global CSS/animations that existed only to support the splash screen (if any), while keeping a solid dark pre-mount background behavior intact and not altering normal theme behavior post-mount."
-        },
-        {
-          "path": "frontend/index.html",
-          "operation": "modify",
-          "description": "Keep/adjust the pre-mount background styling so the document shows a solid dark background before React mounts and does not flash other colors."
-        }
-      ]
-    },
-    {
-      "id": "REQ-134",
-      "summary": "If any Service Worker / PWA caching exists in the running browser, ensure it cannot serve stale splash-related cached assets/HTML and that the newest version loads after deployment.",
-      "acceptanceCriteria": [
-        "If a Service Worker exists in the project, it does not cache or serve any splash-screen-related assets or HTML that would recreate a splash UI.",
-        "After a deployment, a normal reload shows the updated app (no stale splash artifacts).",
-        "If no Service Worker exists, there are no code references attempting to register one."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add a startup safeguard that, when Service Worker APIs are available, unregisters existing service workers and clears relevant Cache Storage entries to prevent any previously cached splash artifacts or stale HTML from being served after deployment (without adding any new service worker registration)."
-        },
-        {
-          "path": "frontend/index.html",
-          "operation": "modify",
-          "description": "Verify the HTML entrypoint does not include any service worker registration script tags or splash-related pre-render markup that could be cached and replayed."
+          "description": "Add a single new centered subtitle text node directly below the existing \"Dashboard\" <h1> that displays exactly \"Be honest & mark attendance\". Style using existing theme-aware text utilities (e.g., muted/foreground-based color), medium font weight, slightly smaller typography than the title, and subtle opacity (~80–90%) with minimal vertical spacing so the header does not look crowded; do not change any existing dashboard logic, responsiveness, or layout structure beyond inserting this single line."
         }
       ]
     }

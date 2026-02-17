@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 63,
+  "projectStateVersion": 71,
   "summary": "Upgrade BunkPro with (1) a new \"Mark Past Attendance\" flow that lets users mark attendance for any past date via a calendar, prevents future/duplicate marking, stores per-date attendance records, and safely recalculates streak/points; (2) disable any automatic \"auto-absent\" handling for missed days; (3) add a once-per-day reminder push notification if today’s attendance is not marked by a configured time, respecting notification settings and deep-linking into the attendance screen on both app and web; and (4) remove the web app splash/initial loading screen entirely so the app loads directly into Login/Dashboard with no intermediate splash UI or cached splash artifacts.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -26,7 +26,7 @@
     "Bug: In 'Mark Past Attendance' flow, calendar date selection updates visually but subjects do not display after selecting a date (selectedDate not persisted / subject filtering by weekday not triggered; UI not re-rendering).",
     "Splash screen still shows purple/pink background and old logo on initial load (branding not updated; possible index.html/body/theme_color/service-worker cache causing a purple flash and stale assets)."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -963,6 +963,22 @@
         "REQ-134"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-settings-notifications-ui-to-show-an-android-only-notifications-toggle-that-is-always-disabled-and-clearly-labeled-as-coming-soon-while-keeping-the-existing-web-browser-notifications-flow-fully-working-and-unchanged-for-non-android-users-details-detect-android-at-runtime-e-g-via-user-agent-platform-detection-when-the-user-is-on-android-render-an-additional-row-in-the-notifications-card-for-android-notifications-with-a-toggle-control-rendered-in-a-disabled-state-cannot-be-toggled-visible-label-text-that-includes-coming-soon-supporting-helper-text-in-english-that-makes-it-clear-android-push-notifications-are-not-available-in-this-build-do-not-block-or-degrade-the-existing-browser-notifications-api-permission-flow-enable-notifications-toggle-category-toggles-or-send-test-notification-behavior-for-web-ensure-user-facing-strings-added-for-this-android-toggle-are-in-english",
+      "title": "Update Settings → Notifications UI to show an Android-only notifications toggle that is always disabled and clearly labeled as “Coming Soon”, while keeping the existing Web/browser notifications flow fully working and unchanged for non-Android users.\n\nDetails:\n- Detect Android at runtime (e.g., via user agent / platform detection).\n- When the user is on Android, render an additional row in the Notifications card for Android notifications with:\n  - A toggle control rendered in a disabled state (cannot be toggled).\n  - Visible label text that includes “Coming Soon”.\n  - Supporting helper text in English that makes it clear Android push notifications are not available in this build.\n- Do not block or degrade the existing browser Notifications API permission flow, “Enable Notifications” toggle, category toggles, or “Send Test Notification” behavior for Web.\n- Ensure user-facing strings added for this Android toggle are in English.",
+      "reqIds": [
+        "REQ-135"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-main-home-dashboard-page-frontend-src-pages-homedashboardpage-tsx-add-a-new-centered-subtitle-text-directly-below-the-dashboard-heading-that-displays-exactly-be-honest-mark-attendance-style-it-to-be-clean-and-minimal-slightly-smaller-than-the-dashboard-title-medium-font-weight-subtle-opacity-80-90-with-proper-vertical-spacing-so-it-does-not-look-crowded-the-text-color-must-be-theme-aware-and-adapt-correctly-to-dark-mode-using-existing-theme-based-text-colors-no-harsh-bright-colors-do-not-change-any-dashboard-functionality-do-not-modify-the-existing-layout-structure-beyond-inserting-this-single-line-of-text-and-do-not-affect-responsiveness-or-mobile-spacing",
+      "title": "On the main Home Dashboard page (`frontend/src/pages/HomeDashboardPage.tsx`), add a new centered subtitle text directly below the \"Dashboard\" heading that displays exactly: \"Be honest & mark attendance\". Style it to be clean and minimal: slightly smaller than the Dashboard title, medium font weight, subtle opacity (~80–90%), with proper vertical spacing so it does not look crowded. The text color must be theme-aware and adapt correctly to dark mode using existing theme-based text colors (no harsh bright colors). Do not change any dashboard functionality, do not modify the existing layout structure beyond inserting this single line of text, and do not affect responsiveness or mobile spacing.",
+      "reqIds": [
+        "REQ-136"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1319,6 +1335,30 @@
     {
       "id": "AR-92",
       "summary": "Remove the web app splash/initial loading screen completely: delete SplashScreen component and all references (App/layout/routing/conditional render), remove any index.html/public/root loading markup and splash/spinner divs, delete splash CSS/background/animations (including purple/pink flash), clear any service-worker cached splash assets, and ensure direct load to Dashboard (logged in) or Login (logged out) with a clean dark background.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-93",
+      "summary": "Integrate Firebase Cloud Messaging (FCM) for Android APK push notifications: add google-services.json, Firebase init, FirebaseMessagingService, notification channel, device-token capture + backend storage, and tap-to-open behavior; no other app functionality changes",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-94",
+      "summary": "Integrate real Firebase Cloud Messaging (FCM) push notifications for the Android APK generated from the web build (via Applix): add google-services.json + Gradle deps/plugin, implement FirebaseMessagingService + notification channel, capture/store device token to backend, and ensure foreground/background/terminated delivery with tap-to-open deep link.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-95",
+      "summary": "Disable Android notifications toggle (Android users only) and show a \"Coming Soon\" label, while keeping Web notifications working/active.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-96",
+      "summary": "Add centered subtitle text \"Be honest & mark attendance\" directly below the Dashboard heading on the Home page with subtle styling (slightly smaller font, medium weight, 80–90% opacity), proper spacing, and theme-aware dark-mode color; no functional/layout/responsiveness changes.",
       "reqIds": [],
       "status": "pending"
     }

@@ -1,60 +1,45 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T12:16:39.241Z",
-  "summary": "The diff does not remove the splash screen; instead it keeps/updates `InitialLoadSplash.tsx` and adds startup logic to unregister service workers and clear all browser caches. `index.html` appears to have no splash placeholder markup and sets a solid dark background.",
+  "generatedAt": "2026-02-17T13:02:16.042Z",
+  "summary": "REQ-136 asks for a single, theme-aware centered subtitle line under the \"Dashboard\" heading on HomeDashboardPage. The diff snippet for HomeDashboardPage.tsx is truncated before any header JSX, so the subtitle text/styling can’t be verified from the provided evidence. The diff also shows multiple unrelated changes (milestone/points/notifications logic and project metadata updates) that were not requested and may violate the constraint to avoid changing dashboard functionality/business logic.",
   "missing_requirements": [
     {
-      "id": "REQ-130",
-      "requirement": "Completely remove the splash screen from the codebase by deleting `frontend/src/components/system/InitialLoadSplash.tsx` and removing all imports/usages/references to it across the app.",
-      "reason": "The splash component file still exists (and is referenced in the file summaries as an implemented animated splash), so it was not deleted/removed from the codebase.",
+      "id": "REQ-136",
+      "requirement": "Add a new centered subtitle text directly below the \"Dashboard\" heading that displays exactly \"Be honest & mark attendance\" with minimal styling (slightly smaller than title, medium weight, ~80–90% opacity), theme-aware colors (dark-mode safe), and proper vertical spacing without affecting responsiveness/layout.",
+      "reason": "The provided diff for HomeDashboardPage.tsx is truncated and does not include the header JSX where the \"Dashboard\" title/subtitle would be rendered, so there is no evidence that the exact text, placement, alignment, spacing, or theme-aware styling were implemented.",
       "evidence": [
-        "frontend/src/components/system/InitialLoadSplash.tsx",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "id": "REQ-131",
-      "requirement": "Remove splash-related conditional render logic and artificial initialization delays (remove `isInitializing` state and startup `setTimeout` gating UI in `frontend/src/App.tsx`).",
-      "reason": "The provided `App.tsx` diff excerpt shows added service worker/cache cleanup and other logic, but does not provide evidence that `isInitializing` and the startup `setTimeout` gate were removed; due to truncation, this cannot be verified from the diff summary.",
-      "evidence": [
-        "frontend/src/App.tsx (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-133",
-      "requirement": "Remove any splash-specific styling/animations so no leftover splash styles affect the app.",
-      "reason": "Because the splash component itself still exists (REQ-130 not satisfied) and is described as an animated splash, splash-specific styling/animation is still present in the codebase.",
-      "evidence": [
-        "frontend/src/components/system/InitialLoadSplash.tsx",
-        "frontend-file-summaries.txt"
+        "frontend/src/pages/HomeDashboardPage.tsx (truncated; no header JSX shown)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Startup cleanup that unregisters all service workers and deletes all Cache Storage caches on mount.",
-      "reason": "REQ-134 asks to ensure splash-related cached assets/HTML are not served (or no SW registration if none exists). Unregistering *all* service workers and deleting *all* caches is broader behavior than specified and is not explicitly requested.",
+      "description": "Added/modified dashboard business logic around streak milestones, awarding points via RankingService, showing success toasts, and sending browser notifications for reward alerts.",
+      "reason": "BuildRequest explicitly restricts changes to inserting a single subtitle line and prohibits changes to dashboard functionality/business logic. The diff content shows milestone checking/awarding and notification/toast behavior within HomeDashboardPage.",
       "evidence": [
-        "frontend/src/App.tsx (truncated)"
+        "frontend/src/pages/HomeDashboardPage.tsx"
       ]
     },
     {
-      "description": "Retained/implemented an animated splash screen component describing logo/loading indicators and forced dark background.",
-      "reason": "The BuildRequest requires removing the splash screen entirely; keeping/updating an animated splash component is the opposite of the requested change.",
+      "description": "Updated project metadata/state summary to describe large unrelated features (Mark Past Attendance flow, disabling auto-absent, daily reminder notifications, removing splash screen).",
+      "reason": "These changes are not part of REQ-136 (subtitle text only) and indicate scope beyond the requested UI tweak.",
       "evidence": [
-        "frontend/src/components/system/InitialLoadSplash.tsx",
+        "project_state.json"
+      ]
+    },
+    {
+      "description": "Modified/updated a repository-wide frontend file summary list describing many unrelated components/features.",
+      "reason": "Not requested by REQ-136; appears to be ancillary documentation/metadata unrelated to adding a subtitle line.",
+      "evidence": [
         "frontend-file-summaries.txt"
       ]
     }
   ],
-  "confidence": 0.74,
+  "confidence": 0.62,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/index.html",
-    "frontend/src/App.tsx",
-    "frontend/src/components/system/InitialLoadSplash.tsx",
-    "frontend/src/index.css",
+    "frontend/src/pages/HomeDashboardPage.tsx",
     "project_state.json"
   ]
 }

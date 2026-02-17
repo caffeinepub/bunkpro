@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-completely-remove-the-splash-screen-from-the-codebase-by-deleting-frontend-src-components-system-initialloadsplash-tsx-and-removing-all-imports-usages-references-to-it-across-the-app",
-      "featureTitle": "Completely remove the splash screen from the codebase by deleting `frontend/src/components/system/InitialLoadSplash.tsx` and removing all imports/usages/references to it across the app.",
+      "featureId": "feature-on-the-main-home-dashboard-page-frontend-src-pages-homedashboardpage-tsx-add-a-new-centered-subtitle-text-directly-below-the-dashboard-heading-that-displays-exactly-be-honest-mark-attendance-style-it-to-be-clean-and-minimal-slightly-smaller-than-the-dashboard-title-medium-font-weight-subtle-opacity-80-90-with-proper-vertical-spacing-so-it-does-not-look-crowded-the-text-color-must-be-theme-aware-and-adapt-correctly-to-dark-mode-using-existing-theme-based-text-colors-no-harsh-bright-colors-do-not-change-any-dashboard-functionality-do-not-modify-the-existing-layout-structure-beyond-inserting-this-single-line-of-text-and-do-not-affect-responsiveness-or-mobile-spacing",
+      "featureTitle": "On the main Home Dashboard page (`frontend/src/pages/HomeDashboardPage.tsx`), add a new centered subtitle text directly below the \"Dashboard\" heading that displays exactly: \"Be honest & mark attendance\". Style it to be clean and minimal: slightly smaller than the Dashboard title, medium font weight, subtle opacity (~80–90%), with proper vertical spacing so it does not look crowded. The text color must be theme-aware and adapt correctly to dark mode using existing theme-based text colors (no harsh bright colors). Do not change any dashboard functionality, do not modify the existing layout structure beyond inserting this single line of text, and do not affect responsiveness or mobile spacing.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/system/InitialLoadSplash.tsx"
+        "frontend/src/pages/HomeDashboardPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -17,85 +16,7 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-130"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-remove-any-splash-related-conditional-render-logic-and-any-artificial-initialization-delays-so-the-app-renders-the-real-first-screen-immediately-login-when-logged-out-dashboard-when-logged-in-specifically-remove-the-isinitializing-state-and-the-startup-settimeout-delay-currently-gating-the-app-ui-in-frontend-src-app-tsx",
-      "featureTitle": "Remove any splash-related conditional render logic and any artificial initialization delays so the app renders the real first screen immediately (Login when logged out; Dashboard when logged in). Specifically remove the `isInitializing` state and the startup `setTimeout` delay currently gating the app UI in `frontend/src/App.tsx`.",
-      "files": [
-        "frontend/src/App.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-131"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-remove-any-initial-loading-splash-markup-from-the-html-entrypoint-and-public-assets-e-g-any-splash-screen-div-hardcoded-loading-spinner-markup-or-similar-placeholders-so-the-only-startup-container-is-the-react-root",
-      "featureTitle": "Remove any initial loading/splash markup from the HTML entrypoint and public assets (e.g., any `#splash-screen` div, hardcoded loading spinner markup, or similar placeholders) so the only startup container is the React root.",
-      "files": [
-        "frontend/index.html"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-132"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-remove-any-splash-specific-styling-css-classes-inline-styles-animations-so-no-leftover-splash-styles-affect-the-app-keep-a-clean-solid-dark-initial-background-to-avoid-any-pre-render-background-flash",
-      "featureTitle": "Remove any splash-specific styling (CSS classes, inline styles, animations) so no leftover splash styles affect the app; keep a clean, solid dark initial background to avoid any pre-render background flash.",
-      "files": [
-        "frontend/index.html",
-        "frontend/src/index.css"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-133"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-if-the-project-includes-any-service-worker-pwa-precache-behavior-update-it-so-splash-related-cached-assets-and-any-cached-html-that-could-reintroduce-splash-ui-are-not-served-ensure-the-newest-version-loads-immediately-after-deployment",
-      "featureTitle": "If the project includes any Service Worker / PWA precache behavior, update it so splash-related cached assets and any cached HTML that could reintroduce splash UI are not served; ensure the newest version loads immediately after deployment.",
-      "files": [
-        "frontend/index.html",
-        "frontend/src/App.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-134"
+        "REQ-136"
       ],
       "confidence": "high"
     }

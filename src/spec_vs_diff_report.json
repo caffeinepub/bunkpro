@@ -1,107 +1,61 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T04:42:52.640Z",
-  "summary": "Diff adds a new past-attendance sheet with calendar selection, schedule derivation with exchanges, local ClassEvent creation on save, and a daily reminder hook plus persistence/backup support for reminder deduping. However, some requirements are not evidenced in the diff summary: backend API/storage validation for past attendance, notification click-to-open Mark Today, exact reminder body text, and removal of any existing auto-missed/auto-absent behavior. Dashboard button label/placement is also not provable from the provided truncation.",
+  "generatedAt": "2026-02-17T07:11:45.047Z",
+  "summary": "REQ-106 and REQ-107 appear implemented (gated scheduling, cleanup, 19:00 guard, rate-limited friendly failure toasts). REQ-104 is partially implemented but the notification body string does not match the required curly-apostrophe text. REQ-105 cannot be fully verified from the truncated diff; click handler wiring exists, but focusing and opening the Mark Today sheet / navigating Home is not evidenced.",
   "missing_requirements": [
     {
-      "id": "REQ-91",
-      "requirement": "Add a new Dashboard quick-action button labeled exactly \"Mark Past Attendance\" directly below \"Mark Today's Classes\" and wire it to open the past-attendance flow UI.",
-      "reason": "HomeDashboardPage.tsx is truncated and does not show the actual button label text nor its placement relative to the existing \"Mark Today's Classes\" button, so compliance cannot be confirmed from the diff summary alone.",
+      "id": "REQ-104",
+      "requirement": "Notification body must be exactly \"You haven’t marked today’s attendance. Tap to update now.\" (including the curly apostrophe).",
+      "reason": "The diff shows the reminder body uses a straight apostrophe (\"haven't\") rather than the required curly apostrophe (\"haven’t\"), so the string does not exactly match acceptance criteria.",
       "evidence": [
-        "frontend/src/pages/HomeDashboardPage.tsx (truncated)"
+        "frontend/src/hooks/useDailyAttendanceReminder.ts"
       ]
     },
     {
-      "id": "REQ-95",
-      "requirement": "Backend rejects duplicate saves for the same date for the same caller and returns an error that the frontend maps to exactly: \"Attendance already marked for this date\"; no duplicate per-date records are created.",
-      "reason": "Frontend best-effort duplicate blocking is shown, but the backend-side rejection and error signaling are not evidenced in the backend diff snippet (only new types/maps are visible).",
+      "id": "REQ-105",
+      "requirement": "Clicking the reminder notification focuses the app window/tab and opens the existing \"Mark Today’s Classes\" bottom sheet, navigating to Home if needed (works from other tabs).",
+      "reason": "While the Notifications API wrapper supports an optional click handler and the reminder hook passes one through, the diff does not provide non-truncated evidence that the click handler actually focuses the window/tab and triggers navigation to Home + opening MarkTodaySheet from any route.",
       "evidence": [
-        "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx (duplicate check + toast)",
-        "backend/main.mo (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-96",
-      "requirement": "Backend support for storing per-caller per-date attendance-day records (date, per-subject status, timestamp) and validating both \"no future dates\" and \"no duplicate date\" rules on save via a shared method.",
-      "reason": "backend/main.mo shows new AttendanceDay type and an attendanceDays map keyed by Principal and date-like key, but no shared save method or the future/duplicate validation logic is visible in the provided truncated diff.",
-      "evidence": [
-        "backend/main.mo (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-99",
-      "requirement": "Remove or disable any existing \"auto-mark absent\" or automatic missed-attendance penalty behavior so unmarked days cause no automatic events.",
-      "reason": "No diff evidence shows removal/disablement of any existing automatic missed-day handling logic.",
-      "evidence": [
-        "frontend-file-summaries.txt (no mention of removing auto-mark absent)"
-      ]
-    },
-    {
-      "id": "REQ-100",
-      "requirement": "Reminder notification Body exactly \"You haven’t marked today’s attendance. Tap to update now.\" (curly apostrophe), sent at most once per calendar day, respecting notification settings.",
-      "reason": "Hook sends body text with a straight apostrophe (\"haven't\") instead of the exact required curly apostrophe (\"haven’t\").",
-      "evidence": [
-        "frontend/src/hooks/useDailyAttendanceReminder.ts (body: \"You haven't marked today's attendance. Tap to update now.\")"
-      ]
-    },
-    {
-      "id": "REQ-101",
-      "requirement": "Clicking the reminder notification focuses the window and opens the existing \"Mark Today's Classes\" sheet; fallback to Dashboard with clear message if cannot open.",
-      "reason": "sendNotification supports onClick, but useDailyAttendanceReminder does not pass an onClick handler, and there is no shown wiring to open the Mark Today sheet from notification clicks or a fallback message/navigation.",
-      "evidence": [
-        "frontend/src/hooks/useDailyAttendanceReminder.ts (sendNotification call without onClick)",
-        "frontend/src/notifications/notificationsApi.ts (onClick supported)",
-        "frontend/src/pages/HomeDashboardPage.tsx (truncated; no notification click integration shown)"
-      ]
-    },
-    {
-      "id": "REQ-103",
-      "requirement": "Provide clear English feedback for notification-disabled/unsupported/permission denied cases (where relevant) and not silently fail.",
-      "reason": "sendNotification returns detailed failure reasons/messages, but useDailyAttendanceReminder does not surface these failures via toast/alert, so user-facing messaging for these notification error states is not evidenced.",
-      "evidence": [
-        "frontend/src/hooks/useDailyAttendanceReminder.ts (no handling of result.success === false)",
-        "frontend/src/notifications/notificationsApi.ts (returns failure message/reason)"
+        "frontend/src/notifications/notificationsApi.ts",
+        "frontend/src/hooks/useDailyAttendanceReminder.ts",
+        "frontend/src/App.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Hardened/cancellable backend profile sync logic in App.tsx unrelated to past attendance/reminders.",
-      "reason": "BuildRequest focuses on past attendance flow, missed-day handling, and reminder notifications; it does not request changes to profile sync behavior.",
+      "description": "Added a test-notification feature (sendTestNotification) with \"Test Notification\" title/body, plus UI logic to send it from the Notifications settings card.",
+      "reason": "BuildRequest focuses on the daily attendance reminder content/click behavior/robustness/failure feedback; it does not request adding a test notification capability.",
       "evidence": [
-        "frontend/src/App.tsx (\"hardened profile sync\" changes)"
+        "frontend/src/notifications/notificationsApi.ts",
+        "frontend/src/components/settings/NotificationsCard.tsx (truncated)"
       ]
     },
     {
-      "description": "Added/modified system UI features like new ErrorBoundary messaging and AppShell padding adjustments.",
-      "reason": "Not requested by BuildRequest; appears as additional UX/structure work beyond specified attendance/reminder scope.",
+      "description": "Modified Home dashboard milestone flow to send browser notifications for streak milestone rewards when notification preferences allow.",
+      "reason": "BuildRequest is specifically about the daily attendance reminder deep-link and robustness, not adding or changing milestone reward notification behavior.",
       "evidence": [
-        "frontend-file-summaries.txt (ErrorBoundary updated, AppShell padding changes)"
+        "frontend/src/pages/HomeDashboardPage.tsx (truncated)"
       ]
     },
     {
-      "description": "Added a generic test notification feature (sendTestNotification) and \"BunkPro Test Notification\" content.",
-      "reason": "BuildRequest only specifies the daily reminder notification; it does not request a test-notification capability.",
+      "description": "Added/changed profile sync cancellation and related app-level state handling in App.tsx unrelated to reminders.",
+      "reason": "BuildRequest states no backend changes are required for the reminder logic work and does not request changes to profile sync behavior.",
       "evidence": [
-        "frontend/src/notifications/notificationsApi.ts (sendTestNotification)"
+        "frontend/src/App.tsx (truncated)"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.63,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
     "frontend/src/App.tsx",
-    "frontend/src/backup/backupSchema.ts",
-    "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-    "frontend/src/domain/attendanceTypes.ts",
-    "frontend/src/domain/scheduleForDate.ts",
+    "frontend/src/components/settings/NotificationsCard.tsx",
     "frontend/src/hooks/useDailyAttendanceReminder.ts",
-    "frontend/src/lib/utils.ts",
     "frontend/src/notifications/notificationsApi.ts",
+    "frontend/src/notifications/reminderFailureFeedback.ts",
     "frontend/src/pages/HomeDashboardPage.tsx",
-    "frontend/src/state/persistence.ts",
     "project_state.json"
   ]
 }

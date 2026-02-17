@@ -1,4 +1,4 @@
-// Main app component with hardened profile sync, daily reminder integration, and mark-today sheet control
+// Main app component with daily reminder integration, mark-today sheet control at app level, and notification click handling
 
 import React, { useState, useEffect, useRef } from 'react';
 import { AppProvider, useAppStore } from './state/appStore';
@@ -13,11 +13,12 @@ import { TimetablePage } from './pages/TimetablePage';
 import { StatsPage } from './pages/StatsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { RankPage } from './rank/RankPage';
+import { MarkTodaySheet } from './components/markToday/MarkTodaySheet';
 import { Toaster } from '@/components/ui/sonner';
 import { initializeTheme } from './theme/themeManager';
 import { useActor } from './hooks/useActor';
 import { useDailyAttendanceReminder } from './hooks/useDailyAttendanceReminder';
-import type { UserProfile as DomainUserProfile } from './domain/attendanceTypes';
+import type { UserProfile as DomainUserProfile, ClassEvent } from './domain/attendanceTypes';
 import type { UserProfile as BackendUserProfile } from './backend';
 
 type Route = 
@@ -34,6 +35,7 @@ function AppContent() {
   const [route, setRoute] = useState<Route>({ type: 'home' });
   const [isInitializing, setIsInitializing] = useState(true);
   const [isSyncingProfile, setIsSyncingProfile] = useState(false);
+  const [isMarkTodayOpen, setIsMarkTodayOpen] = useState(false);
   
   // Cancellation flag to prevent post-logout sync
   const syncCancelledRef = useRef(false);
@@ -101,7 +103,7 @@ function AppContent() {
     syncProfileToBackend();
   }, [actor, state.userProfile?.displayName]);
 
-  // Daily attendance reminder
+  // Daily attendance reminder with notification click handler
   const handleReminderSent = (date: string) => {
     dispatch({
       type: 'UPDATE_SETTINGS',
@@ -109,10 +111,24 @@ function AppContent() {
     });
   };
 
+  const handleReminderNotificationClick = () => {
+    // Focus window
+    window.focus();
+    
+    // Navigate to home if not already there
+    if (route.type !== 'home') {
+      setRoute({ type: 'home' });
+    }
+    
+    // Open mark today sheet
+    setIsMarkTodayOpen(true);
+  };
+
   useDailyAttendanceReminder({
     events: state.events,
     settings: state.settings,
     onReminderSent: handleReminderSent,
+    onNotificationClick: handleReminderNotificationClick,
   });
 
   // Simulate initial load
@@ -139,6 +155,11 @@ function AppContent() {
     setRoute({ type: 'home' });
   };
 
+  const handleSaveAttendance = (events: ClassEvent[]) => {
+    dispatch({ type: 'ADD_EVENTS', payload: events });
+    setIsMarkTodayOpen(false);
+  };
+
   if (isInitializing) {
     return <InitialLoadSplash />;
   }
@@ -153,7 +174,12 @@ function AppContent() {
   return (
     <AppShell>
       <div className="flex-1 overflow-y-auto">
-        {route.type === 'home' && <HomeDashboardPage onNavigate={handleNavigate} />}
+        {route.type === 'home' && (
+          <HomeDashboardPage 
+            onNavigate={handleNavigate}
+            onOpenMarkToday={() => setIsMarkTodayOpen(true)}
+          />
+        )}
         {route.type === 'subject-details' && (
           <SubjectDetailsPage subjectId={route.subjectId} onBack={handleBackToHome} />
         )}
@@ -163,6 +189,15 @@ function AppContent() {
         {route.type === 'settings' && <SettingsPage />}
       </div>
       <BottomNav activeTab={currentTab} onTabChange={handleTabChange} />
+      
+      {/* App-level Mark Today Sheet */}
+      <MarkTodaySheet
+        open={isMarkTodayOpen}
+        onOpenChange={setIsMarkTodayOpen}
+        subjects={state.subjects}
+        timetable={state.timetable}
+        onSave={handleSaveAttendance}
+      />
     </AppShell>
   );
 }

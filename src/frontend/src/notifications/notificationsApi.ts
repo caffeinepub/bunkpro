@@ -1,5 +1,5 @@
 /**
- * Browser Notifications API wrapper with comprehensive result feedback
+ * Browser Notifications API wrapper with comprehensive result feedback and click handler support
  * Provides support detection, permission handling, and notification sending
  * Limited to web browser notifications (no FCM/push infrastructure)
  */
@@ -11,7 +11,7 @@ export type NotificationResult =
 export type NotificationClickHandler = () => void;
 
 /**
- * Checks if the browser supports notifications
+ * Checks if the browser supports the Notifications API
  */
 export function isNotificationSupported(): boolean {
   return 'Notification' in window;
@@ -29,13 +29,12 @@ export function getNotificationPermission(): NotificationPermission {
 
 /**
  * Requests notification permission from the user
- * Returns the new permission status
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!isNotificationSupported()) {
     return 'denied';
   }
-
+  
   try {
     const permission = await Notification.requestPermission();
     return permission;
@@ -46,40 +45,36 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 }
 
 /**
- * Sends a browser notification with comprehensive error handling
- * Returns detailed result with reason for failure
+ * Sends a browser notification with optional click handler
+ * @param title - Notification title
+ * @param options - Notification options (body, icon, tag, etc.)
+ * @param requireInteraction - Whether the notification should remain visible until user interaction
+ * @param onClick - Optional click handler to execute when notification is clicked
+ * @returns Result object indicating success or failure with reason
  */
 export async function sendNotification(
   title: string,
-  options?: NotificationOptions & { onClick?: NotificationClickHandler },
-  enabled: boolean = true
+  options: NotificationOptions = {},
+  requireInteraction: boolean = false,
+  onClick?: NotificationClickHandler
 ): Promise<NotificationResult> {
-  // Check if notifications are enabled in app settings
-  if (!enabled) {
-    return {
-      success: false,
-      reason: 'disabled',
-      message: 'Notifications are disabled in settings',
-    };
-  }
-
-  // Check browser support
+  // Check if notifications are supported
   if (!isNotificationSupported()) {
     return {
       success: false,
       reason: 'unsupported',
-      message: 'Your browser does not support notifications',
+      message: 'Notifications are not supported in this browser',
     };
   }
 
   // Check permission status
-  const permission = Notification.permission;
-
+  const permission = getNotificationPermission();
+  
   if (permission === 'denied') {
     return {
       success: false,
       reason: 'permission-denied',
-      message: 'Notification permission was denied. Please enable it in your browser settings.',
+      message: 'Notification permission has been denied',
     };
   }
 
@@ -87,33 +82,24 @@ export async function sendNotification(
     return {
       success: false,
       reason: 'permission-default',
-      message: 'Please grant notification permission first',
+      message: 'Notification permission has not been granted yet',
     };
   }
 
   // Permission is granted, send notification
   try {
-    const { onClick, ...notificationOptions } = options || {};
-    
     const notification = new Notification(title, {
-      icon: '/assets/generated/bunkpro-favicon.dim_32x32.png',
-      badge: '/assets/generated/bunkpro-favicon.dim_32x32.png',
-      ...notificationOptions,
+      ...options,
+      requireInteraction,
     });
 
     // Attach click handler if provided
     if (onClick) {
       notification.onclick = () => {
-        window.focus();
         onClick();
         notification.close();
       };
     }
-
-    // Auto-close after 5 seconds
-    setTimeout(() => {
-      notification.close();
-    }, 5000);
 
     return { success: true };
   } catch (error) {
@@ -121,21 +107,21 @@ export async function sendNotification(
     return {
       success: false,
       reason: 'error',
-      message: 'Failed to send notification',
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }
 }
 
 /**
- * Sends a test notification to verify setup
+ * Sends a test notification to verify the setup
  */
-export async function sendTestNotification(enabled: boolean): Promise<NotificationResult> {
+export async function sendTestNotification(): Promise<NotificationResult> {
   return sendNotification(
-    'BunkPro Test Notification',
+    'Test Notification',
     {
-      body: 'Notifications are working! You will receive alerts for important events.',
+      body: 'Notifications are working correctly!',
       tag: 'test-notification',
     },
-    enabled
+    false
   );
 }

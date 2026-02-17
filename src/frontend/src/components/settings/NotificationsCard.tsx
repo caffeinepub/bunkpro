@@ -66,7 +66,7 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
     setTestResult(null);
 
     try {
-      const result = await sendTestNotification(enabled);
+      const result = await sendTestNotification();
 
       if (result.success) {
         setTestResult({

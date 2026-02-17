@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 45,
+  "projectStateVersion": 47,
   "summary": "Upgrade BunkPro with (1) a new \"Mark Past Attendance\" flow that lets users mark attendance for any past date via a calendar, prevents future/duplicate marking, stores per-date attendance records, and safely recalculates streak/points; (2) disable any automatic \"auto-absent\" handling for missed days; and (3) add a once-per-day reminder push notification if today’s attendance is not marked by a configured time, respecting notification settings and deep-linking into the attendance screen on both app and web.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -726,6 +726,38 @@
       "title": "Add clear English user-facing messaging in the past-attendance flow and reminder flow for all major error states (future date blocked, duplicate date, no subjects scheduled, notifications disabled/unsupported/permission denied), reusing existing toast/alert patterns.",
       "reqIds": [
         "REQ-103"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-daily-attendance-reminder-notification-content-to-exactly-match-the-required-english-strings-when-sent-title-exactly-attendance-not-marked-and-body-exactly-you-haven-t-marked-today-s-attendance-tap-to-update-now-and-keep-the-reminder-deduped-to-at-most-once-per-local-calendar-day-using-the-existing-settings-lastreminderdate-mechanism",
+      "title": "Update the daily attendance reminder notification content to exactly match the required English strings when sent: Title exactly \"Attendance Not Marked 📢\" and Body exactly \"You haven’t marked today’s attendance. Tap to update now.\", and keep the reminder deduped to at most once per local calendar day using the existing settings.lastReminderDate mechanism.",
+      "reqIds": [
+        "REQ-104"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-the-reminder-notification-click-behavior-so-that-when-the-user-clicks-the-reminder-notification-while-the-app-is-running-the-app-window-is-focused-and-the-existing-mark-today-s-classes-bottom-sheet-opens-without-requiring-a-manual-navigation-by-the-user",
+      "title": "Implement the reminder notification click behavior so that when the user clicks the reminder notification while the app is running, the app window is focused and the existing \"Mark Today’s Classes\" bottom sheet opens (without requiring a manual navigation by the user).",
+      "reqIds": [
+        "REQ-105"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-harden-the-reminder-scheduling-polling-logic-so-it-is-safe-and-leak-free-only-schedule-checks-when-notifications-are-enabled-and-the-streak-reminders-category-is-enabled-ensure-intervals-are-cleaned-up-on-settings-changes-unmount-and-ensure-the-reminder-check-does-not-spam-repeated-attempts-before-7-00-pm-local-time",
+      "title": "Harden the reminder scheduling/polling logic so it is safe and leak-free: only schedule checks when notifications are enabled AND the Streak Reminders category is enabled; ensure intervals are cleaned up on settings changes/unmount; and ensure the reminder check does not spam repeated attempts before 7:00 PM local time.",
+      "reqIds": [
+        "REQ-106"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-clear-english-user-friendly-non-blocking-feedback-when-the-app-is-configured-to-send-reminders-but-cannot-send-them-due-to-browser-limitations-unsupported-notifications-api-permission-denied-default-or-notifications-disabled-using-the-existing-toast-alert-patterns-and-avoiding-repeated-noisy-messages",
+      "title": "Add clear English, user-friendly, non-blocking feedback when the app is configured to send reminders but cannot send them due to browser limitations (unsupported Notifications API, permission denied/default, or notifications disabled), using the existing toast/alert patterns and avoiding repeated noisy messages.",
+      "reqIds": [
+        "REQ-107"
       ],
       "version": 1
     }

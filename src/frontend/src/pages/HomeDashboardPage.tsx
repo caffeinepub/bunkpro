@@ -4,12 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, Calendar, TrendingUp, AlertCircle, Trophy, History } from 'lucide-react';
+import { Plus, Calendar, TrendingUp, AlertCircle, History } from 'lucide-react';
 import { useAppStore } from '../state/appStore';
 import { CircularProgress } from '../components/dashboard/CircularProgress';
 import { SubjectAttendanceCard } from '../components/dashboard/SubjectAttendanceCard';
 import { SubjectFormDialog } from '../components/subjects/SubjectFormDialog';
-import { MarkTodaySheet } from '../components/markToday/MarkTodaySheet';
 import { MarkPastAttendanceSheet } from '../components/pastAttendance/MarkPastAttendanceSheet';
 import { calculateSubjectStats, calculateOverallStats } from '../domain/attendanceCalculations';
 import { computeContinuousDayStreak, checkMilestoneEligibility } from '../domain/streakMilestones';
@@ -28,15 +27,7 @@ export function HomeDashboardPage({ onNavigate, onOpenMarkToday }: HomeDashboard
   const { state, dispatch } = useAppStore();
   const { actor } = useActor();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isMarkTodayOpen, setIsMarkTodayOpen] = useState(false);
   const [isMarkPastOpen, setIsMarkPastOpen] = useState(false);
-
-  // Expose mark today handler to parent
-  useEffect(() => {
-    if (onOpenMarkToday) {
-      // This effect allows parent to trigger opening the sheet
-    }
-  }, [onOpenMarkToday]);
 
   // Check for streak milestones and award points
   useEffect(() => {
@@ -123,10 +114,6 @@ export function HomeDashboardPage({ onNavigate, onOpenMarkToday }: HomeDashboard
     dispatch({ type: 'ADD_EVENTS', payload: events });
   };
 
-  const handleOpenMarkToday = () => {
-    setIsMarkTodayOpen(true);
-  };
-
   const currentStreak = computeContinuousDayStreak(state.events);
 
   return (
@@ -191,7 +178,7 @@ export function HomeDashboardPage({ onNavigate, onOpenMarkToday }: HomeDashboard
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Button
           className="h-24 text-lg bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={handleOpenMarkToday}
+          onClick={onOpenMarkToday}
         >
           <Calendar className="w-6 h-6 mr-3" />
           Mark Today's Classes
@@ -240,14 +227,6 @@ export function HomeDashboardPage({ onNavigate, onOpenMarkToday }: HomeDashboard
         onOpenChange={setIsAddDialogOpen}
         onSave={handleAddSubject}
         existingNames={state.subjects.map((s) => s.name)}
-      />
-
-      <MarkTodaySheet
-        open={isMarkTodayOpen}
-        onOpenChange={setIsMarkTodayOpen}
-        subjects={state.subjects}
-        timetable={state.timetable}
-        onSave={handleSaveAttendance}
       />
 
       <MarkPastAttendanceSheet

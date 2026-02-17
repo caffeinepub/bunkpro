@@ -1,283 +1,85 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "BunkPro: Past attendance marking + missed-day handling + daily reminder notification (frontend upgrade)",
+  "title": "BunkPro — Daily attendance reminder deep-link and robustness",
   "requirements": [
     {
-      "id": "REQ-91",
-      "summary": "Add a Dashboard quick-action button labeled exactly \"Mark Past Attendance\" below \"Mark Today's Classes\" and open a dedicated past-attendance flow without changing existing flows.",
+      "id": "REQ-104",
+      "summary": "Ensure the daily attendance reminder notification uses the exact required English title/body strings and remains deduped to at most once per local calendar day via settings.lastReminderDate.",
       "acceptanceCriteria": [
-        "Dashboard shows a distinct button labeled exactly \"Mark Past Attendance\" directly below the \"Mark Today's Classes\" button.",
-        "Clicking \"Mark Past Attendance\" opens the past-attendance flow UI.",
-        "Existing \"Mark Today's Classes\" flow continues to work unchanged."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/HomeDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Add a new quick-action button labeled exactly \"Mark Past Attendance\" placed directly below the existing \"Mark Today's Classes\" button, and wire it to open the new PastAttendance sheet/flow. Use existing shadcn-ui Button styling to match current quick actions. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Lift control of the existing MarkTodaySheet open/close state to App-level (so other features like notification clicks can open it) while keeping the existing Mark Today flow UI and behavior unchanged, and pass an open handler down to the Dashboard. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "operation": "create",
-          "description": "Create a dedicated Past Attendance marking flow as a bottom sheet (similar pattern to MarkTodaySheet) that can be opened from the Dashboard. Use shadcn-ui Sheet components for a consistent sheet experience. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-92",
-      "summary": "Provide a calendar-based selector for past attendance that allows any previous date and blocks future dates with clear English feedback.",
-      "acceptanceCriteria": [
-        "The past-attendance flow displays a calendar UI for picking a date.",
-        "Future dates cannot be selected; attempting to select a future date is blocked and shows a clear English message (for example: \"You cannot mark attendance for a future date.\").",
-        "Selecting a valid past date proceeds to the subject list for that date."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "operation": "modify",
-          "description": "Implement the date-selection step using a calendar-based picker (e.g., a date picker UI) that restricts max date to today; if the user attempts to pick a future date, block progression and show a clear English message (e.g., \"You cannot mark attendance for a future date.\") using existing toast/alert patterns. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/lib/utils.ts",
-          "operation": "modify",
-          "description": "Add small date helpers needed by the past-attendance flow (e.g., safe local YYYY-MM-DD formatting and a utility to compare local dates without time-of-day issues) to ensure future-date checks behave correctly across timezones."
-        }
-      ]
-    },
-    {
-      "id": "REQ-93",
-      "summary": "For a chosen past date, derive the scheduled subjects from the weekday timetable and apply any per-date overrides (exchanges) already supported by the app.",
-      "acceptanceCriteria": [
-        "Given a selected date, the subject list is derived from the weekday timetable slots for that weekday.",
-        "If a class exchange exists for the selected date, the displayed subjects reflect the exchange for that date.",
-        "If no subjects are scheduled for the selected date, the UI shows a clear English empty state (for example: \"No classes scheduled for this date.\")."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/domain/scheduleForDate.ts",
-          "operation": "create",
-          "description": "Add a domain helper that, given (date, timetable slots, subjects, exchanges), returns the scheduled subjects/timeSlots for that date by: (1) selecting timetable slots for the date’s weekday; (2) applying any exchange overrides for that exact date to replace the subject/time slot; (3) filtering out empty slots."
-        },
-        {
-          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "operation": "modify",
-          "description": "Use the new scheduleForDate helper to compute and display the subject list for the selected past date, including exchange overrides. If the computed list is empty, show an English empty state such as \"No classes scheduled for this date.\" Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-94",
-      "summary": "Allow marking each scheduled subject as Present/Absent and save past attendance with date, per-subject status, and timestamp.",
-      "acceptanceCriteria": [
-        "The subject list for the selected date provides Present and Absent choices for each subject.",
-        "Saving creates persisted records that include: date (YYYY-MM-DD), subject identifier, status, and timestamp.",
-        "After saving, the UI returns to a sensible state (for example: closes the past-attendance flow) and the saved attendance is reflected in the app’s attendance stats derived from events.",
-        "All user-facing labels and messages in this flow are English."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "operation": "modify",
-          "description": "Add Present/Absent controls per scheduled subject (map Present->\"attended\" and Absent->\"missed\" for ClassEvent.status), and on Save create ClassEvent entries including id, selected date (YYYY-MM-DD), subjectId, status, isExtra=false, and timestamp=Date.now(). After saving, close the sheet and reset internal flow state. Use existing shadcn-ui controls (Button/Badge/etc.) for consistent UI. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/HomeDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Wire the PastAttendance sheet’s onSave callback to dispatch ADD_EVENTS so existing stats/cards update via the existing event-driven calculations (no new stats logic). Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-95",
-      "summary": "Prevent marking the same past date twice and show the exact message \"Attendance already marked for this date\" when blocked.",
-      "acceptanceCriteria": [
-        "If attendance has already been saved for a date, the UI indicates it cannot be marked again and shows exactly: \"Attendance already marked for this date\".",
-        "Frontend blocks the save action for an already-marked date even before calling the backend (best-effort).",
-        "Backend rejects any attempt to save attendance for a date that already has a saved day record for that caller and returns an error that the frontend maps to exactly: \"Attendance already marked for this date\".",
-        "No duplicate per-date records are created in backend state."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "operation": "modify",
-          "description": "Implement best-effort duplicate-day prevention by detecting whether any existing ClassEvent already exists for the selected date (any subject/status). If so, disable/guard the Save action and show exactly: \"Attendance already marked for this date\" (exact casing and punctuation) using existing toast/alert patterns. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/HomeDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Pass existing events (or a derived per-date index) into the past-attendance flow so it can quickly determine whether a selected date is already marked and block saving accordingly."
-        }
-      ]
-    },
-    {
-      "id": "REQ-97",
-      "summary": "Integrate saved past attendance into the existing event-driven data model so all existing calculations/UI reflect it without new calculation logic.",
-      "acceptanceCriteria": [
-        "Saving past attendance results in local state updates that reuse existing event-driven calculations (no new percentage/stats logic).",
-        "Past-dated attendance is included in overall and per-subject stats where appropriate.",
-        "No existing attendance calculation functions are replaced; changes are limited to adding valid events and reusing existing computation paths."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "operation": "modify",
-          "description": "Ensure Save produces standard ClassEvent entries (same shape used by MarkTodaySheet) so calculateOverallStats/calculateSubjectStats automatically include past dates. Do not modify existing calculation utilities; only feed them valid events. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/domain/attendanceCalculations.ts",
-          "operation": "modify",
-          "description": "Do not change algorithms; only add small comments/tests or safeguards if needed to confirm past-dated events are handled identically to today-dated events (no logic rewrite)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-98",
-      "summary": "Ensure streak and milestone points update correctly when past attendance is added, without double-awarding milestones.",
-      "acceptanceCriteria": [
-        "After saving past attendance that changes the set of completed days, the displayed streak value updates to the correct current streak based on existing rules.",
-        "If adding past attendance causes a streak to reach a milestone that has not yet been awarded, the app awards the correct points once.",
-        "If the milestone was already awarded (per existing milestone award state), the app does not award it again."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/HomeDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the existing milestone-award effect continues to run off of state.events changes so that adding past events triggers recalculation, and keep using state.streakMilestones to prevent double-awards. No new milestone-award tracking system should be added."
-        },
-        {
-          "path": "frontend/src/domain/streakMilestones.ts",
-          "operation": "modify",
-          "description": "Keep existing rules; only adjust if necessary to ensure past-added events correctly influence the computed streak (based on unique event dates) without introducing duplicate milestone awards."
-        }
-      ]
-    },
-    {
-      "id": "REQ-99",
-      "summary": "Remove/disable any automatic missed-day \"auto-mark absent\" behavior so unmarked days are left untouched and can be filled later via past attendance.",
-      "acceptanceCriteria": [
-        "No code path automatically creates \"missed\" ClassEvent entries for a day solely because it was not marked.",
-        "If the user does not mark attendance for a day, the app does not change attendance totals automatically.",
-        "User can later fill the missed day using the \"Mark Past Attendance\" flow."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Audit and remove/disable any startup/background logic that auto-generates missed/absent ClassEvent entries for unmarked days. Ensure the only automatic timed logic introduced by this upgrade is the reminder notification check (which must not create attendance events)."
-        },
-        {
-          "path": "frontend/src/state/appStore.tsx",
-          "operation": "modify",
-          "description": "Audit and remove/disable any persistence/load-time migration logic that infers or inserts missed-day events. Ensure loadState/RESTORE_STATE only merges defaults and never creates attendance events for unmarked days."
-        }
-      ]
-    },
-    {
-      "id": "REQ-100",
-      "summary": "Add a once-per-day (local date) 7:00 PM reminder check that sends a browser notification if today’s attendance is unmarked, respecting notification settings.",
-      "acceptanceCriteria": [
-        "If today has no attendance marked (no ClassEvent for today) at/after 7:00 PM local time, the app attempts to send the reminder notification.",
-        "The reminder notification Title is exactly \"Attendance Not Marked 📢\".",
-        "The reminder notification Body is exactly \"You haven’t marked today’s attendance. Tap to update now.\".",
-        "The reminder is only sent once per calendar day (local date) even if the app remains open or the user navigates around.",
-        "If notifications are disabled in settings or permission is not granted, no reminder is sent."
+        "When a reminder notification is sent, its title is exactly \"Attendance Not Marked 📢\".",
+        "When a reminder notification is sent, its body is exactly \"You haven’t marked today’s attendance. Tap to update now.\" (including the curly apostrophe).",
+        "If settings.lastReminderDate equals today’s local YYYY-MM-DD string, no reminder is sent again that day."
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
-          "operation": "create",
-          "description": "Create a hook that (1) checks at/after 7:00 PM local time whether today has any ClassEvent; (2) if not marked and reminders are enabled in settings, attempts to send a notification with the exact required title/body; (3) dedupes to at most once per local calendar day using persisted state. Use existing notificationsApi wrapper to respect support/permission/enablement. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Integrate useDailyAttendanceReminder at the top level after login (so it runs while the app is open), passing state.events and notification settings. Ensure it does not run for logged-out users and does not send more than once per day."
-        },
-        {
-          "path": "frontend/src/notifications/notificationsApi.ts",
-          "operation": "modify",
-          "description": "Add support for sending this reminder notification with explicit title/body and a stable tag (for dedupe on the Notification side) while keeping existing notification sending behavior intact. Verify the component's usage instructions before implementing."
+          "description": "Update the reminder notification payload to use the exact required Title and Body strings (including the curly apostrophe), while keeping the existing settings.lastReminderDate local YYYY-MM-DD dedupe check as the source of truth."
         }
       ]
     },
     {
-      "id": "REQ-101",
-      "summary": "On reminder notification click, focus the app and open the existing Mark Today sheet; otherwise navigate to Dashboard with guidance.",
+      "id": "REQ-105",
+      "summary": "When the user clicks the reminder notification while the app is running, focus the window and automatically navigate to Home and open the existing Mark Today’s Classes bottom sheet.",
       "acceptanceCriteria": [
         "Clicking the reminder notification focuses the app window/tab.",
-        "Clicking the reminder notification opens the existing attendance marking UI for today (the Mark Today sheet) without requiring additional manual navigation.",
-        "If the app cannot open the sheet for any reason, the user is navigated to the Dashboard and shown a clear English message explaining what to do next."
+        "After clicking the reminder notification, the app navigates to the Home tab if needed and opens the existing MarkTodaySheet UI (the same UI opened by the Dashboard button).",
+        "The click behavior works even if the user is currently on Timetable/Stats/Rank/Settings.",
+        "No immutable frontend paths are modified."
       ],
       "file_operations": [
-        {
-          "path": "frontend/src/notifications/notificationsApi.ts",
-          "operation": "modify",
-          "description": "Extend the notification wrapper to optionally attach an onClick handler for notifications created while the app is running (so click can focus the window and trigger in-app navigation/action). Verify the component's usage instructions before implementing."
-        },
         {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Provide an app-level handler that, when invoked from the reminder notification click, focuses the window, navigates to the Dashboard route, and opens the existing MarkTodaySheet. If the sheet cannot be opened (e.g., missing required data), show a clear English toast guiding the user to tap \"Mark Today's Classes\"."
-        }
-      ]
-    },
-    {
-      "id": "REQ-102",
-      "summary": "Persist reminder dedupe state via IndexedDB and backup/restore in a backward-compatible way with safe defaults.",
-      "acceptanceCriteria": [
-        "A new persisted field is added to support reminder deduping across refreshes.",
-        "Existing users with older stored state can load the app without errors; missing reminder fields default safely.",
-        "Exported backups include the reminder-deduping field, and restoring a backup restores that field.",
-        "Older backups without the field still restore correctly with defaults."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/domain/attendanceTypes.ts",
-          "operation": "modify",
-          "description": "Add a new settings/state field for reminder deduping (e.g., last local date a reminder was sent) and include a safe default in DEFAULT_SETTINGS/DEFAULT_STATE."
+          "description": "Lift control of the existing MarkTodaySheet to the app shell level so it can be opened from both the Dashboard button and from the reminder notification click handler; ensure the handler also switches the current tab/route to Home before opening the sheet."
         },
         {
-          "path": "frontend/src/state/persistence.ts",
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
           "operation": "modify",
-          "description": "Update loadState merging to backfill the new reminder-dedupe field with a safe default for older IndexedDB states."
-        },
-        {
-          "path": "frontend/src/backup/backupSchema.ts",
-          "operation": "modify",
-          "description": "Update backup migration logic to include the reminder-dedupe field in a backward-compatible way (merge missing field with defaults) and ensure it round-trips through export/restore."
-        }
-      ]
-    },
-    {
-      "id": "REQ-103",
-      "summary": "Add clear English messages for major error states in past-attendance and reminder flows using existing toast/alert patterns.",
-      "acceptanceCriteria": [
-        "All user-facing messages added by this upgrade are English.",
-        "Duplicate-day error displays exactly \"Attendance already marked for this date\".",
-        "Future-date attempts show a clear English message.",
-        "If notifications cannot be sent due to unsupported browser/permission/settings, the app provides clear English feedback in UI where relevant (and does not silently fail)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "operation": "modify",
-          "description": "Ensure all user-facing labels/messages in the past-attendance flow are English and cover: future-date blocked, duplicate date (exact string), and empty schedule state. Use existing toast/alert patterns already used in the app. Verify the component's usage instructions before implementing."
+          "description": "Wire the existing \"Mark Today's Classes\" button to call a parent-provided open handler (instead of only local state), so the same MarkTodaySheet instance can be opened by the notification click flow."
         },
         {
           "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
           "operation": "modify",
-          "description": "When a reminder would be sent but cannot be (unsupported browser, permission denied/default, or notifications disabled), provide clear English feedback where relevant using existing toast patterns, while still ensuring at-most-once-per-day behavior and avoiding repeated spam. Verify the component's usage instructions before implementing."
+          "description": "Provide an onClick handler to the notification send call (via notificationsApi) that triggers the app-level navigation-to-Home + open-MarkTodaySheet behavior."
+        }
+      ]
+    },
+    {
+      "id": "REQ-106",
+      "summary": "Harden reminder scheduling so it only schedules checks when notifications and Streak Reminders are enabled, cleans up timers reliably, and never attempts to send before 7:00 PM local time.",
+      "acceptanceCriteria": [
+        "If settings.enableNotifications is false or settings.notificationPreferences.streakReminders is false, the reminder hook does not schedule any interval checks.",
+        "When the reminder hook is active, it never triggers a notification attempt before 19:00 local time.",
+        "Intervals/timeouts created by the reminder hook are cleaned up on unmount and when dependency conditions change, with no accumulating intervals over time."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
+          "operation": "modify",
+          "description": "Refactor the effect to be leak-free: always clear any existing interval/timeout on dependency changes and unmount; only create scheduling when both master notifications and the streak reminders category are enabled; ensure the check function returns before any send attempt prior to 19:00 local time."
+        }
+      ]
+    },
+    {
+      "id": "REQ-107",
+      "summary": "Show clear, user-friendly, non-blocking (toast/alert pattern) feedback when reminders are configured but cannot be sent due to browser limitations, with rate-limited messaging and no raw error text.",
+      "acceptanceCriteria": [
+        "If a reminder attempt fails due to unsupported notifications, permission denied/default, or notifications disabled, the user receives a clear English non-blocking message (toast/alert pattern consistent with the app).",
+        "Failure messaging is rate-limited so it is not shown repeatedly in a short period (no spam).",
+        "The app never displays raw technical error text to users for reminder-related failures."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/notifications/reminderFailureFeedback.ts",
+          "operation": "create",
+          "description": "Add a small helper that maps notificationsApi failure reasons to user-friendly English messages and enforces rate-limiting (e.g., via in-memory ref and/or localStorage timestamps) so reminder-related failure feedback is not noisy."
         },
         {
-          "path": "frontend/src/components/settings/NotificationsCard.tsx",
+          "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
           "operation": "modify",
-          "description": "Ensure Notifications settings UI continues to provide clear English feedback for unsupported/permission denied states, and (if needed) add specific guidance text relevant to attendance reminders using existing Alert patterns. Verify the component's usage instructions before implementing."
+          "description": "When a reminder send attempt fails for unsupported API, permission denied/default, or disabled notifications, show a non-blocking toast (using the app’s existing sonner toast pattern) with a friendly message from the new helper, and ensure messages are rate-limited and never show raw technical text."
         }
       ]
     }

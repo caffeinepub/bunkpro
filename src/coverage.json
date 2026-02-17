@@ -1,204 +1,78 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T04:42:52.651Z",
+  "generatedAt": "2026-02-17T07:11:45.054Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 13,
-    "implemented": 12,
+    "total": 4,
+    "implemented": 4,
     "items": [
       {
-        "id": "REQ-100",
-        "summary": "Implement a once-per-day attendance reminder notification check: if the user has not marked today’s attendance by a fixed local time (default 7:00 PM), send a browser notification with Title exactly \"Attendance Not Marked 📢\" and Body exactly \"You haven’t marked today’s attendance. Tap to update now.\", respecting notification settings and sending at most once per calendar day.",
+        "id": "REQ-104",
+        "summary": "Update the daily attendance reminder notification content to exactly match the required English strings when sent: Title exactly \"Attendance Not Marked 📢\" and Body exactly \"You haven’t marked today’s attendance. Tap to update now.\", and keep the reminder deduped to at most once per local calendar day using the existing settings.lastReminderDate mechanism.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useDailyAttendanceReminder.ts",
-          "frontend/src/App.tsx",
-          "frontend/src/notifications/notificationsApi.ts"
+          "frontend/src/hooks/useDailyAttendanceReminder.ts"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useDailyAttendanceReminder.ts",
-          "frontend/src/App.tsx",
-          "frontend/src/notifications/notificationsApi.ts"
-        ]
-      },
-      {
-        "id": "REQ-101",
-        "summary": "When the user clicks the reminder notification (while the app is running), bring the app window into focus and open the attendance marking UI (the existing \"Mark Today's Classes\" sheet) so the user can update attendance immediately.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/notifications/notificationsApi.ts",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/notifications/notificationsApi.ts",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-102",
-        "summary": "Persist the reminder-deduping state (for example, the last local date a reminder was sent) through the existing IndexedDB persistence and backup/restore flows in a backward-compatible way (merging missing fields with defaults).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/domain/attendanceTypes.ts",
-          "frontend/src/state/persistence.ts",
-          "frontend/src/backup/backupSchema.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/domain/attendanceTypes.ts",
-          "frontend/src/state/persistence.ts",
-          "frontend/src/backup/backupSchema.ts"
-        ]
-      },
-      {
-        "id": "REQ-103",
-        "summary": "Add clear English user-facing messaging in the past-attendance flow and reminder flow for all major error states (future date blocked, duplicate date, no subjects scheduled, notifications disabled/unsupported/permission denied), reusing existing toast/alert patterns.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "frontend/src/hooks/useDailyAttendanceReminder.ts",
-          "frontend/src/components/settings/NotificationsCard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
           "frontend/src/hooks/useDailyAttendanceReminder.ts"
         ]
       },
       {
-        "id": "REQ-91",
-        "summary": "Add a new Dashboard quick-action button labeled exactly \"Mark Past Attendance\" placed below the existing \"Mark Today's Classes\" button, and wire it to open a dedicated past-attendance marking flow without rebuilding or removing existing flows.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/HomeDashboardPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/HomeDashboardPage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx"
-        ]
-      },
-      {
-        "id": "REQ-92",
-        "summary": "Implement a calendar-based past-date selector for the \"Mark Past Attendance\" flow that allows selecting any previous date and prevents selecting future dates with clear English feedback.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "frontend/src/lib/utils.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "frontend/src/lib/utils.ts"
-        ]
-      },
-      {
-        "id": "REQ-93",
-        "summary": "For a selected past date, compute and display the scheduled subjects for that day using both (a) the weekly repeating timetable based on the date’s weekday and (b) any per-date overrides already supported by the app (for example, class exchanges tied to a specific date).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/domain/scheduleForDate.ts",
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/domain/scheduleForDate.ts",
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx"
-        ]
-      },
-      {
-        "id": "REQ-94",
-        "summary": "Allow the user to mark each scheduled subject for the selected past date as Present or Absent and save the attendance with the selected date, recording per-subject status plus a timestamp.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "frontend/src/pages/HomeDashboardPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "frontend/src/pages/HomeDashboardPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-95",
-        "summary": "Enforce duplicate-marking prevention for past attendance: a user must not be able to mark the same date twice; if the date has already been marked, block saving and show the exact English message: \"Attendance already marked for this date\".",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "frontend/src/pages/HomeDashboardPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "frontend/src/pages/HomeDashboardPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-96",
-        "summary": "Add backend (Motoko) support for storing per-caller per-date attendance-day records (including date, per-subject status, and timestamp) and validating both \"no future dates\" and \"no duplicate date\" rules on save.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-97",
-        "summary": "Integrate the past-attendance save into the frontend data model by creating corresponding ClassEvent entries (or an equivalent existing local event model) for the selected date so that existing calculations and UI (overall %, subject cards, subject details) reflect the saved past attendance without introducing new attendance-calculation logic.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-          "frontend/src/domain/attendanceCalculations.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx"
-        ]
-      },
-      {
-        "id": "REQ-98",
-        "summary": "Ensure streak and milestone points are recalculated correctly when past attendance is added: the existing continuous-day streak computation must reflect the newly added past date events, and milestone point awards must not be double-awarded for milestones that were already recorded as awarded.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/HomeDashboardPage.tsx",
-          "frontend/src/domain/streakMilestones.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/HomeDashboardPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-99",
-        "summary": "Remove or disable any existing \"auto-mark absent\" or automatic missed-attendance penalty behavior so that if the user forgets to mark attendance, the system does nothing automatically and leaves the day unmodified.",
+        "id": "REQ-105",
+        "summary": "Implement the reminder notification click behavior so that when the user clicks the reminder notification while the app is running, the app window is focused and the existing \"Mark Today’s Classes\" bottom sheet opens (without requiring a manual navigation by the user).",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/App.tsx",
-          "frontend/src/state/appStore.tsx"
+          "frontend/src/pages/HomeDashboardPage.tsx",
+          "frontend/src/hooks/useDailyAttendanceReminder.ts"
         ],
         "matchedFiles": [
-          "frontend/src/App.tsx"
+          "frontend/src/App.tsx",
+          "frontend/src/pages/HomeDashboardPage.tsx",
+          "frontend/src/hooks/useDailyAttendanceReminder.ts"
+        ]
+      },
+      {
+        "id": "REQ-106",
+        "summary": "Harden the reminder scheduling/polling logic so it is safe and leak-free: only schedule checks when notifications are enabled AND the Streak Reminders category is enabled; ensure intervals are cleaned up on settings changes/unmount; and ensure the reminder check does not spam repeated attempts before 7:00 PM local time.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useDailyAttendanceReminder.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useDailyAttendanceReminder.ts"
+        ]
+      },
+      {
+        "id": "REQ-107",
+        "summary": "Add clear English, user-friendly, non-blocking feedback when the app is configured to send reminders but cannot send them due to browser limitations (unsupported Notifications API, permission denied/default, or notifications disabled), using the existing toast/alert patterns and avoiding repeated noisy messages.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/notifications/reminderFailureFeedback.ts",
+          "frontend/src/hooks/useDailyAttendanceReminder.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/notifications/reminderFailureFeedback.ts",
+          "frontend/src/hooks/useDailyAttendanceReminder.ts"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/App.tsx",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/backup/backupSchema.ts",
-    "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/domain/attendanceTypes.ts",
-    "frontend/src/domain/scheduleForDate.ts",
+    "frontend/src/components/settings/NotificationsCard.tsx",
     "frontend/src/hooks/useDailyAttendanceReminder.ts",
-    "frontend/src/lib/utils.ts",
     "frontend/src/notifications/notificationsApi.ts",
+    "frontend/src/notifications/reminderFailureFeedback.ts",
     "frontend/src/pages/HomeDashboardPage.tsx",
-    "frontend/src/state/persistence.ts",
     "frontend/src/utils/urlParams.ts",
     "project_state.json",
     "scratch/component-selection.json",

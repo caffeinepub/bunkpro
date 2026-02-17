@@ -1,6 +1,6 @@
-// Past attendance marking flow with calendar selection and subject list
+// Past attendance marking flow with fixed date selection that properly transitions to subject marking step and renders scheduled subjects based on local weekday computation
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -50,6 +50,15 @@ export function MarkPastAttendanceSheet({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [pastClasses, setPastClasses] = useState<PastClass[]>([]);
 
+  // Reset state only when sheet is explicitly closed (open -> false)
+  useEffect(() => {
+    if (!open) {
+      setStep('select-date');
+      setSelectedDate(undefined);
+      setPastClasses([]);
+    }
+  }, [open]);
+
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
 
@@ -84,6 +93,7 @@ export function MarkPastAttendanceSheet({
       status: 'attended' as ClassStatus,
     }));
 
+    // Set state and transition to mark-attendance step
     setSelectedDate(date);
     setPastClasses(classes);
     setStep('mark-attendance');
@@ -110,15 +120,8 @@ export function MarkPastAttendanceSheet({
     }));
 
     onSave(events);
-    handleClose();
+    onOpenChange(false); // Close sheet after save
     toast.success('Past attendance saved successfully');
-  };
-
-  const handleClose = () => {
-    setStep('select-date');
-    setSelectedDate(undefined);
-    setPastClasses([]);
-    onOpenChange(false);
   };
 
   const handleBack = () => {
@@ -127,8 +130,15 @@ export function MarkPastAttendanceSheet({
     setPastClasses([]);
   };
 
+  const handleSheetOpenChange = (newOpen: boolean) => {
+    // Only allow closing the sheet, not opening
+    if (!newOpen) {
+      onOpenChange(false);
+    }
+  };
+
   return (
-    <Sheet open={open} onOpenChange={handleClose}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent side="bottom" className="h-[80vh]">
         {step === 'select-date' && (
           <>
@@ -155,7 +165,7 @@ export function MarkPastAttendanceSheet({
                   const dateString = formatDateString(date.toISOString());
                   return isFutureDate(dateString) || date > new Date();
                 }}
-                className="rounded-md border"
+                className="premium-calendar"
               />
             </div>
           </>

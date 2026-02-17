@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-daily-attendance-reminder-notification-content-to-exactly-match-the-required-english-strings-when-sent-title-exactly-attendance-not-marked-and-body-exactly-you-haven-t-marked-today-s-attendance-tap-to-update-now-and-keep-the-reminder-deduped-to-at-most-once-per-local-calendar-day-using-the-existing-settings-lastreminderdate-mechanism",
-      "featureTitle": "Update the daily attendance reminder notification content to exactly match the required English strings when sent: Title exactly \"Attendance Not Marked 📢\" and Body exactly \"You haven’t marked today’s attendance. Tap to update now.\", and keep the reminder deduped to at most once per local calendar day using the existing settings.lastReminderDate mechanism.",
+      "featureId": "feature-fix-the-calendar-header-layout-in-the-mark-past-attendance-modal-so-it-has-three-clearly-separated-sections-header-navigation-row-weekday-row-date-grid-with-no-overlap-collision-and-the-month-title-remains-perfectly-centered-between-left-right-navigation-arrows-on-all-screen-sizes",
+      "featureTitle": "Fix the calendar header layout in the \"Mark Past Attendance\" modal so it has three clearly separated sections (Header navigation row, Weekday row, Date grid) with no overlap/collision, and the month title remains perfectly centered between left/right navigation arrows on all screen sizes.",
       "files": [
-        "frontend/src/hooks/useDailyAttendanceReminder.ts"
+        "frontend/src/index.css"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -16,67 +16,7 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-104"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-the-reminder-notification-click-behavior-so-that-when-the-user-clicks-the-reminder-notification-while-the-app-is-running-the-app-window-is-focused-and-the-existing-mark-today-s-classes-bottom-sheet-opens-without-requiring-a-manual-navigation-by-the-user",
-      "featureTitle": "Implement the reminder notification click behavior so that when the user clicks the reminder notification while the app is running, the app window is focused and the existing \"Mark Today’s Classes\" bottom sheet opens (without requiring a manual navigation by the user).",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/hooks/useDailyAttendanceReminder.ts",
-        "frontend/src/pages/HomeDashboardPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-105"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-harden-the-reminder-scheduling-polling-logic-so-it-is-safe-and-leak-free-only-schedule-checks-when-notifications-are-enabled-and-the-streak-reminders-category-is-enabled-ensure-intervals-are-cleaned-up-on-settings-changes-unmount-and-ensure-the-reminder-check-does-not-spam-repeated-attempts-before-7-00-pm-local-time",
-      "featureTitle": "Harden the reminder scheduling/polling logic so it is safe and leak-free: only schedule checks when notifications are enabled AND the Streak Reminders category is enabled; ensure intervals are cleaned up on settings changes/unmount; and ensure the reminder check does not spam repeated attempts before 7:00 PM local time.",
-      "files": [
-        "frontend/src/hooks/useDailyAttendanceReminder.ts"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-106"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-clear-english-user-friendly-non-blocking-feedback-when-the-app-is-configured-to-send-reminders-but-cannot-send-them-due-to-browser-limitations-unsupported-notifications-api-permission-denied-default-or-notifications-disabled-using-the-existing-toast-alert-patterns-and-avoiding-repeated-noisy-messages",
-      "featureTitle": "Add clear English, user-friendly, non-blocking feedback when the app is configured to send reminders but cannot send them due to browser limitations (unsupported Notifications API, permission denied/default, or notifications disabled), using the existing toast/alert patterns and avoiding repeated noisy messages.",
-      "files": [
-        "frontend/src/hooks/useDailyAttendanceReminder.ts",
-        "frontend/src/notifications/reminderFailureFeedback.ts"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-107"
+        "REQ-115"
       ],
       "confidence": "high"
     }

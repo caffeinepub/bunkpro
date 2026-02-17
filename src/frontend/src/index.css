@@ -134,3 +134,175 @@
         }
     }
 }
+
+/* Premium Calendar Styling */
+@layer components {
+    .premium-calendar {
+        @apply w-full max-w-md mx-auto;
+        @apply rounded-[18px] p-5;
+        @apply shadow-premium-glow;
+        border: 1px solid oklch(var(--border) / 0.5);
+        background: linear-gradient(135deg, 
+            oklch(var(--card) / 0.95), 
+            oklch(var(--card) / 0.85)
+        );
+    }
+
+    /* Header Section: Three-column layout with centered month title */
+    .premium-calendar :where(.rdp-caption) {
+        @apply grid items-center;
+        grid-template-columns: auto 1fr auto;
+        @apply gap-4;
+        @apply px-4 mb-3;
+    }
+
+    /* Navigation buttons container - positioned in grid */
+    .premium-calendar :where(.rdp-nav) {
+        @apply contents;
+    }
+
+    /* Previous button - left column */
+    .premium-calendar :where(.rdp-button_previous) {
+        @apply w-10 h-10;
+        @apply rounded-full;
+        @apply flex items-center justify-center;
+        @apply text-primary;
+        @apply transition-all duration-300;
+        @apply active:scale-95;
+        @apply disabled:opacity-30 disabled:cursor-not-allowed;
+        border: 1px solid oklch(var(--primary) / 0.3);
+        background: oklch(var(--primary) / 0.1);
+        grid-column: 1;
+    }
+
+    /* Month label - center column, perfectly centered */
+    .premium-calendar :where(.rdp-caption_label) {
+        @apply text-xl font-bold tracking-wide;
+        @apply text-foreground;
+        @apply text-center;
+        grid-column: 2;
+    }
+
+    /* Next button - right column */
+    .premium-calendar :where(.rdp-button_next) {
+        @apply w-10 h-10;
+        @apply rounded-full;
+        @apply flex items-center justify-center;
+        @apply text-primary;
+        @apply transition-all duration-300;
+        @apply active:scale-95;
+        @apply disabled:opacity-30 disabled:cursor-not-allowed;
+        border: 1px solid oklch(var(--primary) / 0.3);
+        background: oklch(var(--primary) / 0.1);
+        grid-column: 3;
+    }
+
+    .premium-calendar :where(.rdp-button_previous:hover, .rdp-button_next:hover) {
+        background: oklch(var(--primary) / 0.2);
+        border-color: oklch(var(--primary) / 0.5);
+        @apply shadow-glow-sm;
+    }
+
+    /* Weekday headers - separated from header with margin */
+    .premium-calendar :where(.rdp-weekdays) {
+        @apply mt-3 mb-2;
+    }
+
+    .premium-calendar :where(.rdp-weekday) {
+        @apply text-xs font-medium;
+        @apply uppercase tracking-wider;
+        color: oklch(var(--muted-foreground) / 0.7);
+    }
+
+    /* Day cells grid - separated from weekday row */
+    .premium-calendar :where(.rdp-month_grid) {
+        @apply w-full;
+        @apply gap-1;
+        @apply mt-2;
+    }
+
+    /* Individual day buttons */
+    .premium-calendar :where(.rdp-day) {
+        @apply w-full aspect-square;
+        @apply min-w-[44px] min-h-[44px];
+        @apply rounded-full;
+        @apply text-sm font-medium;
+        @apply transition-all duration-200;
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+        color: oklch(var(--muted-foreground) / 0.8);
+    }
+
+    .premium-calendar :where(.rdp-day:hover) {
+        background: oklch(var(--accent) / 0.2);
+        @apply text-accent-foreground;
+    }
+
+    /* Today's date - glow ring */
+    .premium-calendar :where(.rdp-day_button.rdp-day_today:not(.rdp-day_selected)) {
+        @apply text-primary;
+        @apply font-semibold;
+        @apply shadow-glow-sm;
+        box-shadow: 0 0 0 2px oklch(var(--primary) / 0.4);
+    }
+
+    /* Selected date - filled accent circle */
+    .premium-calendar :where(.rdp-day_button.rdp-day_selected) {
+        @apply bg-primary text-primary-foreground;
+        @apply font-bold;
+        @apply shadow-glow-md;
+        @apply scale-105;
+    }
+
+    .premium-calendar :where(.rdp-day_button.rdp-day_selected:hover) {
+        background: oklch(var(--primary) / 0.9);
+    }
+
+    /* Disabled dates (future) - reduced opacity */
+    .premium-calendar :where(.rdp-day_button:disabled) {
+        @apply opacity-30;
+        @apply cursor-not-allowed;
+        color: oklch(var(--muted-foreground) / 0.4);
+    }
+
+    .premium-calendar :where(.rdp-day_button:disabled:hover) {
+        @apply bg-transparent;
+    }
+
+    /* Outside month dates */
+    .premium-calendar :where(.rdp-day_outside) {
+        color: oklch(var(--muted-foreground) / 0.3);
+    }
+
+    /* Mobile optimization */
+    @media (max-width: 640px) {
+        .premium-calendar {
+            @apply p-4 rounded-[16px];
+        }
+
+        .premium-calendar :where(.rdp-caption) {
+            @apply px-2 mb-3;
+            @apply gap-3;
+        }
+
+        .premium-calendar :where(.rdp-caption_label) {
+            @apply text-lg;
+        }
+
+        .premium-calendar :where(.rdp-button_previous, .rdp-button_next) {
+            @apply w-9 h-9;
+        }
+
+        .premium-calendar :where(.rdp-day) {
+            @apply min-w-[40px] min-h-[40px];
+            @apply text-sm;
+        }
+
+        .premium-calendar :where(.rdp-month_grid) {
+            @apply gap-0.5;
+        }
+
+        .premium-calendar :where(.rdp-weekdays) {
+            @apply mt-2 mb-1;
+        }
+    }
+}

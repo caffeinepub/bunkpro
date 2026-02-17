@@ -1,61 +1,53 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T07:11:45.047Z",
-  "summary": "REQ-106 and REQ-107 appear implemented (gated scheduling, cleanup, 19:00 guard, rate-limited friendly failure toasts). REQ-104 is partially implemented but the notification body string does not match the required curly-apostrophe text. REQ-105 cannot be fully verified from the truncated diff; click handler wiring exists, but focusing and opening the Mark Today sheet / navigating Home is not evidenced.",
+  "generatedAt": "2026-02-17T11:06:12.574Z",
+  "summary": "The diff does not show any targeted implementation of REQ-115 in the Mark Past Attendance calendar header (no changes are shown to the specified component), and the visible CSS changes include multiple unrelated global/theme/animation additions beyond a layout/spacing-only fix.",
   "missing_requirements": [
     {
-      "id": "REQ-104",
-      "requirement": "Notification body must be exactly \"You haven’t marked today’s attendance. Tap to update now.\" (including the curly apostrophe).",
-      "reason": "The diff shows the reminder body uses a straight apostrophe (\"haven't\") rather than the required curly apostrophe (\"haven’t\"), so the string does not exactly match acceptance criteria.",
+      "id": "REQ-115",
+      "requirement": "Fix the calendar header layout in the \"Mark Past Attendance\" modal so it has three clearly separated sections (header navigation row, weekday row, date grid) with no overlap/collision, and keep the month title perfectly centered between left/right navigation arrows on all screen sizes (including required padding/margins and stable positioning while navigating months).",
+      "reason": "The diff summary does not show any changes to the required target file/component (MarkPastAttendanceSheet.tsx) or any explicit CSS/structure adjustments that demonstrably implement the header/weekday/date-grid separation, centering, and spacing acceptance criteria for that calendar instance.",
       "evidence": [
-        "frontend/src/hooks/useDailyAttendanceReminder.ts"
-      ]
-    },
-    {
-      "id": "REQ-105",
-      "requirement": "Clicking the reminder notification focuses the app window/tab and opens the existing \"Mark Today’s Classes\" bottom sheet, navigating to Home if needed (works from other tabs).",
-      "reason": "While the Notifications API wrapper supports an optional click handler and the reminder hook passes one through, the diff does not provide non-truncated evidence that the click handler actually focuses the window/tab and triggers navigation to Home + opening MarkTodaySheet from any route.",
-      "evidence": [
-        "frontend/src/notifications/notificationsApi.ts",
-        "frontend/src/hooks/useDailyAttendanceReminder.ts",
-        "frontend/src/App.tsx (truncated)"
+        "File diff summary lists modifications only for: frontend/src/index.css, frontend-file-summaries.txt, project_state.json (no frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx shown)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added a test-notification feature (sendTestNotification) with \"Test Notification\" title/body, plus UI logic to send it from the Notifications settings card.",
-      "reason": "BuildRequest focuses on the daily attendance reminder content/click behavior/robustness/failure feedback; it does not request adding a test notification capability.",
+      "description": "Global UI/UX changes unrelated to the requested calendar header spacing fix (e.g., smooth scrolling behavior).",
+      "reason": "BuildRequest scope is limited to a layout/spacing fix in the Mark Past Attendance calendar header; global scrolling UX changes were not requested.",
       "evidence": [
-        "frontend/src/notifications/notificationsApi.ts",
-        "frontend/src/components/settings/NotificationsCard.tsx (truncated)"
+        "frontend/src/index.css (adds `html { scroll-behavior: smooth; }` and reduced-motion override)"
       ]
     },
     {
-      "description": "Modified Home dashboard milestone flow to send browser notifications for streak milestone rewards when notification preferences allow.",
-      "reason": "BuildRequest is specifically about the daily attendance reminder deep-link and robustness, not adding or changing milestone reward notification behavior.",
+      "description": "Confetti animation styling and keyframes.",
+      "reason": "BuildRequest explicitly constrains changes to a calendar header layout/spacing fix only; confetti animation is unrelated and introduces new visual behavior.",
       "evidence": [
-        "frontend/src/pages/HomeDashboardPage.tsx (truncated)"
+        "frontend/src/index.css (adds `.confetti-particle` styles and `@keyframes confetti-fall`)"
       ]
     },
     {
-      "description": "Added/changed profile sync cancellation and related app-level state handling in App.tsx unrelated to reminders.",
-      "reason": "BuildRequest states no backend changes are required for the reminder logic work and does not request changes to profile sync behavior.",
+      "description": "Theme token/variable changes for a \"Purple-Blue Theme\" and additional theme variants.",
+      "reason": "Not requested by REQ-115 and outside the specified scope (calendar header layout/spacing only).",
       "evidence": [
-        "frontend/src/App.tsx (truncated)"
+        "frontend/src/index.css (adds/changes many CSS variables under `:root`, `.dark`, and `[data-theme=\"midnight\"]` blocks)"
+      ]
+    },
+    {
+      "description": "Updates to project tracking/summary files describing unrelated features (e.g., reminders, persistence, backup, premium insights).",
+      "reason": "These changes are not requested by REQ-115 and appear unrelated to the calendar header layout fix.",
+      "evidence": [
+        "frontend-file-summaries.txt (mentions many domain/state/feature updates unrelated to calendar header spacing)",
+        "project_state.json (summary references reminders, persistence, past attendance flow, etc.)"
       ]
     }
   ],
-  "confidence": 0.63,
+  "confidence": 0.62,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/settings/NotificationsCard.tsx",
-    "frontend/src/hooks/useDailyAttendanceReminder.ts",
-    "frontend/src/notifications/notificationsApi.ts",
-    "frontend/src/notifications/reminderFailureFeedback.ts",
-    "frontend/src/pages/HomeDashboardPage.tsx",
+    "frontend/src/index.css",
     "project_state.json"
   ]
 }

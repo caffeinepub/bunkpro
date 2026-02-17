@@ -1,4 +1,4 @@
-// Hook for daily attendance reminder at 7:00 PM with robust scheduling and click handling
+// Hook that checks at/after 7:00 PM local time whether today's attendance is unmarked and sends the required reminder notification once per day with exact title/body strings
 
 import { useEffect, useRef } from 'react';
 import { sendNotification } from '../notifications/notificationsApi';
@@ -70,7 +70,7 @@ export function useDailyAttendanceReminder({
         const result = await sendNotification(
           'Attendance Not Marked 📢',
           {
-            body: "You haven't marked today's attendance. Tap to update now.",
+            body: 'You forgot to mark today\'s attendance. Tap to mark now.',
             tag: 'daily-attendance-reminder',
           },
           true,

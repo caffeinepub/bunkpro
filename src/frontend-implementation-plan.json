@@ -1,85 +1,25 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "BunkPro — Daily attendance reminder deep-link and robustness",
+  "title": "Fix Mark Past Attendance calendar header layout/spacing",
   "requirements": [
     {
-      "id": "REQ-104",
-      "summary": "Ensure the daily attendance reminder notification uses the exact required English title/body strings and remains deduped to at most once per local calendar day via settings.lastReminderDate.",
+      "id": "REQ-115",
+      "summary": "Adjust premium calendar CSS so the calendar header, weekday row, and date grid are clearly separated with a perfectly centered month title and no overlap at any viewport size.",
       "acceptanceCriteria": [
-        "When a reminder notification is sent, its title is exactly \"Attendance Not Marked 📢\".",
-        "When a reminder notification is sent, its body is exactly \"You haven’t marked today’s attendance. Tap to update now.\" (including the curly apostrophe).",
-        "If settings.lastReminderDate equals today’s local YYYY-MM-DD string, no reminder is sent again that day."
+        "In the past attendance date picker (frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx, Calendar with className=\"premium-calendar\"), the header renders as: left arrow | centered month+year | right arrow, with the month text visually centered between arrows.",
+        "Header has horizontal padding of at least 16px on both sides and a bottom margin of at least 12px before the weekday row.",
+        "Weekday row (SU MO TU WE TH FR SA) is visually separated below the header and never overlaps with the arrows or month label.",
+        "Date grid is visually separated below the weekday row with clean padding/spacing; no elements overlap at any viewport width.",
+        "Month title does not shift position when navigating months; arrows stay pinned to left/right extremes.",
+        "Navigation arrow buttons have comfortable clickable/tappable area (8–12px padding equivalent) and do not collide with the weekday row.",
+        "No calendar functionality changes: date selection, disabled future dates, and month navigation behavior remain unchanged."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
+          "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Update the reminder notification payload to use the exact required Title and Body strings (including the curly apostrophe), while keeping the existing settings.lastReminderDate local YYYY-MM-DD dedupe check as the source of truth."
-        }
-      ]
-    },
-    {
-      "id": "REQ-105",
-      "summary": "When the user clicks the reminder notification while the app is running, focus the window and automatically navigate to Home and open the existing Mark Today’s Classes bottom sheet.",
-      "acceptanceCriteria": [
-        "Clicking the reminder notification focuses the app window/tab.",
-        "After clicking the reminder notification, the app navigates to the Home tab if needed and opens the existing MarkTodaySheet UI (the same UI opened by the Dashboard button).",
-        "The click behavior works even if the user is currently on Timetable/Stats/Rank/Settings.",
-        "No immutable frontend paths are modified."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Lift control of the existing MarkTodaySheet to the app shell level so it can be opened from both the Dashboard button and from the reminder notification click handler; ensure the handler also switches the current tab/route to Home before opening the sheet."
-        },
-        {
-          "path": "frontend/src/pages/HomeDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Wire the existing \"Mark Today's Classes\" button to call a parent-provided open handler (instead of only local state), so the same MarkTodaySheet instance can be opened by the notification click flow."
-        },
-        {
-          "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
-          "operation": "modify",
-          "description": "Provide an onClick handler to the notification send call (via notificationsApi) that triggers the app-level navigation-to-Home + open-MarkTodaySheet behavior."
-        }
-      ]
-    },
-    {
-      "id": "REQ-106",
-      "summary": "Harden reminder scheduling so it only schedules checks when notifications and Streak Reminders are enabled, cleans up timers reliably, and never attempts to send before 7:00 PM local time.",
-      "acceptanceCriteria": [
-        "If settings.enableNotifications is false or settings.notificationPreferences.streakReminders is false, the reminder hook does not schedule any interval checks.",
-        "When the reminder hook is active, it never triggers a notification attempt before 19:00 local time.",
-        "Intervals/timeouts created by the reminder hook are cleaned up on unmount and when dependency conditions change, with no accumulating intervals over time."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
-          "operation": "modify",
-          "description": "Refactor the effect to be leak-free: always clear any existing interval/timeout on dependency changes and unmount; only create scheduling when both master notifications and the streak reminders category are enabled; ensure the check function returns before any send attempt prior to 19:00 local time."
-        }
-      ]
-    },
-    {
-      "id": "REQ-107",
-      "summary": "Show clear, user-friendly, non-blocking (toast/alert pattern) feedback when reminders are configured but cannot be sent due to browser limitations, with rate-limited messaging and no raw error text.",
-      "acceptanceCriteria": [
-        "If a reminder attempt fails due to unsupported notifications, permission denied/default, or notifications disabled, the user receives a clear English non-blocking message (toast/alert pattern consistent with the app).",
-        "Failure messaging is rate-limited so it is not shown repeatedly in a short period (no spam).",
-        "The app never displays raw technical error text to users for reminder-related failures."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/notifications/reminderFailureFeedback.ts",
-          "operation": "create",
-          "description": "Add a small helper that maps notificationsApi failure reasons to user-friendly English messages and enforces rate-limiting (e.g., via in-memory ref and/or localStorage timestamps) so reminder-related failure feedback is not noisy."
-        },
-        {
-          "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
-          "operation": "modify",
-          "description": "When a reminder send attempt fails for unsupported API, permission denied/default, or disabled notifications, show a non-blocking toast (using the app’s existing sonner toast pattern) with a friendly message from the new helper, and ensure messages are rate-limited and never show raw technical text."
+          "description": "Update the .premium-calendar DayPicker layout styles to enforce three non-overlapping vertical sections (caption/navigation row, weekday row, date grid). Implement a robust header layout (e.g., grid-based caption row with fixed left/right nav areas and a centered label that doesn’t affect flow or collide), ensure >=16px horizontal padding and >=12px spacing below the header, add explicit spacing between weekday row and date grid, and increase nav button hit area without changing behavior. Use the shadcn/ui Calendar composition as-is (do not modify files under frontend/src/components/ui); Verify the component's usage instructions before implementing."
         }
       ]
     }

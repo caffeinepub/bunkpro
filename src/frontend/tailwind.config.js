@@ -65,7 +65,10 @@ export default {
             boxShadow: {
                 xs: '0 1px 2px 0 rgba(0,0,0,0.05)',
                 glass: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-                neumorphic: '8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,0.05)'
+                neumorphic: '8px 8px 16px rgba(0,0,0,0.1), -8px -8px 16px rgba(255,255,255,0.05)',
+                'glow-sm': '0 0 12px oklch(var(--primary) / 0.3)',
+                'glow-md': '0 0 20px oklch(var(--primary) / 0.4)',
+                'premium-glow': '0 4px 24px oklch(var(--primary) / 0.15), 0 2px 8px oklch(var(--border) / 0.3)'
             },
             keyframes: {
                 'accordion-down': {

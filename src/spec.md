@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Make the daily attendance reminder notification consistent, deep-link into the existing “Mark Today’s Classes” UI when clicked, and ensure reminder scheduling is robust, leak-free, and user-friendly when notifications can’t be delivered.
+**Goal:** Fix the calendar header layout/spacing in the “Mark Past Attendance” modal so the navigation header, weekday row, and date grid are clearly separated with no overlap, and the month title stays perfectly centered between the left/right arrows on all screen sizes.
 
 **Planned changes:**
-- Update the reminder notification content to use the exact required English title/body strings, and keep it deduped to at most once per local calendar day using the existing `settings.lastReminderDate` mechanism.
-- Implement reminder notification click behavior so that clicking while the app is running focuses the window and opens the existing “Mark Today’s Classes” bottom sheet (navigating to Home first if needed).
-- Harden reminder scheduling/polling so checks only run when notifications and the Streak Reminders category are enabled; ensure intervals/timeouts are cleaned up on unmount/dependency changes; and prevent any notification attempts before 7:00 PM local time.
-- Add clear, non-blocking, rate-limited user feedback (toast/alert style consistent with the app) when reminders can’t be sent due to browser notification limitations or permissions, without showing raw technical errors.
+- Update the “Mark Past Attendance” calendar header layout to a 3-section structure: navigation header row, weekday row, and date grid with consistent vertical spacing.
+- Implement a flexbox-based navigation header (left arrow | centered month+year | right arrow) with adequate horizontal padding and bottom margin, ensuring the month title remains visually centered and does not shift when navigating months.
+- Adjust spacing/padding to prevent any collisions between header elements, weekday row, and date grid across viewport sizes, while preserving existing calendar behavior.
 
-**User-visible outcome:** Users receive a correctly-worded daily reminder at most once per day after 7:00 PM, can click it to jump directly into the existing “Mark Today’s Classes” sheet from anywhere in the app, and will see clear non-spammy messages if the browser can’t deliver notifications.
+**User-visible outcome:** The past attendance date picker displays a clean, non-overlapping calendar layout with a stable centered month title and comfortable navigation arrows, without changing how date selection or month navigation works.

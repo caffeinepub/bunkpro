@@ -99,18 +99,6 @@ export function clearSessionParameter(key: string): void {
 }
 
 /**
- * Clears all parameters from sessionStorage
- * Used during logout to ensure complete cleanup
- */
-export function clearAllSessionParameters(): void {
-    try {
-        sessionStorage.clear();
-    } catch (error) {
-        console.warn('Failed to clear all session parameters:', error);
-    }
-}
-
-/**
  * Removes a specific parameter from the URL hash without reloading the page
  * Preserves route information and other parameters in the hash
  * Used to remove sensitive data from the address bar after extracting it

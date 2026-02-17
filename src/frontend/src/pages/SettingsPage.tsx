@@ -1,4 +1,5 @@
 // Settings page with resilient logout flow, notification category preferences, and proper error handling
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,6 @@ import { useAuthRecovery } from '../hooks/useAuthRecovery';
 import { toast } from 'sonner';
 import type { UserProfile as BackendUserProfile } from '../backend';
 import type { AppState, NotificationPreferences } from '../domain/attendanceTypes';
-import { clearAllSessionParameters } from '../utils/urlParams';
 
 export function SettingsPage() {
   const { state, dispatch } = useAppStore();
@@ -83,8 +83,12 @@ export function SettingsPage() {
       // Complete local cleanup via auth recovery hook
       await performLogout(false); // Don't show duplicate toast
 
-      // Clear sessionStorage including URL param secrets
-      clearAllSessionParameters();
+      // Clear sessionStorage
+      try {
+        sessionStorage.clear();
+      } catch (error) {
+        console.warn('Failed to clear sessionStorage:', error);
+      }
 
       toast.success('Logged out successfully');
     } catch (error) {

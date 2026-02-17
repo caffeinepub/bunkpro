@@ -1,96 +1,57 @@
 {
   "kind": "build_request",
-  "title": "Complete daily attendance reminder deep-link and robustness",
+  "title": "Fix Mark Past Attendance calendar header layout/spacing",
   "projectName": "BunkPro",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-104",
-      "text": "Update the daily attendance reminder notification content to exactly match the required English strings when sent: Title exactly \"Attendance Not Marked 📢\" and Body exactly \"You haven’t marked today’s attendance. Tap to update now.\", and keep the reminder deduped to at most once per local calendar day using the existing settings.lastReminderDate mechanism.",
+      "id": "REQ-115",
+      "text": "Fix the calendar header layout in the \"Mark Past Attendance\" modal so it has three clearly separated sections (Header navigation row, Weekday row, Date grid) with no overlap/collision, and the month title remains perfectly centered between left/right navigation arrows on all screen sizes.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-4"
         ],
         "quotes": [
-          "Continue with reminder logic"
+          "Fix the UI bug in the calendar component inside the \"Mark Past Attendance\" modal.",
+          "The calendar must have 3 clearly separated sections: Header Section (Navigation Row), Weekday Row (Below Header), Date Grid Section",
+          "Month title must be perfectly centered",
+          "Use Flexbox Layout for Header: display: flex; justify-content: space-between; align-items: center; padding-left: 16px; padding-right: 16px; margin-bottom: 12px"
         ]
       },
       "acceptanceCriteria": [
-        "When a reminder notification is sent, its title is exactly \"Attendance Not Marked 📢\".",
-        "When a reminder notification is sent, its body is exactly \"You haven’t marked today’s attendance. Tap to update now.\" (including the curly apostrophe).",
-        "If settings.lastReminderDate equals today’s local YYYY-MM-DD string, no reminder is sent again that day."
-      ]
-    },
-    {
-      "id": "REQ-105",
-      "text": "Implement the reminder notification click behavior so that when the user clicks the reminder notification while the app is running, the app window is focused and the existing \"Mark Today’s Classes\" bottom sheet opens (without requiring a manual navigation by the user).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Continue with reminder logic"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Clicking the reminder notification focuses the app window/tab.",
-        "After clicking the reminder notification, the app navigates to the Home tab if needed and opens the existing MarkTodaySheet UI (the same UI opened by the Dashboard button).",
-        "The click behavior works even if the user is currently on Timetable/Stats/Rank/Settings.",
-        "No immutable frontend paths are modified."
-      ]
-    },
-    {
-      "id": "REQ-106",
-      "text": "Harden the reminder scheduling/polling logic so it is safe and leak-free: only schedule checks when notifications are enabled AND the Streak Reminders category is enabled; ensure intervals are cleaned up on settings changes/unmount; and ensure the reminder check does not spam repeated attempts before 7:00 PM local time.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Continue with reminder logic"
-        ]
-      },
-      "acceptanceCriteria": [
-        "If settings.enableNotifications is false or settings.notificationPreferences.streakReminders is false, the reminder hook does not schedule any interval checks.",
-        "When the reminder hook is active, it never triggers a notification attempt before 19:00 local time.",
-        "Intervals/timeouts created by the reminder hook are cleaned up on unmount and when dependency conditions change, with no accumulating intervals over time."
-      ]
-    },
-    {
-      "id": "REQ-107",
-      "text": "Add clear English, user-friendly, non-blocking feedback when the app is configured to send reminders but cannot send them due to browser limitations (unsupported Notifications API, permission denied/default, or notifications disabled), using the existing toast/alert patterns and avoiding repeated noisy messages.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Continue with reminder logic"
-        ]
-      },
-      "acceptanceCriteria": [
-        "If a reminder attempt fails due to unsupported notifications, permission denied/default, or notifications disabled, the user receives a clear English non-blocking message (toast/alert pattern consistent with the app).",
-        "Failure messaging is rate-limited so it is not shown repeatedly in a short period (no spam).",
-        "The app never displays raw technical error text to users for reminder-related failures."
+        "In the past attendance date picker (frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx, Calendar with className=\"premium-calendar\"), the header renders as: left arrow | centered month+year | right arrow, with the month text visually centered between arrows.",
+        "Header has horizontal padding of at least 16px on both sides and a bottom margin of at least 12px before the weekday row.",
+        "Weekday row (SU MO TU WE TH FR SA) is visually separated below the header and never overlaps with the arrows or month label.",
+        "Date grid is visually separated below the weekday row with clean padding/spacing; no elements overlap at any viewport width.",
+        "Month title does not shift position when navigating months; arrows stay pinned to left/right extremes.",
+        "Navigation arrow buttons have comfortable clickable/tappable area (8–12px padding equivalent) and do not collide with the weekday row.",
+        "No calendar functionality changes: date selection, disabled future dates, and month navigation behavior remain unchanged."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under frontend/src/components/ui (compose existing components instead).",
-    "Do not edit immutable frontend paths listed in SYSTEM_CONTEXT (including frontend/src/main.tsx and the auth hooks).",
-    "Keep the architecture single-actor on the backend; no backend changes are required for this reminder logic work.",
-    "Use English for all user-facing text."
+    "Do not modify any files under frontend/src/components/ui (immutable UI component sources must be composed, not edited).",
+    "Do not change calendar functionality (date selection, disabled dates, navigation behavior); this is a layout/spacing fix only.",
+    "Use English for any user-facing text."
   ],
   "nonGoals": [
-    "Implementing true background push notifications or service-worker-based push delivery when the app is closed.",
-    "Adding any new backend endpoints or storing reminder state in the backend.",
-    "Changing core attendance calculation logic or the mark-today attendance workflow beyond opening the existing UI."
+    "Do not add new calendar features (e.g., range selection, week numbers, custom tooltips).",
+    "Do not change the past attendance flow logic, validation rules, or save behavior.",
+    "Do not introduce new timers/intervals or polling related to the calendar UI."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

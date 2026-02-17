@@ -1,4 +1,5 @@
-// Settings card for managing browser notification preferences with category toggles and clear limitation messaging
+// Settings card for managing browser notification preferences with category toggles, clear limitation messaging explicitly stating FCM/background push is not supported, and test notification functionality
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -112,9 +113,13 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
         {/* Platform Limitations Notice */}
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            <strong>Browser notifications only:</strong> Notifications require browser permission and work only while the app is open. 
-            Delivery is not guaranteed when the browser or app is closed. Behavior depends on your browser's notification support.
+          <AlertDescription className="text-sm space-y-2">
+            <p>
+              <strong>Browser notifications only:</strong> This build supports browser-based notifications that work while the app is running.
+            </p>
+            <p>
+              <strong>Not supported:</strong> Firebase Cloud Messaging (FCM) push notifications for background delivery on Web or Android are not available in this platform build. Notifications are not guaranteed when the browser or app is closed.
+            </p>
           </AlertDescription>
         </Alert>
 
@@ -136,126 +141,126 @@ export function NotificationsCard({ enabled, preferences, onToggle, onPreference
               <AlertDescription>
                 {permission === 'denied'
                   ? 'Notification permission was denied. Please enable it in your browser settings to receive notifications.'
-                  : 'Notification permission is required. Click the button below to grant permission.'}
+                  : 'Notification permission is required to receive alerts.'}
               </AlertDescription>
             </Alert>
 
-            {permission === 'default' && (
+            {permission !== 'denied' && (
               <Button
                 onClick={handleRequestPermission}
                 disabled={isRequesting}
                 className="w-full"
               >
-                {isRequesting ? 'Requesting Permission...' : 'Grant Notification Permission'}
+                {isRequesting ? 'Requesting...' : 'Request Permission'}
               </Button>
             )}
           </div>
         )}
 
-        {/* Master Toggle */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="enable-notifications" className="text-base font-medium">
-              Enable Notifications
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              Master switch for all notifications
-            </p>
-          </div>
-          <Switch
-            id="enable-notifications"
-            checked={enabled}
-            onCheckedChange={onToggle}
-            disabled={!canEnable}
-          />
-        </div>
-
-        {/* Category Toggles */}
-        {enabled && canEnable && (
+        {/* Main Toggle */}
+        {canEnable && (
           <>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notifications-toggle" className="text-base">
+                  Enable Notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive browser notifications while app is open
+                </p>
+              </div>
+              <Switch
+                id="notifications-toggle"
+                checked={enabled}
+                onCheckedChange={onToggle}
+              />
+            </div>
+
             <Separator />
 
-            <div className="space-y-4">
-              <p className="text-sm font-medium">Notification Categories</p>
+            {/* Notification Categories */}
+            {enabled && (
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">Notification Categories</h4>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="ranking-alerts" className="text-sm font-medium">
-                    Ranking Alerts
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Get notified about leaderboard changes
-                  </p>
-                </div>
-                <Switch
-                  id="ranking-alerts"
-                  checked={preferences.rankingAlerts}
-                  onCheckedChange={() => handleTogglePreference('rankingAlerts')}
-                />
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="streak-reminders" className="text-sm font-normal">
+                        Daily Reminders
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Remind me at 7 PM if I haven't marked attendance
+                      </p>
+                    </div>
+                    <Switch
+                      id="streak-reminders"
+                      checked={preferences.streakReminders}
+                      onCheckedChange={() => handleTogglePreference('streakReminders')}
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="reward-alerts" className="text-sm font-medium">
-                    Reward Alerts
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Get notified when you earn points or achievements
-                  </p>
-                </div>
-                <Switch
-                  id="reward-alerts"
-                  checked={preferences.rewardAlerts}
-                  onCheckedChange={() => handleTogglePreference('rewardAlerts')}
-                />
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="ranking-alerts" className="text-sm font-normal">
+                        Ranking Alerts
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Notify me about ranking changes and achievements
+                      </p>
+                    </div>
+                    <Switch
+                      id="ranking-alerts"
+                      checked={preferences.rankingAlerts}
+                      onCheckedChange={() => handleTogglePreference('rankingAlerts')}
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="streak-reminders" className="text-sm font-medium">
-                    Streak Reminders
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Get reminded about your attendance streaks
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="reward-alerts" className="text-sm font-normal">
+                        Reward Alerts
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Notify me when I earn points or rewards
+                      </p>
+                    </div>
+                    <Switch
+                      id="reward-alerts"
+                      checked={preferences.rewardAlerts}
+                      onCheckedChange={() => handleTogglePreference('rewardAlerts')}
+                    />
+                  </div>
                 </div>
-                <Switch
-                  id="streak-reminders"
-                  checked={preferences.streakReminders}
-                  onCheckedChange={() => handleTogglePreference('streakReminders')}
-                />
+
+                <Separator />
+
+                {/* Test Notification */}
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleSendTest}
+                    disabled={isSendingTest}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isSendingTest ? 'Sending...' : 'Send Test Notification'}
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
 
-        {/* Test Notification */}
-        {enabled && canEnable && (
-          <>
-            <Separator />
-
-            <div className="space-y-3">
-              <Button
-                onClick={handleSendTest}
-                disabled={isSendingTest}
-                variant="outline"
-                className="w-full"
-              >
-                {isSendingTest ? 'Sending...' : 'Send Test Notification'}
-              </Button>
-
-              {testResult && (
-                <Alert variant={testResult.success ? 'default' : 'destructive'}>
-                  {testResult.success ? (
-                    <CheckCircle2 className="h-4 w-4" />
-                  ) : (
-                    <XCircle className="h-4 w-4" />
-                  )}
-                  <AlertDescription>{testResult.message}</AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </>
+        {/* Test Result Feedback */}
+        {testResult && (
+          <Alert variant={testResult.success ? 'default' : 'destructive'}>
+            {testResult.success ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <XCircle className="h-4 w-4" />
+            )}
+            <AlertDescription>{testResult.message}</AlertDescription>
+          </Alert>
         )}
       </CardContent>
     </Card>

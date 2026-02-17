@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 47,
+  "projectStateVersion": 53,
   "summary": "Upgrade BunkPro with (1) a new \"Mark Past Attendance\" flow that lets users mark attendance for any past date via a calendar, prevents future/duplicate marking, stores per-date attendance records, and safely recalculates streak/points; (2) disable any automatic \"auto-absent\" handling for missed days; and (3) add a once-per-day reminder push notification if today’s attendance is not marked by a configured time, respecting notification settings and deep-linking into the attendance screen on both app and web.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
@@ -21,9 +21,11 @@
     "UI regression: “Mark Today’s Classes” and “View Rankings” buttons changed to black; should be purple per app theme.",
     "Global Ranking visibility bug: users are not mutually visible (leaderboard appears device-specific/partially loaded/incorrectly filtered; may only show current user or be truncated).",
     "Critical: After logout, the app shows an “Unauthorized User” error (logout flow is not clearing auth/session state and/or API calls continue after logout).",
-    "Push notifications not working after APK installation (no notifications received)."
+    "Push notifications not working after APK installation (no notifications received).",
+    "Calendar header UI issue: month name and navigation arrows are overlapping/too close; needs centered month text with left/right arrows at extremes and proper padding.",
+    "Bug: In 'Mark Past Attendance' flow, calendar date selection updates visually but subjects do not display after selecting a date (selectedDate not persisted / subject filtering by weekday not triggered; UI not re-rendering)."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -760,6 +762,70 @@
         "REQ-107"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-upgrade-the-existing-calendar-month-header-layout-so-the-month-label-is-centered-and-the-navigation-arrows-are-placed-at-the-extreme-left-right-with-proper-horizontal-padding-without-changing-any-calendar-functionality-date-selection-disabled-dates-navigation-behavior-the-header-must-use-a-flex-layout-equivalent-to-left-arrow-centered-month-text-right-arrow-with-justify-between-behavior-and-minimum-16px-horizontal-padding-ensuring-no-overlap-at-any-screen-size",
+      "title": "Upgrade the existing calendar month header layout so the month label is centered and the navigation arrows are placed at the extreme left/right with proper horizontal padding, without changing any calendar functionality (date selection, disabled dates, navigation behavior). The header must use a flex layout equivalent to: left arrow | centered month text | right arrow, with `justify-between` behavior and minimum 16px horizontal padding, ensuring no overlap at any screen size.",
+      "reqIds": [
+        "REQ-108"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-the-calendar-s-visual-hierarchy-and-premium-styling-layout-only-make-the-month-label-larger-with-semi-bold-bold-weight-and-slight-letter-spacing-render-navigation-arrows-as-circular-touch-friendly-icon-buttons-with-a-subtle-border-or-soft-glow-and-smooth-hover-press-animations-do-not-change-the-click-targets-behavior-or-add-new-functionality",
+      "title": "Improve the calendar’s visual hierarchy and premium styling (layout-only): make the month label larger with semi-bold/bold weight and slight letter spacing; render navigation arrows as circular, touch-friendly icon buttons with a subtle border or soft glow and smooth hover/press animations. Do not change the click targets’ behavior or add new functionality.",
+      "reqIds": [
+        "REQ-109"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-calendar-container-and-day-cells-look-premium-with-a-dark-modern-theme-and-neon-blue-violet-accents-without-changing-functionality-1-calendar-container-uses-rounded-corners-16-20px-radius-subtle-dark-gradient-background-1px-subtle-border-and-soft-shadow-glow-2-day-cells-have-clear-visual-states-default-dates-in-soft-grey-today-highlighted-with-a-glow-ring-selected-date-as-a-filled-circle-using-the-accent-color-and-disabled-future-dates-shown-with-lower-opacity-3-add-a-smooth-selection-animation-that-does-not-cause-layout-shift",
+      "title": "Make the calendar container and day cells look premium with a dark modern theme and neon blue/violet accents, without changing functionality: (1) calendar container uses rounded corners (16–20px radius), subtle dark gradient background, 1px subtle border, and soft shadow/glow; (2) day cells have clear visual states—default dates in soft grey, today highlighted with a glow ring, selected date as a filled circle using the accent color, and disabled future dates shown with lower opacity; (3) add a smooth selection animation that does not cause layout shift.",
+      "reqIds": [
+        "REQ-110"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-optimize-the-calendar-ui-for-mobile-responsiveness-without-changing-functionality-ensure-tap-friendly-day-cell-sizing-adequate-spacing-between-dates-no-crowding-overflow-and-responsive-scaling-across-small-screens-the-calendar-must-remain-performant-no-jank-and-must-not-introduce-new-timers-or-leaking-intervals",
+      "title": "Optimize the calendar UI for mobile responsiveness without changing functionality: ensure tap-friendly day cell sizing, adequate spacing between dates, no crowding/overflow, and responsive scaling across small screens. The calendar must remain performant (no jank) and must not introduce new timers or leaking intervals.",
+      "reqIds": [
+        "REQ-111"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-mark-past-attendance-flow-so-that-selecting-a-past-date-immediately-displays-the-scheduled-subjects-for-that-date-filtered-by-the-selected-date-s-weekday-same-date-exchange-overrides-and-the-ui-reliably-transitions-from-date-selection-to-the-subject-marking-step-without-closing-resetting-unexpectedly",
+      "title": "Fix the \"Mark Past Attendance\" flow so that selecting a past date immediately displays the scheduled subjects for that date (filtered by the selected date’s weekday + same-date exchange overrides), and the UI reliably transitions from date selection to the subject-marking step without closing/resetting unexpectedly.",
+      "reqIds": [
+        "REQ-112"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-daily-missed-attendance-reminder-notification-body-text-to-exactly-you-forgot-to-mark-today-s-attendance-tap-to-mark-now-while-keeping-the-reminder-deduped-to-at-most-once-per-local-calendar-day-and-keeping-the-existing-click-behavior-that-focuses-the-app-and-opens-the-mark-today-s-classes-ui-while-the-app-is-running",
+      "title": "Update the daily missed-attendance reminder notification body text to exactly: \"You forgot to mark today's attendance. Tap to mark now.\" while keeping the reminder deduped to at most once per local calendar day and keeping the existing click behavior that focuses the app and opens the \"Mark Today’s Classes\" UI while the app is running.",
+      "reqIds": [
+        "REQ-113"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-clear-english-user-facing-messaging-in-settings-notifications-and-or-relevant-notification-surfaces-clarifying-that-this-build-supports-browser-notifications-while-the-app-is-running-and-does-not-support-firebase-cloud-messaging-fcm-push-notifications-for-background-delivery-on-web-or-android-within-this-platform-build",
+      "title": "Add clear English user-facing messaging in Settings → Notifications and/or relevant notification surfaces clarifying that this build supports browser notifications while the app is running and does not support Firebase Cloud Messaging (FCM) push notifications for background delivery on Web or Android within this platform build.",
+      "reqIds": [
+        "REQ-114"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-calendar-header-layout-in-the-mark-past-attendance-modal-so-it-has-three-clearly-separated-sections-header-navigation-row-weekday-row-date-grid-with-no-overlap-collision-and-the-month-title-remains-perfectly-centered-between-left-right-navigation-arrows-on-all-screen-sizes",
+      "title": "Fix the calendar header layout in the \"Mark Past Attendance\" modal so it has three clearly separated sections (Header navigation row, Weekday row, Date grid) with no overlap/collision, and the month title remains perfectly centered between left/right navigation arrows on all screen sizes.",
+      "reqIds": [
+        "REQ-115"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1071,6 +1137,12 @@
       "reqIds": [
         "REQ-96"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-84",
+      "summary": "Upgrade existing calendar UI design/layout only (no functionality changes): fix month/header arrow alignment with flex + padding; premium dark theme container styling; improved date states (default/today/selected/disabled) with smooth animations; touch-friendly circular nav buttons; mobile-responsive spacing.",
+      "reqIds": [],
       "status": "pending"
     }
   ],

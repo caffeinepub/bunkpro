@@ -8,6 +8,7 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const Time = IDL.Int;
 export const AddPointsResult = IDL.Variant({
   'success' : IDL.Nat,
   'pointsUpdateFailed' : IDL.Null,
@@ -22,7 +23,6 @@ export const UserProfile = IDL.Record({
   'email' : IDL.Text,
   'college' : IDL.Text,
 });
-export const Time = IDL.Int;
 export const RankingDetails = IDL.Record({
   'streak' : IDL.Nat,
   'displayName' : IDL.Text,
@@ -34,6 +34,7 @@ export const RankingDetails = IDL.Record({
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addDailyAttendance' : IDL.Func([Time, IDL.Vec(IDL.Text)], [], []),
   'addPoints' : IDL.Func([IDL.Nat], [AddPointsResult], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'deleteCallerUser' : IDL.Func([], [], []),
@@ -61,6 +62,7 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const Time = IDL.Int;
   const AddPointsResult = IDL.Variant({
     'success' : IDL.Nat,
     'pointsUpdateFailed' : IDL.Null,
@@ -75,7 +77,6 @@ export const idlFactory = ({ IDL }) => {
     'email' : IDL.Text,
     'college' : IDL.Text,
   });
-  const Time = IDL.Int;
   const RankingDetails = IDL.Record({
     'streak' : IDL.Nat,
     'displayName' : IDL.Text,
@@ -87,6 +88,7 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addDailyAttendance' : IDL.Func([Time, IDL.Vec(IDL.Text)], [], []),
     'addPoints' : IDL.Func([IDL.Nat], [AddPointsResult], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'deleteCallerUser' : IDL.Func([], [], []),

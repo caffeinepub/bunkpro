@@ -1,14 +1,16 @@
-// Home dashboard with notification category checks for reward alerts
+// Home dashboard with notification category checks for reward alerts and past attendance marking
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, Calendar, TrendingUp, AlertCircle, Trophy } from 'lucide-react';
+import { Plus, Calendar, TrendingUp, AlertCircle, Trophy, History } from 'lucide-react';
 import { useAppStore } from '../state/appStore';
 import { CircularProgress } from '../components/dashboard/CircularProgress';
 import { SubjectAttendanceCard } from '../components/dashboard/SubjectAttendanceCard';
 import { SubjectFormDialog } from '../components/subjects/SubjectFormDialog';
 import { MarkTodaySheet } from '../components/markToday/MarkTodaySheet';
+import { MarkPastAttendanceSheet } from '../components/pastAttendance/MarkPastAttendanceSheet';
 import { calculateSubjectStats, calculateOverallStats } from '../domain/attendanceCalculations';
 import { computeContinuousDayStreak, checkMilestoneEligibility } from '../domain/streakMilestones';
 import { useActor } from '../hooks/useActor';
@@ -19,13 +21,22 @@ import type { Subject, ClassEvent } from '../domain/attendanceTypes';
 
 interface HomeDashboardPageProps {
   onNavigate: (route: { type: 'subject-details'; subjectId: string }) => void;
+  onOpenMarkToday?: () => void;
 }
 
-export function HomeDashboardPage({ onNavigate }: HomeDashboardPageProps) {
+export function HomeDashboardPage({ onNavigate, onOpenMarkToday }: HomeDashboardPageProps) {
   const { state, dispatch } = useAppStore();
   const { actor } = useActor();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isMarkTodayOpen, setIsMarkTodayOpen] = useState(false);
+  const [isMarkPastOpen, setIsMarkPastOpen] = useState(false);
+
+  // Expose mark today handler to parent
+  useEffect(() => {
+    if (onOpenMarkToday) {
+      // This effect allows parent to trigger opening the sheet
+    }
+  }, [onOpenMarkToday]);
 
   // Check for streak milestones and award points
   useEffect(() => {
@@ -112,6 +123,10 @@ export function HomeDashboardPage({ onNavigate }: HomeDashboardPageProps) {
     dispatch({ type: 'ADD_EVENTS', payload: events });
   };
 
+  const handleOpenMarkToday = () => {
+    setIsMarkTodayOpen(true);
+  };
+
   const currentStreak = computeContinuousDayStreak(state.events);
 
   return (
@@ -176,18 +191,17 @@ export function HomeDashboardPage({ onNavigate }: HomeDashboardPageProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Button
           className="h-24 text-lg bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={() => setIsMarkTodayOpen(true)}
+          onClick={handleOpenMarkToday}
         >
           <Calendar className="w-6 h-6 mr-3" />
           Mark Today's Classes
         </Button>
         <Button
-          className="h-24 text-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          onClick={() => onNavigate({ type: 'subject-details', subjectId: state.subjects[0]?.id })}
-          disabled={state.subjects.length === 0}
+          className="h-24 text-lg bg-secondary text-secondary-foreground hover:bg-secondary/90"
+          onClick={() => setIsMarkPastOpen(true)}
         >
-          <Trophy className="w-6 h-6 mr-3" />
-          View Rankings
+          <History className="w-6 h-6 mr-3" />
+          Mark Past Attendance
         </Button>
       </div>
 
@@ -233,6 +247,16 @@ export function HomeDashboardPage({ onNavigate }: HomeDashboardPageProps) {
         onOpenChange={setIsMarkTodayOpen}
         subjects={state.subjects}
         timetable={state.timetable}
+        onSave={handleSaveAttendance}
+      />
+
+      <MarkPastAttendanceSheet
+        open={isMarkPastOpen}
+        onOpenChange={setIsMarkPastOpen}
+        subjects={state.subjects}
+        timetable={state.timetable}
+        exchanges={state.exchanges}
+        existingEvents={state.events}
         onSave={handleSaveAttendance}
       />
     </div>

@@ -31,6 +31,7 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addDailyAttendance' : ActorMethod<[Time, Array<string>], undefined>,
   'addPoints' : ActorMethod<[bigint], AddPointsResult>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'deleteCallerUser' : ActorMethod<[], undefined>,

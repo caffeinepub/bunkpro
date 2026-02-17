@@ -8,6 +8,8 @@ export type NotificationResult =
   | { success: true }
   | { success: false; reason: 'unsupported' | 'permission-denied' | 'permission-default' | 'disabled' | 'error'; message: string };
 
+export type NotificationClickHandler = () => void;
+
 /**
  * Checks if the browser supports notifications
  */
@@ -49,7 +51,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
  */
 export async function sendNotification(
   title: string,
-  options?: NotificationOptions,
+  options?: NotificationOptions & { onClick?: NotificationClickHandler },
   enabled: boolean = true
 ): Promise<NotificationResult> {
   // Check if notifications are enabled in app settings
@@ -91,11 +93,22 @@ export async function sendNotification(
 
   // Permission is granted, send notification
   try {
+    const { onClick, ...notificationOptions } = options || {};
+    
     const notification = new Notification(title, {
       icon: '/assets/generated/bunkpro-favicon.dim_32x32.png',
       badge: '/assets/generated/bunkpro-favicon.dim_32x32.png',
-      ...options,
+      ...notificationOptions,
     });
+
+    // Attach click handler if provided
+    if (onClick) {
+      notification.onclick = () => {
+        window.focus();
+        onClick();
+        notification.close();
+      };
+    }
 
     // Auto-close after 5 seconds
     setTimeout(() => {

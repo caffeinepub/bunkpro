@@ -12,10 +12,18 @@ import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+import Validation "validation";
+
 actor {
   // Mix in the authorization logic
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
+  type AttendanceDay = {
+    date : Time.Time;
+    courses : [Text];
+    timestamp : Time.Time;
+  };
 
   type RankingDetails = {
     displayName : Text;
@@ -49,6 +57,7 @@ actor {
   };
 
   let users = Map.empty<Principal, UserData>();
+  let attendanceDays = Map.empty<Principal, Map.Map<Time.Time, AttendanceDay>>();
   var lastRecalculated : ?Time.Time = null;
 
   func compareEntriesForRanking(a : RankingDetails, b : RankingDetails) : Order.Order {
@@ -96,23 +105,30 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
+
+    let trimmedDisplayName = profile.displayName.trim(#char ' ');
+
+    Validation.isValidName(trimmedDisplayName);
+
+    let trimmedCollege = profile.college.trim(#char ' ');
+
     switch (users.get(caller)) {
       case (null) {
         let newUser : UserData = {
-          displayName = profile.displayName;
+          displayName = trimmedDisplayName;
           points = 0;
           streak = 0;
           joinDate = Time.now();
           longestStreak = 0;
           currentStreak = 0;
-          college = ?profile.college;
+          college = ?trimmedCollege;
           rankingDetails = {
-            displayName = profile.displayName;
+            displayName = trimmedDisplayName;
             points = 0;
             streak = 0;
             joinDate = Time.now();
             longestStreak = 0;
-            college = ?profile.college;
+            college = ?trimmedCollege;
           };
         };
         users.add(caller, newUser);
@@ -120,12 +136,12 @@ actor {
       case (?existingUser) {
         let updatedUser : UserData = {
           existingUser with
-          displayName = profile.displayName;
-          college = ?profile.college;
+          displayName = trimmedDisplayName;
+          college = ?trimmedCollege;
           rankingDetails = {
             existingUser.rankingDetails with
-            displayName = profile.displayName;
-            college = ?profile.college;
+            displayName = trimmedDisplayName;
+            college = ?trimmedCollege;
           };
         };
         users.add(caller, updatedUser);
@@ -147,6 +163,41 @@ actor {
             case (?college) { college };
           };
           email = "not-implemented";
+        };
+      };
+    };
+  };
+
+  public shared ({ caller }) func addDailyAttendance(date : Time.Time, courses : [Text]) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can mark attendance");
+    };
+
+    let now = Time.now();
+
+    // Prevent marking future dates
+    if (date > now) {
+      Runtime.trap("Cannot mark attendance for a future date");
+    };
+
+    // Check for duplicate dates
+    let callerAttendance = attendanceDays.get(caller);
+    switch (callerAttendance) {
+      case (null) {
+        // No existing attendance map for caller, create new and add entry
+        let newAttendance = Map.empty<Time.Time, AttendanceDay>();
+        newAttendance.add(date, { date; courses; timestamp = now });
+        attendanceDays.add(caller, newAttendance);
+      };
+      case (?userAttendance) {
+        // Check if date already exists to prevent duplicates
+        switch (userAttendance.get(date)) {
+          case (null) {
+            userAttendance.add(date, { date; courses; timestamp = now });
+          };
+          case (?_) {
+            Runtime.trap("Attendance already marked for this date");
+          };
         };
       };
     };
@@ -192,8 +243,6 @@ actor {
     };
   };
 
-  // Public query - accessible to all users including guests
-  // Global leaderboard should be publicly accessible
   public query func getGlobalRankingPaginated(start : Nat, count : Nat) : async [RankingDetails] {
     let allEntries = users.values().map(func(userData) { userData.rankingDetails }).toArray();
     let sortedEntries = allEntries.sort(compareEntriesForRanking);
@@ -213,8 +262,6 @@ actor {
     );
   };
 
-  // Public query - accessible to all users including guests
-  // College-specific leaderboard should be publicly accessible
   public query func getRankingByCollege(college : Text, start : Nat, count : Nat) : async [RankingDetails] {
     let filteredEntries = users.values()
       .map(func(userData) { userData.rankingDetails })

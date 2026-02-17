@@ -33,11 +33,11 @@ export function validateDisplayName(input: string): ValidationResult {
     };
   }
   
-  // Only allow letters (A-Z, a-z) and spaces
-  if (!/^[A-Za-z\s]+$/.test(trimmed)) {
+  // Only allow letters (A-Z, a-z), numbers (0-9), spaces, and underscores
+  if (!/^[A-Za-z0-9_ ]+$/.test(trimmed)) {
     return {
       isValid: false,
-      error: 'Name can only contain letters and spaces',
+      error: 'Only letters, numbers, spaces and underscore are allowed.',
       normalizedValue: trimmed,
     };
   }

@@ -34,6 +34,7 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    addDailyAttendance(date: Time, courses: Array<string>): Promise<void>;
     addPoints(pointsToAdd: bigint): Promise<AddPointsResult>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     deleteCallerUser(): Promise<void>;

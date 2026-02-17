@@ -1,140 +1,280 @@
 {
   "kind": "build_request",
-  "title": "Fix logout Unauthorized error and harden notifications within supported web capabilities",
+  "title": "Add Mark Past Attendance flow + missed-day handling + daily reminder notification",
   "projectName": "BunkPro",
-  "priority": "high",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-82",
-      "text": "Fix the post-logout “Unauthorized User” bug by making the logout flow immediately transition the UI to the Login screen, cancel/stop any in-flight backend calls, and prevent any subsequent backend calls from being initiated after logout completes.",
+      "id": "REQ-91",
+      "text": "Add a new Dashboard quick-action button labeled exactly \"Mark Past Attendance\" placed below the existing \"Mark Today's Classes\" button, and wire it to open a dedicated past-attendance marking flow without rebuilding or removing existing flows.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "After logout, app shows “Unauthorized User” error.",
-          "Redirect to login screen immediately",
-          "Prevent any API call after logout"
+          "Add a separate button on dashboard:\n\"Mark Past Attendance\"\nPlace it below the normal “Mark Today’s Attendance” button."
         ]
       },
       "acceptanceCriteria": [
-        "Tapping Settings → Log Out (and confirming) immediately returns the user to the Login screen (i.e., the login gate is reached) without showing any “Unauthorized” error UI.",
-        "Any in-flight React Query requests are cancelled/ignored during logout so they cannot surface errors after logout completes.",
-        "After logout completes, the app does not attempt background profile sync calls (e.g., saveCallerUserProfile) until the user logs in again.",
-        "The logout flow works consistently across repeated logout/login cycles in a single browser session without requiring a hard refresh."
+        "Dashboard shows a distinct button labeled exactly \"Mark Past Attendance\" directly below the \"Mark Today's Classes\" button.",
+        "Clicking \"Mark Past Attendance\" opens the past-attendance flow UI.",
+        "Existing \"Mark Today's Classes\" flow continues to work unchanged."
       ]
     },
     {
-      "id": "REQ-83",
-      "text": "Implement consistent, user-friendly handling for authorization-related backend errors so the app never shows raw “Unauthorized” text to users: map authorization failures to clean UX and recovery actions.",
+      "id": "REQ-92",
+      "text": "Implement a calendar-based past-date selector for the \"Mark Past Attendance\" flow that allows selecting any previous date and prevents selecting future dates with clear English feedback.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "Do NOT show raw “Unauthorized” error",
-          "Add proper error handling:\n\n401 → logout and show session expired message\n\n403 → show permission denied"
+          "Open a calendar view\nUser can select any previous date\nDo NOT allow selecting future dates",
+          "Prevent marking future dates"
         ]
       },
       "acceptanceCriteria": [
-        "If the frontend encounters a backend authorization failure (e.g., error text containing \"Unauthorized\" from canister traps), the app shows English messaging: \"Your session expired. Please log in again.\" and transitions to the Login screen after clearing local session/app state.",
-        "If the frontend encounters a backend permission/forbidden-style failure (where identifiable), the app shows English messaging: \"Permission denied.\" and does not crash.",
-        "The global ErrorBoundary fallback screen does not display raw backend authorization errors; it either (a) guides the user to reload, or (b) shows a session-expired style message with a clear recovery action.",
-        "No screen in the app renders the literal strings \"Unauthorized\" / \"Unauthorized User\" to the user as an unhandled error."
+        "The past-attendance flow displays a calendar UI for picking a date.",
+        "Future dates cannot be selected; attempting to select a future date is blocked and shows a clear English message (for example: \"You cannot mark attendance for a future date.\").",
+        "Selecting a valid past date proceeds to the subject list for that date."
       ]
     },
     {
-      "id": "REQ-84",
-      "text": "Harden the SettingsPage logout implementation to be resilient and ordered correctly: always clear device data (IndexedDB + ranking cache) and Internet Identity session without leaving the app in a partially logged-out state.",
+      "id": "REQ-93",
+      "text": "For a selected past date, compute and display the scheduled subjects for that day using both (a) the weekly repeating timetable based on the date’s weekday and (b) any per-date overrides already supported by the app (for example, class exchanges tied to a specific date).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-2"
         ],
         "quotes": [
-          "Properly clear:\n\nLocal storage/session storage\n\nCached user data",
-          "On logout:\n\nInvalidate token on backend (blacklist if needed)\n\nRedirect to login screen immediately"
+          "Both"
         ]
       },
       "acceptanceCriteria": [
-        "On logout confirmation, the app clears: IndexedDB app state (via clearIndexedDB), rank cache (via clearRankingCache), and resets in-memory app state (dispatch RESET_ALL).",
-        "After logout, the Internet Identity session is cleared (existing clearIdentity call), and subsequent backend calls use anonymous identity until re-login.",
-        "If backend deletion (deleteCallerUser) fails, the app shows a clear English error and still provides a safe way to complete local logout (device data clearing + returning to Login) without leaving the user stuck on Settings.",
-        "No leftover per-session data used by the app (including any URL param–persisted secrets stored in sessionStorage by urlParams helpers) causes the UI to re-trigger authenticated flows after logout."
+        "Given a selected date, the subject list is derived from the weekday timetable slots for that weekday.",
+        "If a class exchange exists for the selected date, the displayed subjects reflect the exchange for that date.",
+        "If no subjects are scheduled for the selected date, the UI shows a clear English empty state (for example: \"No classes scheduled for this date.\")."
       ]
     },
     {
-      "id": "REQ-85",
-      "text": "Upgrade the in-app notification settings UX to support separate notification preference categories (ranking alerts, reward alerts, streak reminders, etc.) within the existing supported web notification system, and persist these preferences via existing IndexedDB + backup/restore flows.",
+      "id": "REQ-94",
+      "text": "Allow the user to mark each scheduled subject for the selected past date as Present or Absent and save the attendance with the selected date, recording per-subject status plus a timestamp.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "Create notification settings:\nFor App Users:\nEnable/Disable Push\nRanking updates\nReward alerts\nStreak reminder\n...\nStore preferences in database: notificationSettings:\n\npushEnabled\n\nrankingAlert\n\nrewardAlert\n\nstreakReminder\n\nwithdrawalAlert\n\nBefore sending notification:\nCheck user settings first."
+          "Allow user to mark:\nPresent\nAbsent\nSave attendance with selected date.",
+          "Store attendance with:\nuserId\ndate\nsubject\nstatus\ntimestamp"
         ]
       },
       "acceptanceCriteria": [
-        "Settings → Notifications displays separate toggles (English labels) for at minimum: Enable Notifications, Ranking alerts, Reward alerts, Streak reminders (additional categories may be shown but must be clear and not misleading).",
-        "These notification preferences are persisted in the existing local persistence layer (IndexedDB) and included in export/import backup/restore without breaking older stored data (missing fields default safely).",
-        "Any in-app notification triggered by app events respects the new category toggles (e.g., if rankingAlert is off, ranking-related notifications are not shown).",
-        "All user-facing copy clarifies the actual supported behavior for this web build (i.e., browser notifications, not guaranteed when the app is closed)."
+        "The subject list for the selected date provides Present and Absent choices for each subject.",
+        "Saving creates persisted records that include: date (YYYY-MM-DD), subject identifier, status, and timestamp.",
+        "After saving, the UI returns to a sensible state (for example: closes the past-attendance flow) and the saved attendance is reflected in the app’s attendance stats derived from events.",
+        "All user-facing labels and messages in this flow are English."
       ]
     },
     {
-      "id": "REQ-86",
-      "text": "Improve reliability and clarity of the existing “Send Test Notification” action to ensure it consistently provides visible feedback for all states (supported/unsupported, enabled/disabled, permission granted/denied) without silent failure.",
-      "target": "frontend",
+      "id": "REQ-95",
+      "text": "Enforce duplicate-marking prevention for past attendance: a user must not be able to mark the same date twice; if the date has already been marked, block saving and show the exact English message: \"Attendance already marked for this date\".",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "FIX PUSH NOTIFICATION (NOT WORKING IN APK)",
-          "Debug and fix ... \"Send Test Notification\" ... reliably results in a visible browser notification ... provide clear in-app feedback when ... cannot be sent"
+          "User cannot mark same date twice\nIf already marked → show message: \"Attendance already marked for this date\"",
+          "Prevent duplicate marking",
+          "Validate on backend"
         ]
       },
       "acceptanceCriteria": [
-        "When Notifications are supported, permission is granted, and notifications are enabled, pressing “Send Test Notification” produces a visible system notification.",
-        "When notifications cannot be sent, the UI shows an English reason-specific message (unsupported browser, permission denied, permission not granted yet, notifications disabled).",
-        "The test notification flow never throws an unhandled exception and never triggers the global ErrorBoundary."
+        "If attendance has already been saved for a date, the UI indicates it cannot be marked again and shows exactly: \"Attendance already marked for this date\".",
+        "Frontend blocks the save action for an already-marked date even before calling the backend (best-effort).",
+        "Backend rejects any attempt to save attendance for a date that already has a saved day record for that caller and returns an error that the frontend maps to exactly: \"Attendance already marked for this date\".",
+        "No duplicate per-date records are created in backend state."
       ]
     },
     {
-      "id": "REQ-87",
-      "text": "Document and enforce platform limitations in Settings → Notifications so users are not misled: explicitly state that this build supports browser notifications while the app is running and does not provide true background push delivery when the app is closed.",
-      "target": "frontend",
+      "id": "REQ-96",
+      "text": "Add backend (Motoko) support for storing per-caller per-date attendance-day records (including date, per-subject status, and timestamp) and validating both \"no future dates\" and \"no duplicate date\" rules on save.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "Use English for any user-facing text",
-          "Implement service worker (firebase-messaging-sw.js)",
-          "Ensure:\n✅ Notifications work in APK\n✅ Notifications work on Web\n✅ Real-time delivery"
+          "Validate on backend",
+          "Prevent marking future dates",
+          "Prevent duplicate marking",
+          "Save all changes in database",
+          "Store attendance with:\nuserId\ndate\nsubject\nstatus\ntimestamp"
         ]
       },
       "acceptanceCriteria": [
-        "Settings → Notifications includes clear English text stating: notifications require browser permission; delivery is not guaranteed when the app/browser is closed; behavior depends on browser support.",
-        "No UI text claims Firebase/FCM/APK push support unless it is actually implemented (and on this platform it must not be claimed)."
+        "Backend exposes a shared method for the authenticated caller to save a past-attendance day record for a given date.",
+        "Backend storage keys attendance records by (caller principal, date).",
+        "Backend rejects future dates for saves.",
+        "Backend rejects duplicate saves for the same date for the same caller.",
+        "Backend stores timestamp for the save and per-subject statuses for that date."
+      ]
+    },
+    {
+      "id": "REQ-97",
+      "text": "Integrate the past-attendance save into the frontend data model by creating corresponding ClassEvent entries (or an equivalent existing local event model) for the selected date so that existing calculations and UI (overall %, subject cards, subject details) reflect the saved past attendance without introducing new attendance-calculation logic.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Save attendance with selected date.",
+          "Do not affect streak logic incorrectly",
+          "If user marks past attendance:\nRecalculate streak properly\nUpdate points correctly"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Saving past attendance results in local state updates that reuse existing event-driven calculations (no new percentage/stats logic).",
+        "Past-dated attendance is included in overall and per-subject stats where appropriate.",
+        "No existing attendance calculation functions are replaced; changes are limited to adding valid events and reusing existing computation paths."
+      ]
+    },
+    {
+      "id": "REQ-98",
+      "text": "Ensure streak and milestone points are recalculated correctly when past attendance is added: the existing continuous-day streak computation must reflect the newly added past date events, and milestone point awards must not be double-awarded for milestones that were already recorded as awarded.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Do not affect streak logic incorrectly\nIf user marks past attendance:\nRecalculate streak properly\nUpdate points correctly"
+        ]
+      },
+      "acceptanceCriteria": [
+        "After saving past attendance that changes the set of completed days, the displayed streak value updates to the correct current streak based on existing rules.",
+        "If adding past attendance causes a streak to reach a milestone that has not yet been awarded, the app awards the correct points once.",
+        "If the milestone was already awarded (per existing milestone award state), the app does not award it again."
+      ]
+    },
+    {
+      "id": "REQ-99",
+      "text": "Remove or disable any existing \"auto-mark absent\" or automatic missed-attendance penalty behavior so that if the user forgets to mark attendance, the system does nothing automatically and leaves the day unmodified.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Do NOT auto-mark absent.",
+          "If user forgets to mark attendance:\nDo nothing automatically",
+          "No automatic penalty unless admin defines rule."
+        ]
+      },
+      "acceptanceCriteria": [
+        "No code path automatically creates \"missed\" ClassEvent entries for a day solely because it was not marked.",
+        "If the user does not mark attendance for a day, the app does not change attendance totals automatically.",
+        "User can later fill the missed day using the \"Mark Past Attendance\" flow."
+      ]
+    },
+    {
+      "id": "REQ-100",
+      "text": "Implement a once-per-day attendance reminder notification check: if the user has not marked today’s attendance by a fixed local time (default 7:00 PM), send a browser notification with Title exactly \"Attendance Not Marked 📢\" and Body exactly \"You haven’t marked today’s attendance. Tap to update now.\", respecting notification settings and sending at most once per calendar day.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "If user has not marked attendance by a fixed time (example: 7 PM):\nSend push notification:\nTitle: \"Attendance Not Marked 📢\"\nBody: \"You haven’t marked today’s attendance. Tap to update now.\"\nNotification Rules\nSend only once per day\nRespect user notification settings",
+          "Works for both:\nApp users\nWeb users"
+        ]
+      },
+      "acceptanceCriteria": [
+        "If today has no attendance marked (no ClassEvent for today) at/after 7:00 PM local time, the app attempts to send the reminder notification.",
+        "The reminder notification Title is exactly \"Attendance Not Marked 📢\".",
+        "The reminder notification Body is exactly \"You haven’t marked today’s attendance. Tap to update now.\".",
+        "The reminder is only sent once per calendar day (local date) even if the app remains open or the user navigates around.",
+        "If notifications are disabled in settings or permission is not granted, no reminder is sent."
+      ]
+    },
+    {
+      "id": "REQ-101",
+      "text": "When the user clicks the reminder notification (while the app is running), bring the app window into focus and open the attendance marking UI (the existing \"Mark Today's Classes\" sheet) so the user can update attendance immediately.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Clicking notification should open attendance screen"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking the reminder notification focuses the app window/tab.",
+        "Clicking the reminder notification opens the existing attendance marking UI for today (the Mark Today sheet) without requiring additional manual navigation.",
+        "If the app cannot open the sheet for any reason, the user is navigated to the Dashboard and shown a clear English message explaining what to do next."
+      ]
+    },
+    {
+      "id": "REQ-102",
+      "text": "Persist the reminder-deduping state (for example, the last local date a reminder was sent) through the existing IndexedDB persistence and backup/restore flows in a backward-compatible way (merging missing fields with defaults).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Send only once per day",
+          "Save all changes in database"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A new persisted field is added to support reminder deduping across refreshes.",
+        "Existing users with older stored state can load the app without errors; missing reminder fields default safely.",
+        "Exported backups include the reminder-deduping field, and restoring a backup restores that field.",
+        "Older backups without the field still restore correctly with defaults."
+      ]
+    },
+    {
+      "id": "REQ-103",
+      "text": "Add clear English user-facing messaging in the past-attendance flow and reminder flow for all major error states (future date blocked, duplicate date, no subjects scheduled, notifications disabled/unsupported/permission denied), reusing existing toast/alert patterns.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Attendance already marked for this date",
+          "Prevent marking future dates",
+          "Respect user notification settings"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All user-facing messages added by this upgrade are English.",
+        "Duplicate-day error displays exactly \"Attendance already marked for this date\".",
+        "Future-date attempts show a clear English message.",
+        "If notifications cannot be sent due to unsupported browser/permission/settings, the app provides clear English feedback in UI where relevant (and does not silently fail)."
       ]
     }
   ],
   "constraints": [
-    "Upgrade the existing BunkPro app; do not rebuild from scratch.",
-    "Frontend files under immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and frontend/src/components/ui/* must remain unchanged.",
-    "Backend must remain a single Motoko actor in backend/main.mo; add backend changes only within that file unless a state migration is strictly necessary.",
-    "This platform does not support Firebase Cloud Messaging (FCM) integration, Android APK native configuration (google-services.json, AndroidManifest.xml), iOS push setup, JWT/refresh-token auth stacks, or service-worker-based FCM push. Notification improvements must be limited to supported web capabilities (browser Notifications API and in-app/local notifications while the web app is running).",
-    "Use English for all user-facing text."
+    "Do not rebuild the app; upgrade the existing codebase only.",
+    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Backend must remain a single Motoko actor with all logic in backend/main.mo; add backend/migration.mo only if existing stable state must be upgraded.",
+    "All new user-facing text introduced by this change must be English, except where the user specified an exact string to display.",
+    "No Firebase/FCM or true background push notifications; implement reminder using the existing browser Notifications API capabilities in this web app context."
   ],
   "nonGoals": [
-    "Implementing FCM token registration/storage, Firebase projects, or sending true cross-platform push notifications to Android/iOS.",
-    "Adding or managing JWT/refresh tokens, token blacklists, or token-validation middleware typical of REST backends (the app uses Internet Identity + canister calls).",
-    "Building or modifying native Android/iOS project files (AndroidManifest.xml, notification channels, icons) or producing an APK/iOS app package.",
-    "Adding real-time push delivery when the web app is closed (not supported without external push infrastructure)."
+    "Implementing true background push notifications when the app/browser is closed (not supported on this platform).",
+    "Introducing an admin rule engine for automatic penalties (explicitly deferred by the user).",
+    "Changing existing attendance calculation algorithms beyond feeding them correct past-dated events.",
+    "Adding new timetable paradigms beyond using the existing weekly timetable plus existing per-date overrides (such as exchanges)."
   ],
   "imageRequirements": {
     "required": [],

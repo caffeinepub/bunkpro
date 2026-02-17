@@ -25,7 +25,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     
     const validation = validateDisplayName(name);
     if (!validation.isValid) {
-      setError(validation.error || 'Invalid name');
+      setError(validation.error || 'Only letters, numbers, spaces and underscore are allowed.');
       return;
     }
     

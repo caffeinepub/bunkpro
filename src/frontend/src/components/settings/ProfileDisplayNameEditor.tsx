@@ -42,7 +42,7 @@ export function ProfileDisplayNameEditor({
     const validation = validateDisplayName(editedName);
     
     if (!validation.isValid) {
-      setError(validation.error);
+      setError(validation.error || 'Only letters, numbers, spaces and underscore are allowed.');
       return;
     }
     

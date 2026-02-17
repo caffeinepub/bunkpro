@@ -1,179 +1,283 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "BunkPro: Fix logout Unauthorized bug and harden notification settings UX (web Notifications API only)",
+  "title": "BunkPro: Past attendance marking + missed-day handling + daily reminder notification (frontend upgrade)",
   "requirements": [
     {
-      "id": "REQ-82",
-      "summary": "Make logout immediately transition to the Login gate, cancel/ignore in-flight work, and prevent any post-logout backend calls within the same session.",
+      "id": "REQ-91",
+      "summary": "Add a Dashboard quick-action button labeled exactly \"Mark Past Attendance\" below \"Mark Today's Classes\" and open a dedicated past-attendance flow without changing existing flows.",
       "acceptanceCriteria": [
-        "Tapping Settings → Log Out (and confirming) immediately returns the user to the Login screen (i.e., the login gate is reached) without showing any “Unauthorized” error UI.",
-        "Any in-flight React Query requests are cancelled/ignored during logout so they cannot surface errors after logout completes.",
-        "After logout completes, the app does not attempt background profile sync calls (e.g., saveCallerUserProfile) until the user logs in again.",
-        "The logout flow works consistently across repeated logout/login cycles in a single browser session without requiring a hard refresh."
+        "Dashboard shows a distinct button labeled exactly \"Mark Past Attendance\" directly below the \"Mark Today's Classes\" button.",
+        "Clicking \"Mark Past Attendance\" opens the past-attendance flow UI.",
+        "Existing \"Mark Today's Classes\" flow continues to work unchanged."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/SettingsPage.tsx",
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
           "operation": "modify",
-          "description": "Rework handleLogout ordering to immediately trigger the login gate (clear in-memory app state first), cancel React Query activity via useQueryClient, and then perform best-effort cleanup (ranking cache, IndexedDB, sessionStorage/urlParams, Internet Identity clear) while ensuring no background calls re-trigger after logout. Use the authorization component’s frontend guidance for clearing cached application data on logout. Verify the component's usage instructions before implementing."
+          "description": "Add a new quick-action button labeled exactly \"Mark Past Attendance\" placed directly below the existing \"Mark Today's Classes\" button, and wire it to open the new PastAttendance sheet/flow. Use existing shadcn-ui Button styling to match current quick actions. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Harden the background profile sync effect so it cannot surface post-logout errors: add a cancellation/ignore pattern (e.g., local cancelled flag or epoch ref) and ensure it short-circuits immediately when the login gate is reached (userProfile cleared). Use the authorization component’s frontend guidance about clearing cached user profile on logout. Verify the component's usage instructions before implementing."
+          "description": "Lift control of the existing MarkTodaySheet open/close state to App-level (so other features like notification clicks can open it) while keeping the existing Mark Today flow UI and behavior unchanged, and pass an open handler down to the Dashboard. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/rank/RankingScreen.tsx",
-          "operation": "modify",
-          "description": "Add an additional guard so polling/refresh logic cannot continue when the UI is logged out (e.g., ensure timers are stopped and no refresh runs if the app is not authenticated / no current user context). This prevents post-logout background calls from firing after unmount/rerender cycles."
+          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
+          "operation": "create",
+          "description": "Create a dedicated Past Attendance marking flow as a bottom sheet (similar pattern to MarkTodaySheet) that can be opened from the Dashboard. Use shadcn-ui Sheet components for a consistent sheet experience. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-83",
-      "summary": "Introduce consistent authorization-error UX that never renders raw “Unauthorized” text and provides clean recovery actions (session-expired logout vs permission denied).",
+      "id": "REQ-92",
+      "summary": "Provide a calendar-based selector for past attendance that allows any previous date and blocks future dates with clear English feedback.",
       "acceptanceCriteria": [
-        "If the frontend encounters a backend authorization failure (e.g., error text containing \"Unauthorized\" from canister traps), the app shows English messaging: \"Your session expired. Please log in again.\" and transitions to the Login screen after clearing local session/app state.",
-        "If the frontend encounters a backend permission/forbidden-style failure (where identifiable), the app shows English messaging: \"Permission denied.\" and does not crash.",
-        "The global ErrorBoundary fallback screen does not display raw backend authorization errors; it either (a) guides the user to reload, or (b) shows a session-expired style message with a clear recovery action.",
-        "No screen in the app renders the literal strings \"Unauthorized\" / \"Unauthorized User\" to the user as an unhandled error."
+        "The past-attendance flow displays a calendar UI for picking a date.",
+        "Future dates cannot be selected; attempting to select a future date is blocked and shows a clear English message (for example: \"You cannot mark attendance for a future date.\").",
+        "Selecting a valid past date proceeds to the subject list for that date."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/lib/authErrorHandling.ts",
-          "operation": "create",
-          "description": "Add a small shared utility to classify backend authorization-related errors (session-expired/unauthorized vs forbidden/permission denied vs other) and to produce user-safe English messages that never include raw backend trap text. Use the authorization component’s error-handling guidance as the reference behavior. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useAuthRecovery.ts",
-          "operation": "create",
-          "description": "Create a hook that centralizes recovery actions for auth failures (clear React Query cache, clear IndexedDB/ranking cache as appropriate, reset app store, clear Internet Identity session) and exposes a safe helper like handleAuthError(error) for callers. Use the authorization component’s frontend guidance for logout/cache clearing. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/system/ErrorBoundary.tsx",
+          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
           "operation": "modify",
-          "description": "Update the fallback UI to avoid showing raw backend authorization errors. Detect classified auth errors (via the new authErrorHandling helper) and display either “Your session expired. Please log in again.” with a clear recovery action, or a generic reload message, without ever rendering “Unauthorized” strings."
+          "description": "Implement the date-selection step using a calendar-based picker (e.g., a date picker UI) that restricts max date to today; if the user attempts to pick a future date, block progression and show a clear English message (e.g., \"You cannot mark attendance for a future date.\") using existing toast/alert patterns. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/rank/RankingService.ts",
+          "path": "frontend/src/lib/utils.ts",
           "operation": "modify",
-          "description": "Ensure ranking-related backend failures are mapped to clean messages and do not propagate raw authorization strings to the UI; use the shared auth error classification and (where appropriate) trigger centralized session-expired recovery instead of letting ‘Unauthorized’ bubble up."
+          "description": "Add small date helpers needed by the past-attendance flow (e.g., safe local YYYY-MM-DD formatting and a utility to compare local dates without time-of-day issues) to ensure future-date checks behave correctly across timezones."
+        }
+      ]
+    },
+    {
+      "id": "REQ-93",
+      "summary": "For a chosen past date, derive the scheduled subjects from the weekday timetable and apply any per-date overrides (exchanges) already supported by the app.",
+      "acceptanceCriteria": [
+        "Given a selected date, the subject list is derived from the weekday timetable slots for that weekday.",
+        "If a class exchange exists for the selected date, the displayed subjects reflect the exchange for that date.",
+        "If no subjects are scheduled for the selected date, the UI shows a clear English empty state (for example: \"No classes scheduled for this date.\")."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/domain/scheduleForDate.ts",
+          "operation": "create",
+          "description": "Add a domain helper that, given (date, timetable slots, subjects, exchanges), returns the scheduled subjects/timeSlots for that date by: (1) selecting timetable slots for the date’s weekday; (2) applying any exchange overrides for that exact date to replace the subject/time slot; (3) filtering out empty slots."
+        },
+        {
+          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
+          "operation": "modify",
+          "description": "Use the new scheduleForDate helper to compute and display the subject list for the selected past date, including exchange overrides. If the computed list is empty, show an English empty state such as \"No classes scheduled for this date.\" Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-94",
+      "summary": "Allow marking each scheduled subject as Present/Absent and save past attendance with date, per-subject status, and timestamp.",
+      "acceptanceCriteria": [
+        "The subject list for the selected date provides Present and Absent choices for each subject.",
+        "Saving creates persisted records that include: date (YYYY-MM-DD), subject identifier, status, and timestamp.",
+        "After saving, the UI returns to a sensible state (for example: closes the past-attendance flow) and the saved attendance is reflected in the app’s attendance stats derived from events.",
+        "All user-facing labels and messages in this flow are English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
+          "operation": "modify",
+          "description": "Add Present/Absent controls per scheduled subject (map Present->\"attended\" and Absent->\"missed\" for ClassEvent.status), and on Save create ClassEvent entries including id, selected date (YYYY-MM-DD), subjectId, status, isExtra=false, and timestamp=Date.now(). After saving, close the sheet and reset internal flow state. Use existing shadcn-ui controls (Button/Badge/etc.) for consistent UI. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/pages/HomeDashboardPage.tsx",
           "operation": "modify",
-          "description": "Wrap backend calls (e.g., points submission) with the shared auth error handling so authorization failures trigger session-expired recovery UX rather than surfacing raw backend text. Use the authorization component’s guidance for handling canister authorization traps gracefully. Verify the component's usage instructions before implementing."
+          "description": "Wire the PastAttendance sheet’s onSave callback to dispatch ADD_EVENTS so existing stats/cards update via the existing event-driven calculations (no new stats logic). Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-84",
-      "summary": "Make Settings logout resilient and correctly ordered: always clear IndexedDB, ranking cache, in-memory state, and Internet Identity session, even if backend deletion fails, and clear any sessionStorage secrets.",
+      "id": "REQ-95",
+      "summary": "Prevent marking the same past date twice and show the exact message \"Attendance already marked for this date\" when blocked.",
       "acceptanceCriteria": [
-        "On logout confirmation, the app clears: IndexedDB app state (via clearIndexedDB), rank cache (via clearRankingCache), and resets in-memory app state (dispatch RESET_ALL).",
-        "After logout, the Internet Identity session is cleared (existing clearIdentity call), and subsequent backend calls use anonymous identity until re-login.",
-        "If backend deletion (deleteCallerUser) fails, the app shows a clear English error and still provides a safe way to complete local logout (device data clearing + returning to Login) without leaving the user stuck on Settings.",
-        "No leftover per-session data used by the app (including any URL param–persisted secrets stored in sessionStorage by urlParams helpers) causes the UI to re-trigger authenticated flows after logout."
+        "If attendance has already been saved for a date, the UI indicates it cannot be marked again and shows exactly: \"Attendance already marked for this date\".",
+        "Frontend blocks the save action for an already-marked date even before calling the backend (best-effort).",
+        "Backend rejects any attempt to save attendance for a date that already has a saved day record for that caller and returns an error that the frontend maps to exactly: \"Attendance already marked for this date\".",
+        "No duplicate per-date records are created in backend state."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/SettingsPage.tsx",
+          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
           "operation": "modify",
-          "description": "Refactor logout to (1) immediately reset app state to reach the Login gate, (2) cancel/clear React Query work, then (3) always clear ranking cache, IndexedDB, and sessionStorage (including secrets persisted by urlParams helpers), and (4) always clear Internet Identity session. Backend deleteCallerUser should be best-effort: if it fails, show a clear English message but still complete local logout. Use the authorization component’s logout/cache clearing guidance. Verify the component's usage instructions before implementing."
+          "description": "Implement best-effort duplicate-day prevention by detecting whether any existing ClassEvent already exists for the selected date (any subject/status). If so, disable/guard the Save action and show exactly: \"Attendance already marked for this date\" (exact casing and punctuation) using existing toast/alert patterns. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/utils/urlParams.ts",
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
           "operation": "modify",
-          "description": "Add (or export) a safe helper to clear any session-persisted URL/secret parameters used by the app (or document using sessionStorage.clear()) so logout can reliably remove per-session secrets that might re-trigger authenticated flows."
-        },
-        {
-          "path": "frontend/src/components/settings/LogoutCard.tsx",
-          "operation": "modify",
-          "description": "Update logout confirmation UX copy (English) to reflect resilient logout behavior (local logout will complete even if leaderboard deletion fails) and ensure loading/disabled state remains correct across repeated logout/login cycles. Use existing shadcn-ui Button/Card patterns already in use. Verify the component's usage instructions before implementing."
+          "description": "Pass existing events (or a derived per-date index) into the past-attendance flow so it can quickly determine whether a selected date is already marked and block saving accordingly."
         }
       ]
     },
     {
-      "id": "REQ-85",
-      "summary": "Add category-based notification preferences in Settings and persist them via IndexedDB and backup/restore; ensure in-app notifications respect category toggles using supported web Notifications API only.",
+      "id": "REQ-97",
+      "summary": "Integrate saved past attendance into the existing event-driven data model so all existing calculations/UI reflect it without new calculation logic.",
       "acceptanceCriteria": [
-        "Settings → Notifications displays separate toggles (English labels) for at minimum: Enable Notifications, Ranking alerts, Reward alerts, Streak reminders (additional categories may be shown but must be clear and not misleading).",
-        "These notification preferences are persisted in the existing local persistence layer (IndexedDB) and included in export/import backup/restore without breaking older stored data (missing fields default safely).",
-        "Any in-app notification triggered by app events respects the new category toggles (e.g., if rankingAlert is off, ranking-related notifications are not shown).",
-        "All user-facing copy clarifies the actual supported behavior for this web build (i.e., browser notifications, not guaranteed when the app is closed)."
+        "Saving past attendance results in local state updates that reuse existing event-driven calculations (no new percentage/stats logic).",
+        "Past-dated attendance is included in overall and per-subject stats where appropriate.",
+        "No existing attendance calculation functions are replaced; changes are limited to adding valid events and reusing existing computation paths."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
+          "operation": "modify",
+          "description": "Ensure Save produces standard ClassEvent entries (same shape used by MarkTodaySheet) so calculateOverallStats/calculateSubjectStats automatically include past dates. Do not modify existing calculation utilities; only feed them valid events. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/domain/attendanceCalculations.ts",
+          "operation": "modify",
+          "description": "Do not change algorithms; only add small comments/tests or safeguards if needed to confirm past-dated events are handled identically to today-dated events (no logic rewrite)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-98",
+      "summary": "Ensure streak and milestone points update correctly when past attendance is added, without double-awarding milestones.",
+      "acceptanceCriteria": [
+        "After saving past attendance that changes the set of completed days, the displayed streak value updates to the correct current streak based on existing rules.",
+        "If adding past attendance causes a streak to reach a milestone that has not yet been awarded, the app awards the correct points once.",
+        "If the milestone was already awarded (per existing milestone award state), the app does not award it again."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/HomeDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the existing milestone-award effect continues to run off of state.events changes so that adding past events triggers recalculation, and keep using state.streakMilestones to prevent double-awards. No new milestone-award tracking system should be added."
+        },
+        {
+          "path": "frontend/src/domain/streakMilestones.ts",
+          "operation": "modify",
+          "description": "Keep existing rules; only adjust if necessary to ensure past-added events correctly influence the computed streak (based on unique event dates) without introducing duplicate milestone awards."
+        }
+      ]
+    },
+    {
+      "id": "REQ-99",
+      "summary": "Remove/disable any automatic missed-day \"auto-mark absent\" behavior so unmarked days are left untouched and can be filled later via past attendance.",
+      "acceptanceCriteria": [
+        "No code path automatically creates \"missed\" ClassEvent entries for a day solely because it was not marked.",
+        "If the user does not mark attendance for a day, the app does not change attendance totals automatically.",
+        "User can later fill the missed day using the \"Mark Past Attendance\" flow."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Audit and remove/disable any startup/background logic that auto-generates missed/absent ClassEvent entries for unmarked days. Ensure the only automatic timed logic introduced by this upgrade is the reminder notification check (which must not create attendance events)."
+        },
+        {
+          "path": "frontend/src/state/appStore.tsx",
+          "operation": "modify",
+          "description": "Audit and remove/disable any persistence/load-time migration logic that infers or inserts missed-day events. Ensure loadState/RESTORE_STATE only merges defaults and never creates attendance events for unmarked days."
+        }
+      ]
+    },
+    {
+      "id": "REQ-100",
+      "summary": "Add a once-per-day (local date) 7:00 PM reminder check that sends a browser notification if today’s attendance is unmarked, respecting notification settings.",
+      "acceptanceCriteria": [
+        "If today has no attendance marked (no ClassEvent for today) at/after 7:00 PM local time, the app attempts to send the reminder notification.",
+        "The reminder notification Title is exactly \"Attendance Not Marked 📢\".",
+        "The reminder notification Body is exactly \"You haven’t marked today’s attendance. Tap to update now.\".",
+        "The reminder is only sent once per calendar day (local date) even if the app remains open or the user navigates around.",
+        "If notifications are disabled in settings or permission is not granted, no reminder is sent."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
+          "operation": "create",
+          "description": "Create a hook that (1) checks at/after 7:00 PM local time whether today has any ClassEvent; (2) if not marked and reminders are enabled in settings, attempts to send a notification with the exact required title/body; (3) dedupes to at most once per local calendar day using persisted state. Use existing notificationsApi wrapper to respect support/permission/enablement. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Integrate useDailyAttendanceReminder at the top level after login (so it runs while the app is open), passing state.events and notification settings. Ensure it does not run for logged-out users and does not send more than once per day."
+        },
+        {
+          "path": "frontend/src/notifications/notificationsApi.ts",
+          "operation": "modify",
+          "description": "Add support for sending this reminder notification with explicit title/body and a stable tag (for dedupe on the Notification side) while keeping existing notification sending behavior intact. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-101",
+      "summary": "On reminder notification click, focus the app and open the existing Mark Today sheet; otherwise navigate to Dashboard with guidance.",
+      "acceptanceCriteria": [
+        "Clicking the reminder notification focuses the app window/tab.",
+        "Clicking the reminder notification opens the existing attendance marking UI for today (the Mark Today sheet) without requiring additional manual navigation.",
+        "If the app cannot open the sheet for any reason, the user is navigated to the Dashboard and shown a clear English message explaining what to do next."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/notifications/notificationsApi.ts",
+          "operation": "modify",
+          "description": "Extend the notification wrapper to optionally attach an onClick handler for notifications created while the app is running (so click can focus the window and trigger in-app navigation/action). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Provide an app-level handler that, when invoked from the reminder notification click, focuses the window, navigates to the Dashboard route, and opens the existing MarkTodaySheet. If the sheet cannot be opened (e.g., missing required data), show a clear English toast guiding the user to tap \"Mark Today's Classes\"."
+        }
+      ]
+    },
+    {
+      "id": "REQ-102",
+      "summary": "Persist reminder dedupe state via IndexedDB and backup/restore in a backward-compatible way with safe defaults.",
+      "acceptanceCriteria": [
+        "A new persisted field is added to support reminder deduping across refreshes.",
+        "Existing users with older stored state can load the app without errors; missing reminder fields default safely.",
+        "Exported backups include the reminder-deduping field, and restoring a backup restores that field.",
+        "Older backups without the field still restore correctly with defaults."
       ],
       "file_operations": [
         {
           "path": "frontend/src/domain/attendanceTypes.ts",
           "operation": "modify",
-          "description": "Extend AppSettings to include a notification preferences object (at minimum: rankingAlerts, rewardAlerts, streakReminders) with safe defaults; keep backward compatibility by defaulting missing fields. Ensure all user-facing labels remain English."
+          "description": "Add a new settings/state field for reminder deduping (e.g., last local date a reminder was sent) and include a safe default in DEFAULT_SETTINGS/DEFAULT_STATE."
         },
         {
           "path": "frontend/src/state/persistence.ts",
           "operation": "modify",
-          "description": "Update loadState merge logic to include default values for the new notification preference fields so older IndexedDB data loads safely without breaking."
+          "description": "Update loadState merging to backfill the new reminder-dedupe field with a safe default for older IndexedDB states."
         },
         {
           "path": "frontend/src/backup/backupSchema.ts",
           "operation": "modify",
-          "description": "Ensure backup migration merges DEFAULT_SETTINGS (including new notification preference fields) so import/export supports older backups with missing fields defaulting safely."
-        },
-        {
-          "path": "frontend/src/components/settings/NotificationsCard.tsx",
-          "operation": "modify",
-          "description": "Upgrade Settings → Notifications UI to include separate category toggles (English labels) for ranking alerts, reward alerts, and streak reminders, while keeping ‘Enable Notifications’ as the master gate. Use existing shadcn-ui components (Card, Switch, Alert, Button, Label) for consistent UX. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/SettingsPage.tsx",
-          "operation": "modify",
-          "description": "Wire the expanded NotificationsCard props into AppSettings state updates so category toggles are persisted through the existing reducer + IndexedDB save flow."
-        },
-        {
-          "path": "frontend/src/pages/HomeDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Update any in-app notification triggers related to rewards/achievements (e.g., streak milestone awards) to check the new category toggles before calling the browser Notifications wrapper; ensure no notifications are shown when the relevant category toggle is off."
+          "description": "Update backup migration logic to include the reminder-dedupe field in a backward-compatible way (merge missing field with defaults) and ensure it round-trips through export/restore."
         }
       ]
     },
     {
-      "id": "REQ-86",
-      "summary": "Make “Send Test Notification” reliable with visible, reason-specific feedback for supported/unsupported, enabled/disabled, and permission states, without unhandled exceptions.",
+      "id": "REQ-103",
+      "summary": "Add clear English messages for major error states in past-attendance and reminder flows using existing toast/alert patterns.",
       "acceptanceCriteria": [
-        "When Notifications are supported, permission is granted, and notifications are enabled, pressing “Send Test Notification” produces a visible system notification.",
-        "When notifications cannot be sent, the UI shows an English reason-specific message (unsupported browser, permission denied, permission not granted yet, notifications disabled).",
-        "The test notification flow never throws an unhandled exception and never triggers the global ErrorBoundary."
+        "All user-facing messages added by this upgrade are English.",
+        "Duplicate-day error displays exactly \"Attendance already marked for this date\".",
+        "Future-date attempts show a clear English message.",
+        "If notifications cannot be sent due to unsupported browser/permission/settings, the app provides clear English feedback in UI where relevant (and does not silently fail)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/settings/NotificationsCard.tsx",
+          "path": "frontend/src/components/pastAttendance/MarkPastAttendanceSheet.tsx",
           "operation": "modify",
-          "description": "Revise the test notification action so it always provides visible, English feedback for all states: unsupported, permission denied, permission default (not granted yet), and notifications disabled. Ensure the button behavior and in-card messaging cannot silently fail and never throws to the ErrorBoundary. Use existing shadcn-ui Alert/Button components. Verify the component's usage instructions before implementing."
+          "description": "Ensure all user-facing labels/messages in the past-attendance flow are English and cover: future-date blocked, duplicate date (exact string), and empty schedule state. Use existing toast/alert patterns already used in the app. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/notifications/notificationsApi.ts",
+          "path": "frontend/src/hooks/useDailyAttendanceReminder.ts",
           "operation": "modify",
-          "description": "Adjust the Notifications API wrapper to return more granular, actionable result reasons (including distinguishing ‘permission not granted yet’ vs ‘denied’) and ensure it never throws; keep behavior limited to the browser Notifications API."
-        }
-      ]
-    },
-    {
-      "id": "REQ-87",
-      "summary": "Document and enforce platform limitations in Settings → Notifications: browser notifications only while the app is running; no claims of FCM/APK push/background delivery.",
-      "acceptanceCriteria": [
-        "Settings → Notifications includes clear English text stating: notifications require browser permission; delivery is not guaranteed when the app/browser is closed; behavior depends on browser support.",
-        "No UI text claims Firebase/FCM/APK push support unless it is actually implemented (and on this platform it must not be claimed)."
-      ],
-      "file_operations": [
+          "description": "When a reminder would be sent but cannot be (unsupported browser, permission denied/default, or notifications disabled), provide clear English feedback where relevant using existing toast patterns, while still ensuring at-most-once-per-day behavior and avoiding repeated spam. Verify the component's usage instructions before implementing."
+        },
         {
           "path": "frontend/src/components/settings/NotificationsCard.tsx",
           "operation": "modify",
-          "description": "Update all user-facing copy to explicitly and clearly state supported limitations: browser permission required; notifications only while the app is open/running; no delivery guarantees when closed; behavior depends on browser support. Remove/avoid any wording implying FCM/APK push support. Use English only and keep the messaging consistent with the rest of Settings. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/notifications/notificationsApi.ts",
-          "operation": "modify",
-          "description": "Ensure default notification title/body strings are plain English (avoid raw ‘push’/FCM implications) and align with documented web-only behavior."
+          "description": "Ensure Notifications settings UI continues to provide clear English feedback for unsupported/permission denied states, and (if needed) add specific guidance text relevant to attendance reminders using existing Alert patterns. Verify the component's usage instructions before implementing."
         }
       ]
     }

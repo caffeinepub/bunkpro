@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 41,
-  "summary": "Enhance BunkPro by upgrading and fixing the Global Weekly Ranking System to be fully cloud-based and truly global using Firebase Firestore as the only ranking source (no local-only/device-specific ranking). All users must be mutually visible and realtime-synced, ranks computed dynamically at runtime using deterministic tie-breakers, with weekly Sunday 12:00 AM rollover guarded by a last-update timestamp, and a premium leaderboard UI (Top-3 + dynamic rank badges, current-user highlight, pagination for 100+ users).",
+  "projectStateVersion": 45,
+  "summary": "Upgrade BunkPro with (1) a new \"Mark Past Attendance\" flow that lets users mark attendance for any past date via a calendar, prevents future/duplicate marking, stores per-date attendance records, and safely recalculates streak/points; (2) disable any automatic \"auto-absent\" handling for missed days; and (3) add a once-per-day reminder push notification if today’s attendance is not marked by a configured time, respecting notification settings and deep-linking into the attendance screen on both app and web.",
   "architectural_notes": [
     "Android app using MVVM architecture (preferred) with clean structure and error handling",
     "Offline-first app using local Room/SQLite database (secure local storage)",
@@ -23,7 +23,7 @@
     "Critical: After logout, the app shows an “Unauthorized User” error (logout flow is not clearing auth/session state and/or API calls continue after logout).",
     "Push notifications not working after APK installation (no notifications received)."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-implement-the-core-data-model-and-logic-for-subject-wise-attendance-tracking-including-subjects-add-edit-delete-per-subject-counters-for-attended-missed-cancelled-extra-classes-class-exchanges-per-subject-attendance-percentage-overall-attendance-percentage-reset-attendance-for-a-subject-and-a-target-attendance-percentage-setting-used-by-calculators-all-calculations-must-correctly-handle-edge-cases-such-as-0-total-classes-and-100-attendance",
@@ -616,6 +616,118 @@
         "REQ-87"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-shared-frontend-display-name-validation-to-enforce-the-regex-a-za-z0-9-after-trimming-leading-trailing-spaces-and-when-invalid-return-show-the-exact-english-error-message-only-letters-numbers-spaces-and-underscore-are-allowed",
+      "title": "Update the shared frontend display-name validation to enforce the regex `^[A-Za-z0-9_ ]+$` (after trimming leading/trailing spaces), and when invalid return/show the exact English error message: \"Only letters, numbers, spaces and underscore are allowed.\"",
+      "reqIds": [
+        "REQ-88"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-any-user-facing-frontend-error-displayed-for-invalid-usernames-uses-the-exact-english-string-only-letters-numbers-spaces-and-underscore-are-allowed-no-commas-no-extra-punctuation-no-alternate-wording",
+      "title": "Ensure any user-facing frontend error displayed for invalid usernames uses the exact English string: \"Only letters, numbers, spaces and underscore are allowed.\" (no commas, no extra punctuation, no alternate wording).",
+      "reqIds": [
+        "REQ-90"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-dashboard-quick-action-button-labeled-exactly-mark-past-attendance-placed-below-the-existing-mark-today-s-classes-button-and-wire-it-to-open-a-dedicated-past-attendance-marking-flow-without-rebuilding-or-removing-existing-flows",
+      "title": "Add a new Dashboard quick-action button labeled exactly \"Mark Past Attendance\" placed below the existing \"Mark Today's Classes\" button, and wire it to open a dedicated past-attendance marking flow without rebuilding or removing existing flows.",
+      "reqIds": [
+        "REQ-91"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-calendar-based-past-date-selector-for-the-mark-past-attendance-flow-that-allows-selecting-any-previous-date-and-prevents-selecting-future-dates-with-clear-english-feedback",
+      "title": "Implement a calendar-based past-date selector for the \"Mark Past Attendance\" flow that allows selecting any previous date and prevents selecting future dates with clear English feedback.",
+      "reqIds": [
+        "REQ-92"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-for-a-selected-past-date-compute-and-display-the-scheduled-subjects-for-that-day-using-both-a-the-weekly-repeating-timetable-based-on-the-date-s-weekday-and-b-any-per-date-overrides-already-supported-by-the-app-for-example-class-exchanges-tied-to-a-specific-date",
+      "title": "For a selected past date, compute and display the scheduled subjects for that day using both (a) the weekly repeating timetable based on the date’s weekday and (b) any per-date overrides already supported by the app (for example, class exchanges tied to a specific date).",
+      "reqIds": [
+        "REQ-93"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-allow-the-user-to-mark-each-scheduled-subject-for-the-selected-past-date-as-present-or-absent-and-save-the-attendance-with-the-selected-date-recording-per-subject-status-plus-a-timestamp",
+      "title": "Allow the user to mark each scheduled subject for the selected past date as Present or Absent and save the attendance with the selected date, recording per-subject status plus a timestamp.",
+      "reqIds": [
+        "REQ-94"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enforce-duplicate-marking-prevention-for-past-attendance-a-user-must-not-be-able-to-mark-the-same-date-twice-if-the-date-has-already-been-marked-block-saving-and-show-the-exact-english-message-attendance-already-marked-for-this-date",
+      "title": "Enforce duplicate-marking prevention for past attendance: a user must not be able to mark the same date twice; if the date has already been marked, block saving and show the exact English message: \"Attendance already marked for this date\".",
+      "reqIds": [
+        "REQ-95"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-integrate-the-past-attendance-save-into-the-frontend-data-model-by-creating-corresponding-classevent-entries-or-an-equivalent-existing-local-event-model-for-the-selected-date-so-that-existing-calculations-and-ui-overall-subject-cards-subject-details-reflect-the-saved-past-attendance-without-introducing-new-attendance-calculation-logic",
+      "title": "Integrate the past-attendance save into the frontend data model by creating corresponding ClassEvent entries (or an equivalent existing local event model) for the selected date so that existing calculations and UI (overall %, subject cards, subject details) reflect the saved past attendance without introducing new attendance-calculation logic.",
+      "reqIds": [
+        "REQ-97"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-streak-and-milestone-points-are-recalculated-correctly-when-past-attendance-is-added-the-existing-continuous-day-streak-computation-must-reflect-the-newly-added-past-date-events-and-milestone-point-awards-must-not-be-double-awarded-for-milestones-that-were-already-recorded-as-awarded",
+      "title": "Ensure streak and milestone points are recalculated correctly when past attendance is added: the existing continuous-day streak computation must reflect the newly added past date events, and milestone point awards must not be double-awarded for milestones that were already recorded as awarded.",
+      "reqIds": [
+        "REQ-98"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-or-disable-any-existing-auto-mark-absent-or-automatic-missed-attendance-penalty-behavior-so-that-if-the-user-forgets-to-mark-attendance-the-system-does-nothing-automatically-and-leaves-the-day-unmodified",
+      "title": "Remove or disable any existing \"auto-mark absent\" or automatic missed-attendance penalty behavior so that if the user forgets to mark attendance, the system does nothing automatically and leaves the day unmodified.",
+      "reqIds": [
+        "REQ-99"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-once-per-day-attendance-reminder-notification-check-if-the-user-has-not-marked-today-s-attendance-by-a-fixed-local-time-default-7-00-pm-send-a-browser-notification-with-title-exactly-attendance-not-marked-and-body-exactly-you-haven-t-marked-today-s-attendance-tap-to-update-now-respecting-notification-settings-and-sending-at-most-once-per-calendar-day",
+      "title": "Implement a once-per-day attendance reminder notification check: if the user has not marked today’s attendance by a fixed local time (default 7:00 PM), send a browser notification with Title exactly \"Attendance Not Marked 📢\" and Body exactly \"You haven’t marked today’s attendance. Tap to update now.\", respecting notification settings and sending at most once per calendar day.",
+      "reqIds": [
+        "REQ-100"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-when-the-user-clicks-the-reminder-notification-while-the-app-is-running-bring-the-app-window-into-focus-and-open-the-attendance-marking-ui-the-existing-mark-today-s-classes-sheet-so-the-user-can-update-attendance-immediately",
+      "title": "When the user clicks the reminder notification (while the app is running), bring the app window into focus and open the attendance marking UI (the existing \"Mark Today's Classes\" sheet) so the user can update attendance immediately.",
+      "reqIds": [
+        "REQ-101"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-persist-the-reminder-deduping-state-for-example-the-last-local-date-a-reminder-was-sent-through-the-existing-indexeddb-persistence-and-backup-restore-flows-in-a-backward-compatible-way-merging-missing-fields-with-defaults",
+      "title": "Persist the reminder-deduping state (for example, the last local date a reminder was sent) through the existing IndexedDB persistence and backup/restore flows in a backward-compatible way (merging missing fields with defaults).",
+      "reqIds": [
+        "REQ-102"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-clear-english-user-facing-messaging-in-the-past-attendance-flow-and-reminder-flow-for-all-major-error-states-future-date-blocked-duplicate-date-no-subjects-scheduled-notifications-disabled-unsupported-permission-denied-reusing-existing-toast-alert-patterns",
+      "title": "Add clear English user-facing messaging in the past-attendance flow and reminder flow for all major error states (future date blocked, duplicate date, no subjects scheduled, notifications disabled/unsupported/permission denied), reusing existing toast/alert patterns.",
+      "reqIds": [
+        "REQ-103"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -887,6 +999,46 @@
       "id": "AR-71",
       "summary": "Implement a proper cross-platform push notification system using Firebase Cloud Messaging (FCM): register/store device tokens (userId, token, platform, lastUpdated), web push service worker setup, Android APK Firebase setup (google-services.json, manifest, channels), per-platform notification preferences stored server-side, secure server-only sending, dedupe/invalid-token cleanup, and end-to-end testing (foreground/background/terminated, multi-device, logout/login).",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-72",
+      "summary": "Upgrade username/input-field validation on both frontend and backend to allow only letters, numbers, spaces, and underscore using regex ^[A-Za-z0-9_ ]+$; trim leading/trailing spaces; reject invalid API requests; show error message \"Only letters, numbers, spaces and underscore are allowed.\"; do not change other app functionality.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-74",
+      "summary": "Enforce the same `^[A-Za-z0-9_ ]+$` validation rule on the backend before saving/updating a user profile: trim the submitted display name, reject the request if it fails validation, and do not write invalid values into canister state.",
+      "reqIds": [
+        "REQ-89"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-75",
+      "summary": "Add \"Mark Past Attendance\" dashboard button that opens a calendar (past dates only), shows subjects for the selected date, allows marking Present/Absent, prevents duplicate marking per date, and stores attendance records with userId/date/subject/status/timestamp; backend must validate future/duplicate rules and trigger streak/points recalculation safely.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-76",
+      "summary": "Change missed-attendance handling so the system does NOT auto-mark absent or apply automatic penalties when a user forgets to mark attendance; missed days remain unmodified and can be updated later only via \"Mark Past Attendance\" (unless an admin rule exists in future).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-77",
+      "summary": "Add attendance reminder notification: if today’s attendance is not marked by a fixed time (e.g., 7 PM), send a push notification once per day (respecting notification settings) and on click open the attendance screen; must work for both app and web users.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-83",
+      "summary": "Add backend (Motoko) support for storing per-caller per-date attendance-day records (including date, per-subject status, and timestamp) and validating both \"no future dates\" and \"no duplicate date\" rules on save.",
+      "reqIds": [
+        "REQ-96"
+      ],
       "status": "pending"
     }
   ],

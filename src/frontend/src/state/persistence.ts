@@ -1,4 +1,4 @@
-// Persistence layer connecting app store to IndexedDB with validation and fallback to defaults for new fields
+// Persistence layer connecting app store to IndexedDB with validation and fallback to defaults for new fields including reminder state
 
 import type { AppState } from '../domain/attendanceTypes';
 import { DEFAULT_STATE, DEFAULT_SETTINGS, DEFAULT_NOTIFICATION_PREFERENCES } from '../domain/attendanceTypes';
@@ -38,6 +38,7 @@ export async function loadState(): Promise<AppState | null> {
           ...DEFAULT_NOTIFICATION_PREFERENCES,
           ...(state.settings.notificationPreferences || {}),
         },
+        lastReminderDate: state.settings.lastReminderDate || null,
       },
       userProfile: state.userProfile || null,
       streakMilestones: state.streakMilestones || [],

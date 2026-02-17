@@ -1,4 +1,5 @@
-// Main app component with hardened profile sync that prevents post-logout errors and proper cancellation handling
+// Main app component with hardened profile sync, daily reminder integration, and mark-today sheet control
+
 import React, { useState, useEffect, useRef } from 'react';
 import { AppProvider, useAppStore } from './state/appStore';
 import { ErrorBoundary } from './components/system/ErrorBoundary';
@@ -15,6 +16,7 @@ import { RankPage } from './rank/RankPage';
 import { Toaster } from '@/components/ui/sonner';
 import { initializeTheme } from './theme/themeManager';
 import { useActor } from './hooks/useActor';
+import { useDailyAttendanceReminder } from './hooks/useDailyAttendanceReminder';
 import type { UserProfile as DomainUserProfile } from './domain/attendanceTypes';
 import type { UserProfile as BackendUserProfile } from './backend';
 
@@ -98,6 +100,20 @@ function AppContent() {
 
     syncProfileToBackend();
   }, [actor, state.userProfile?.displayName]);
+
+  // Daily attendance reminder
+  const handleReminderSent = (date: string) => {
+    dispatch({
+      type: 'UPDATE_SETTINGS',
+      payload: { lastReminderDate: date },
+    });
+  };
+
+  useDailyAttendanceReminder({
+    events: state.events,
+    settings: state.settings,
+    onReminderSent: handleReminderSent,
+  });
 
   // Simulate initial load
   useEffect(() => {

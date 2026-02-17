@@ -1,4 +1,4 @@
-// Core domain types for BunkPro attendance tracking with notification preferences, user profile, and gamification
+// Core domain types for BunkPro attendance tracking with notification preferences, user profile, gamification, and reminder state
 
 export type ClassStatus = 'attended' | 'missed' | 'cancelled';
 
@@ -58,6 +58,7 @@ export interface AppSettings {
   enableDangerZone: boolean;
   enableNotifications: boolean;
   notificationPreferences: NotificationPreferences;
+  lastReminderDate: string | null; // ISO date string for reminder deduplication
 }
 
 export interface UserProfile {
@@ -98,6 +99,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   enableDangerZone: true,
   enableNotifications: false,
   notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
+  lastReminderDate: null,
 };
 
 export const DEFAULT_STATE: AppState = {

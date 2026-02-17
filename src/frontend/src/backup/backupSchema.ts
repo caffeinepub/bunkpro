@@ -1,4 +1,4 @@
-// Backup file schema and validation with migration support for user profile, gamification, and notification preferences
+// Backup file schema and validation with migration support for user profile, gamification, notification preferences, and reminder state
 
 import type { AppState } from '../domain/attendanceTypes';
 import { DEFAULT_SETTINGS, DEFAULT_NOTIFICATION_PREFERENCES } from '../domain/attendanceTypes';
@@ -42,7 +42,7 @@ export function validateBackup(data: unknown): data is BackupData {
 
 export function migrateBackup(backup: BackupData): AppState {
   // Future-proof: handle version migrations
-  // Merge with DEFAULT_SETTINGS and default gamification/notification fields to ensure new fields are populated
+  // Merge with DEFAULT_SETTINGS and default gamification/notification/reminder fields to ensure new fields are populated
   if (backup.version === 1) {
     return {
       ...backup.data,
@@ -53,6 +53,7 @@ export function migrateBackup(backup: BackupData): AppState {
           ...DEFAULT_NOTIFICATION_PREFERENCES,
           ...(backup.data.settings.notificationPreferences || {}),
         },
+        lastReminderDate: backup.data.settings.lastReminderDate || null,
       },
       userProfile: backup.data.userProfile || null,
       streakMilestones: backup.data.streakMilestones || [],
